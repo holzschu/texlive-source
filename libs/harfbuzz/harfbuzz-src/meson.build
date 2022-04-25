@@ -1,8 +1,7 @@
 project('harfbuzz', 'c', 'cpp',
-  meson_version: '>= 0.47.0',
-  version: '2.8.1',
+  meson_version: '>= 0.55.0',
+  version: '3.4.0',
   default_options: [
-    'cpp_eh=none',          # Just to support msvc, we are passing -fno-rtti also anyway
     'cpp_rtti=false',       # Just to support msvc, we are passing -fno-exceptions also anyway
     'cpp_std=c++11',
     'wrap_mode=nofallback', # Use --wrap-mode=default to revert, https://github.com/harfbuzz/harfbuzz/pull/2548
@@ -37,6 +36,8 @@ if cpp.get_id() == 'msvc'
   add_project_arguments(msvc_args, language: ['c', 'cpp'])
   # Disable SAFESEH with MSVC for libs that use external deps that are built with MinGW
   # noseh_link_args = ['/SAFESEH:NO']
+  # disable exception handling
+  add_project_arguments(['/EHs-', '/EHc-'], language: 'cpp')
 endif
 
 add_project_link_arguments(cpp.get_supported_link_arguments([
@@ -56,10 +57,17 @@ if host_machine.cpu_family() == 'arm' and cpp.alignment('struct { char c; }') !=
   endif
 endif
 
+if host_machine.system() == 'windows'
+  add_project_arguments(cpp.get_supported_arguments([
+    '-Wa,-mbig-obj'
+  ]), language : 'cpp')
+endif
+
 check_headers = [
   ['unistd.h'],
   ['sys/mman.h'],
   ['stdbool.h'],
+  ['xlocale.h'],
 ]
 
 check_funcs = [
@@ -69,6 +77,8 @@ check_funcs = [
   ['getpagesize'],
   ['mmap'],
   ['isatty'],
+  ['uselocale'],
+  ['newlocale'],
 ]
 
 m_dep = cpp.find_library('m', required: false)
@@ -86,16 +96,14 @@ if not get_option('freetype').disabled()
   if not freetype_dep.found()
     # https://github.com/harfbuzz/harfbuzz/pull/2498
     freetype_dep = dependency('freetype2', required: get_option('freetype'),
-                              fallback: ['freetype2', 'freetype_dep'],
                               default_options: ['harfbuzz=disabled'])
   endif
 endif
 
-glib_dep = dependency('glib-2.0', required: get_option('glib'),
-                      fallback: ['glib', 'libglib_dep'])
-gobject_dep = dependency('gobject-2.0', required: get_option('gobject'),
-                         fallback: ['glib', 'libgobject_dep'])
-graphite2_dep = dependency('graphite2', required: get_option('graphite'))
+glib_dep = dependency('glib-2.0', required: get_option('glib'))
+gobject_dep = dependency('gobject-2.0', required: get_option('gobject'))
+graphite2_dep = dependency('graphite2', required: get_option('graphite2'))
+graphite_dep = dependency('graphite2', required: get_option('graphite'))
 
 icu_dep = null_dep
 if not get_option('icu').disabled()
@@ -121,6 +129,13 @@ if not get_option('icu').disabled()
   endif
 endif
 
+if icu_dep.found() and icu_dep.type_name() == 'pkgconfig'
+  icu_defs = icu_dep.get_variable(pkgconfig: 'DEFS', default_value: '')
+  if icu_defs != ''
+    add_project_arguments(icu_defs, language: ['c', 'cpp'])
+  endif
+endif
+
 cairo_dep = null_dep
 cairo_ft_dep = null_dep
 if not get_option('cairo').disabled()
@@ -139,18 +154,12 @@ if not get_option('cairo').disabled()
   endif
 
   if not cairo_dep.found()
-    # Requires Meson 0.54.0 to use cairo subproject
-    if meson.version().version_compare('>=0.54.0')
-      # Note that we don't have harfbuzz -> cairo -> freetype2 -> harfbuzz fallback
-      # dependency cycle here because we have configured freetype2 above with
-      # harfbuzz support disabled, so when cairo will lookup freetype2 dependency
-      # it will be forced to use that one.
-      cairo_dep = dependency('cairo', fallback: 'cairo', required: get_option('cairo'))
-      cairo_ft_dep = dependency('cairo-ft', fallback: 'cairo', required: get_option('cairo'))
-    elif get_option('cairo').enabled()
-      error('cairo feature is enabled but it cannot be found on the system and ' +
-            'meson>=0.54.0 is required to build it as subproject')
-    endif
+    # Note that we don't have harfbuzz -> cairo -> freetype2 -> harfbuzz fallback
+    # dependency cycle here because we have configured freetype2 above with
+    # harfbuzz support disabled, so when cairo will lookup freetype2 dependency
+    # it will be forced to use that one.
+    cairo_dep = dependency('cairo', required: get_option('cairo'))
+    cairo_ft_dep = dependency('cairo-ft', required: get_option('cairo'))
   endif
 endif
 
@@ -187,7 +196,7 @@ if chafa_dep.found()
   conf.set('HAVE_CHAFA', 1)
 endif
 
-if graphite2_dep.found()
+if graphite2_dep.found() or graphite_dep.found()
   conf.set('HAVE_GRAPHITE2', 1)
 endif
 
@@ -390,19 +399,6 @@ build_summary = {
      'Benchmark': get_option('benchmark').enabled(),
     },
 }
-if meson.version().version_compare('>=0.53')
-  foreach section_title, section : build_summary
-    summary(section, bool_yn: true, section: section_title)
-  endforeach
-else
-  summary = ['']
-  foreach section_title, section : build_summary
-    summary += '  @0@:'.format(section_title)
-    foreach feature, value : section
-      summary += '    @0@:'.format(feature)
-      summary += '          @0@'.format(value)
-    endforeach
-    summary += ''
-  endforeach
-  message('\n'.join(summary))
-endif
+foreach section_title, section : build_summary
+  summary(section, bool_yn: true, section: section_title)
+endforeach

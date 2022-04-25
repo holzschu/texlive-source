@@ -29,9 +29,10 @@ make install
 tirpc-devel:
 ./configure --prefix=/usr --disable-gssapi
 make install
+rm -rf /usr/include/rpc
 ln -s /usr/include/tirpc/rpc /usr/include/rpc
-ln -s /usr/include/tirpc/netconfig.h /usr/include/netconfig.h
-ln -s /usr/lib/libtirpc.a /usr/lib/librpc.a
+ln -sf /usr/include/tirpc/netconfig.h /usr/include/netconfig.h
+ln -sf /usr/lib/libtirpc.a /usr/lib/librpc.a
 
 termcap-1.3.1:
 ./configure --prefix=/usr
@@ -64,7 +65,7 @@ cd ~/
 GCVERSION=7.6.2
 ATOMICVERSION=7.6.10
 wget http://hboehm.info/gc/gc_source/gc-$GCVERSION.tar.gz
-wget http://www.ivmaisoft.com/_bin/atomic_ops/libatomic_ops-$ATOMICVERSION.tar.gz
+wget https://github.com/ivmai/libatomic_ops/releases/download/v$ATOMICVERSION/libatomic_ops-$ATOMICVERSION.tar.gz
 tar -zxf gc-$GCVERSION.tar.gz
 tar -zxf libatomic_ops-$ATOMICVERSION.tar.gz
 mv libatomic_ops-$ATOMICVERSION gc-$GCVERSION/libatomic_ops

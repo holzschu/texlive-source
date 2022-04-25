@@ -37,10 +37,14 @@ libharfbuzz_a_SOURCES =  \
 	@HARFBUZZ_TREE@/src/hb-algs.hh \
 	@HARFBUZZ_TREE@/src/hb-atomic.hh \
 	@HARFBUZZ_TREE@/src/hb-bimap.hh \
+	@HARFBUZZ_TREE@/src/hb-bit-page.hh \
+	@HARFBUZZ_TREE@/src/hb-bit-set-invertible.hh \
+	@HARFBUZZ_TREE@/src/hb-bit-set.hh \
 	@HARFBUZZ_TREE@/src/hb-blob.hh \
 	@HARFBUZZ_TREE@/src/hb-blob.cc \
 	@HARFBUZZ_TREE@/src/hb-buffer.hh \
 	@HARFBUZZ_TREE@/src/hb-buffer-serialize.cc \
+	@HARFBUZZ_TREE@/src/hb-buffer-verify.cc \
 	@HARFBUZZ_TREE@/src/hb-buffer.cc \
 	@HARFBUZZ_TREE@/src/hb-cache.hh \
 	@HARFBUZZ_TREE@/src/hb-cff-interp-common.hh \
@@ -64,6 +68,7 @@ libharfbuzz_a_SOURCES =  \
 	@HARFBUZZ_TREE@/src/hb-map.cc \
 	@HARFBUZZ_TREE@/src/hb-machinery.hh \
 	@HARFBUZZ_TREE@/src/hb-meta.hh \
+	@HARFBUZZ_TREE@/src/hb-ms-feature-ranges.hh \
 	@HARFBUZZ_TREE@/src/hb-mutex.hh \
 	@HARFBUZZ_TREE@/src/hb-null.hh \
 	@HARFBUZZ_TREE@/src/hb-number-parser.hh \
@@ -80,6 +85,7 @@ libharfbuzz_a_SOURCES =  \
 	@HARFBUZZ_TREE@/src/hb-ot-cff2-table.hh \
 	@HARFBUZZ_TREE@/src/hb-ot-gasp-table.hh \
 	@HARFBUZZ_TREE@/src/hb-ot-color-cbdt-table.hh \
+	@HARFBUZZ_TREE@/src/hb-ot-color-colrv1-closure.hh \
 	@HARFBUZZ_TREE@/src/hb-ot-cmap-table.hh \
 	@HARFBUZZ_TREE@/src/hb-ot-face.cc \
 	@HARFBUZZ_TREE@/src/hb-ot-face.hh \
@@ -101,8 +107,10 @@ libharfbuzz_a_SOURCES =  \
 	@HARFBUZZ_TREE@/src/hb-pool.hh \
 	@HARFBUZZ_TREE@/src/hb-ot-post-macroman.hh \
 	@HARFBUZZ_TREE@/src/hb-ot-post-table.hh \
+	@HARFBUZZ_TREE@/src/hb-ot-post-table-v2subset.hh \
 	@HARFBUZZ_TREE@/src/hb-ot-tag.cc \
 	@HARFBUZZ_TREE@/src/hb-ot-tag-table.hh \
+	@HARFBUZZ_TREE@/src/hb-ot-var-common.hh \
 	@HARFBUZZ_TREE@/src/hb-sanitize.hh \
 	@HARFBUZZ_TREE@/src/hb-serialize.hh \
 	@HARFBUZZ_TREE@/src/hb-set-digest.hh \

@@ -1,9 +1,9 @@
 Limbo.
 
 @x
-\def\title{Common code for CTANGLE and CWEAVE (Version 4.3 [CWEBbin 2021])}
+\def\title{Common code for CTANGLE and CWEAVE (Version 4.7 [CWEBbin 2022])}
 @y
-\def\title{COMMON (Version 4.3 [CWEBbin 2021])}
+\def\title{COMMON (Version 4.7 [CWEBbin 2022])}
 \def\contentspagenumber{0}
 @z
 
@@ -57,10 +57,10 @@ current line is nonempty.
 Section 52.
 
 @x
-@d first_chunk(p)  ((p)->byte_start+2)
+@d first_chunk(p) ((p)->byte_start+2)
 @y
 @-m@>
-@d first_chunk(p)  ((p)->byte_start+2)
+@d first_chunk(p) ((p)->byte_start+2)
 @z
 
 Section 87.

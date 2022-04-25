@@ -2,7 +2,7 @@
 % This program by Silvio Levy and Donald E. Knuth
 % is based on a program by Knuth.
 % It is distributed WITHOUT ANY WARRANTY, express or implied.
-% Version 4.3 --- May 2021 (works also with later versions)
+% Version 4.7 --- February 2022 (works also with later versions)
 
 % Copyright (C) 1987,1990,1993 Silvio Levy and Donald E. Knuth
 
@@ -12,8 +12,8 @@
 
 % Permission is granted to copy and distribute modified versions of this
 % document under the conditions for verbatim copying, provided that the
-% entire resulting derived work is distributed under the terms of a
-% permission notice identical to this one.
+% entire resulting derived work is given a different name and distributed
+% under the terms of a permission notice identical to this one.
 
 % Amendments to 'common.h' resulting in this updated version were created
 % by numerous collaborators over the course of many years.
@@ -30,8 +30,8 @@ First comes general stuff:
 @i iso_types.w
 
 
+@s boolean bool
 @<Common code...@>=
-typedef bool boolean;
 typedef uint8_t eight_bits;
 typedef uint16_t sixteen_bits;
 typedef enum {
@@ -45,10 +45,21 @@ are placed in the context of the `|_|'~macro.  This is just a shortcut for the
 `|@!gettext|' function from the ``GNU~gettext utilities.'' For systems that do
 not have this library installed, we wrap things for neutral behavior without
 internationalization.
+For backward compatibility with pre-{\mc ANSI} compilers, we replace the
+``standard'' header file `\.{stdbool.h}' with the
+{\mc KPATHSEA\spacefactor1000} interface `\.{simpletypes.h}'.
 
-@d _(S) gettext(S)
+@d _(s) gettext(s)
 
 @<Include files@>=
+#include <ctype.h> /* definition of |@!isalpha|, |@!isdigit| and so on */
+#include <kpathsea/simpletypes.h> /* |@!boolean|, |@!true| and |@!false| */
+#include <stddef.h> /* definition of |@!ptrdiff_t| */
+#include <stdint.h> /* definition of |@!uint8_t| and |@!uint16_t| */
+#include <stdio.h> /* definition of |@!printf| and friends */
+#include <stdlib.h> /* definition of |@!getenv| and |@!exit| */
+#include <string.h> /* definition of |@!strlen|, |@!strcmp| and so on */
+@#
 #ifndef HAVE_GETTEXT
 #define HAVE_GETTEXT 0
 #endif
@@ -56,16 +67,8 @@ internationalization.
 #if HAVE_GETTEXT
 #include <libintl.h>
 #else
-#define gettext(A) A
+#define gettext(a) a
 #endif
-@#
-#include <ctype.h> /* definition of |@!isalpha|, |@!isdigit| and so on */
-#include <stdbool.h> /* definition of |@!bool|, |@!true| and |@!false| */
-#include <stddef.h> /* definition of |@!ptrdiff_t| */
-#include <stdint.h> /* definition of |@!uint8_t| and |@!uint16_t| */
-#include <stdlib.h> /* definition of |@!getenv| and |@!exit| */
-#include <stdio.h> /* definition of |@!printf| and friends */
-#include <string.h> /* definition of |@!strlen|, |@!strcmp| and so on */
 
 @ Code related to the character set:
 @^ASCII code dependencies@>
@@ -95,12 +98,12 @@ extern char *id_first; /* where the current identifier begins in the buffer */
 extern char *id_loc; /* just after the current identifier in the buffer */
 
 @ Code related to input routines:
-@d xisalpha(c) (isalpha((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisdigit(c) (isdigit((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisspace(c) (isspace((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xislower(c) (islower((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisupper(c) (isupper((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisxdigit(c) (isxdigit((eight_bits)(c))&&((eight_bits)(c)<0200))
+@d xisalpha(c) (isalpha((int)(c))&&((eight_bits)(c)<0200))
+@d xisdigit(c) (isdigit((int)(c))&&((eight_bits)(c)<0200))
+@d xisspace(c) (isspace((int)(c))&&((eight_bits)(c)<0200))
+@d xislower(c) (islower((int)(c))&&((eight_bits)(c)<0200))
+@d xisupper(c) (isupper((int)(c))&&((eight_bits)(c)<0200))
+@d xisxdigit(c) (isxdigit((int)(c))&&((eight_bits)(c)<0200))
 @d isxalpha(c) ((c)=='_' || (c)=='$')
   /* non-alpha characters allowed in identifier */
 @d ishigh(c) ((eight_bits)(c)>0177)
@@ -152,7 +155,7 @@ extern boolean print_where; /* tells \.{CTANGLE} to print line and file info */
 
 @ Code related to identifier and section name storage:
 @d length(c) (size_t)((c+1)->byte_start-(c)->byte_start) /* the length of a name */
-@d print_id(c) term_write((c)->byte_start,length((c))) /* print identifier */
+@d print_id(c) term_write((c)->byte_start,length(c)) /* print identifier */
 @d llink link /* left link in binary search tree for section names */
 @d rlink dummy.Rlink /* right link in binary search tree for section names */
 @d root name_dir->rlink /* the root of the binary search tree
@@ -183,7 +186,7 @@ extern hash_pointer h; /* index into hash-head array */
 
 @ @<Predecl...@>=
 extern boolean names_match(name_pointer,const char *,size_t,eight_bits);@/
-extern name_pointer id_lookup(const char *,const char *,char);
+extern name_pointer id_lookup(const char *,const char *,eight_bits);
    /* looks up a string in the identifier table */
 extern name_pointer section_lookup(char *,char *,boolean); /* finds section name */
 extern void init_node(name_pointer);@/
@@ -248,20 +251,17 @@ extern void common_init(void);@/
 extern void print_stats(void);@/
 extern void cb_show_banner(void);
 
-@ The following parameters were sufficient in the original \.{WEB} to
-handle \TEX/, so they should be sufficient for most applications of
-\.{CWEB}.
+@ The following parameters are sufficient to handle \TEX/ (converted to
+\.{CWEB}), so they should be sufficient for most applications of \.{CWEB}.
 
+@d buf_size 1000 /* maximum length of input line, plus one */
+@d longest_name 10000 /* file names, section names, and section texts
+   shouldn't be longer than this */
+@d long_buf_size (buf_size+longest_name) /* for \.{CWEAVE} */
 @d max_bytes 1000000 /* the number of bytes in identifiers,
-  index entries, and section names */
-@d max_toks 1000000 /* number of bytes in compressed \CEE/ code */
+  index entries, and section names; must be less than $2^{24}$ */
 @d max_names 10239 /* number of identifiers, strings, section names;
   must be less than 10240 */
 @d max_sections 4000 /* greater than the total number of sections */
-@d max_texts 10239 /* number of replacement texts, must be less than 10240 */
-@d longest_name 10000 /* file and section names and section texts shouldn't be longer than this */
-@d stack_size 500 /* number of simultaneous levels of macro expansion */
-@d buf_size 1000 /* maximum length of input line, plus one */
-@d long_buf_size (buf_size+longest_name) /* for \.{CWEAVE} */
 
 @ End of \.{COMMON} interface.

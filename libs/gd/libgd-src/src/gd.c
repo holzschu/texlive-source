@@ -499,12 +499,6 @@ BGD_DECLARE(int) gdImageColorClosestAlpha (gdImagePtr im, int r, int g, int b, i
 #define HWB_UNDEFINED -1
 #define SETUP_RGB(s, r, g, b) {s.R = r/255.0; s.G = g/255.0; s.B = b/255.0;}
 
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MIN3(a,b,c) ((a)<(b)?(MIN(a,c)):(MIN(b,c)))
-#define MAX(a,b) ((a)<(b)?(b):(a))
-#define MAX3(a,b,c) ((a)<(b)?(MAX(b,c)):(MAX(a,c)))
-
-
 /*
  * Theoretically, hue 0 (pure red) is identical to hue 6 in these transforms. Pure
  * red always maps to 6 in this implementation. Therefore UNDEFINED can be
@@ -869,6 +863,11 @@ BGD_DECLARE(int) gdImageColorResolveAlpha (gdImagePtr im, int r, int g, int b, i
  * Removes a palette entry
  *
  * This is a no-op for truecolor images.
+ * The function does not alter the image data nor the transparent color or any
+ * other places where this color index could have been referenced.
+ * The index is marked as open and will be used too for any subsequent <gdImageColorAllocate> 
+ * or <gdImageColorAllocateAlpha> calls. Other lower index may be open as well, the fist open index 
+ * found will be used.
  *
  * Parameters:
  *   im    - The image.
@@ -901,19 +900,27 @@ BGD_DECLARE(void) gdImageColorDeallocate (gdImagePtr im, int color)
  */
 BGD_DECLARE(void) gdImageColorTransparent (gdImagePtr im, int color)
 {
-	if (color < 0) {
+	// Reset ::transparent
+	if (color == -1) {
+		im->transparent = -1;
 		return;
 	}
 
-	if (!im->trueColor) {
-		if (color >= gdMaxColors) {
-			return;
-		}
-		if (im->transparent != -1) {
-			im->alpha[im->transparent] = gdAlphaOpaque;
-		}
-		im->alpha[color] = gdAlphaTransparent;
+	if (color < -1) {
+		return;
 	}
+
+	if (im->trueColor) {
+		im->transparent = color;
+		return;
+	}
+
+	// Palette Image
+	if (color >= gdMaxColors) {
+		return;
+	}
+	im->alpha[im->transparent] = gdAlphaOpaque;
+	im->alpha[color] = gdAlphaTransparent;
 	im->transparent = color;
 }
 
@@ -3545,20 +3552,12 @@ BGD_DECLARE(void) gdImageCopyResampled (gdImagePtr dst,
 				green /= alpha_sum;
 				blue /= alpha_sum;
 			}
-			/* Clamping to allow for rounding errors above */
-			if (red > 255.0) {
-				red = 255.0;
-			}
-			if (green > 255.0) {
-				green = 255.0;
-			}
-			if (blue > 255.0f) {
-				blue = 255.0;
-			}
-			if (alpha > gdAlphaMax) {
-				alpha = gdAlphaMax;
-			}
-			gdImageSetPixel(dst, x, y, gdTrueColorAlpha ((int) red, (int) green, (int) blue, (int) alpha));
+			/* Round up closest next channel value and clamp to max channel value */
+			red = red >= 255.5 ? 255 : red+0.5;
+			blue = blue >= 255.5 ? 255 : blue+0.5;
+			green = green >= 255.5 ? 255 : green+0.5;
+			alpha = alpha >= gdAlphaMax+0.5 ? gdAlphaMax : alpha+0.5;
+			gdImageSetPixel(dst, x, y, gdTrueColorAlpha ((int)red, (int)green, (int)blue, (int)alpha));
 		}
 	}
 }

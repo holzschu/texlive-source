@@ -12,8 +12,8 @@ use strict;
 
 #------------------------------------------------- ZRTeXtor module
 package ZRTeXtor;
-our $VERSION = 1.007_00;
-our $mod_date = "2019/09/02";
+our $VERSION = 1.008_01;
+our $mod_date = "2021/10/09";
 use Encode qw(encode decode);
 
 # Here follows excerpt from ZRTeXtor.pm
@@ -1374,12 +1374,14 @@ sub vf_parse
       pl_set_value($pe, 1, unpack_num($fs[1]));
       if ($fs[5] eq '') { splice(@$pe, 3, 1); }
       $stg = 1; push(@$pl, $pe);
-    } elsif ($stg == 2 && $t == 248) { # post
+    } elsif ($stg <= 2 && $t == 248) { # post
       (($u = substr($dat, $pos, $t)) =~ /^\xf8+$/)
         or return vf_synerror("in postamble");
+      $stg = 3;
       last;
     } else { return vf_synerror("unexpected byte $t"); }
   }
+  ($swdh || $stg == 3) or return vf_synerror("premature end");
   return $pl;
 }
 
@@ -2781,8 +2783,8 @@ package main;
 #================================================= BEGIN
 use Encode qw(encode decode);
 my $prog_name = 'jfmutil';
-my $version = '1.3.1';
-my $mod_date = '2020/05/04';
+my $version = '1.3.3';
+my $mod_date = '2021/10/09';
 #use Data::Dump 'dump';
 #
 my ($sw_hex, $sw_uptool, $sw_noencout, $inenc, $exenc, $sw_lenient);
