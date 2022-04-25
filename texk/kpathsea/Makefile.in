@@ -851,7 +851,8 @@ pkgconfig_DATA = kpathsea.pc
 DISTCLEANFILES = paths.h stamp-paths kpathsea.h
 kpseaccess_SOURCES = access.c
 kpsereadlink_SOURCES = readlink.c
-kpsewhich_LDADD = libkpathsea.la
+# __IPHONE__ change: create a dynamic library, not an executable
+kpsewhich_LDADD = libkpathsea.la -dynamiclib
 progname_test_CPPFLAGS = $(AM_CPPFLAGS) -DMAKE_KPSE_DLL -DTEST
 progname_test_SOURCES = progname.c
 progname_test_LDADD = libkpathsea.la

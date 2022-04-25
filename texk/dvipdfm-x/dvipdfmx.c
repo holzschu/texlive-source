@@ -1013,7 +1013,9 @@ do_mps_pages (void)
 #if defined(WIN32) && !defined(__MINGW32__) && !defined(MIKTEX) && defined(DLLPROC)
 extern __declspec(dllexport) int DLLPROC (int argc, char *argv[]);
 #else
+#ifndef __IPHONE__
 #undef DLLPROC
+#endif
 #endif
 #endif /* !LIBDPX */
 

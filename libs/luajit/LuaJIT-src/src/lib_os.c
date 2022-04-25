@@ -33,6 +33,10 @@
 #include <locale.h>
 #endif
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
+
 /* ------------------------------------------------------------------------ */
 
 #define LJLIB_MODULE_os
@@ -49,7 +53,15 @@ LJLIB_CF(os_execute)
 #endif
 #else
   const char *cmd = luaL_optstring(L, 1, NULL);
+#ifndef __IPHONE__
   int stat = system(cmd);
+#else
+	int pid = ios_fork();
+	int status;
+	ios_system(cmd);
+	waitpid(pid, &status, 0);
+	int stat = WEXITSTATUS(status);
+#endif
 #if LJ_52
   if (cmd)
     return luaL_execresult(L, stat);

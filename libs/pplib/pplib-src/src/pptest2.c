@@ -36,7 +36,11 @@ static void log_callback (const char *message, void *alien)
   fprintf((FILE *)alien, "\nooops: %s\n", message);
 }
 
+#ifdef __IPHONE__
+int pptest2_main(int argc, const char **argv)
+#else
 int main (int argc, const char **argv)
+#endif
 {
   const char *filepath;
   int a;

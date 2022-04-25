@@ -58,6 +58,11 @@
 # endif
 #endif
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#include <sys/wait.h>
+#endif
+
 #if HAVE_AUTO_T1DOTLESSJ
 enum { T1DOTLESSJ_EXIT_J_NODOT = 2 };
 #endif
@@ -347,7 +352,15 @@ update_odir(int o, String file, ErrorHandler *errh)
         // run script
         if (mktexupd) {
             String command = mktexupd + " " + shell_quote(writable_texdir + directory) + " " + shell_quote(file);
+#ifndef __IPHONE__
             int retval = system(command.c_str());
+#else
+			int pid = ios_fork();
+			int status;
+			ios_system(command.c_str());
+			waitpid(pid, &status, 0);
+			int retval = WEXITSTATUS(status);
+#endif
             if (retval == 127)
                 errh->error("could not run %<%s%>", command.c_str());
             else if (retval < 0)

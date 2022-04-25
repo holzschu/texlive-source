@@ -52,10 +52,12 @@ extern char *getenv ();
 #include <malloc.h>
 #else
 #ifndef STDC_HEADERS
+#ifndef __IPHONE__
 #ifndef ALLOC_RETURN_TYPE
 #define ALLOC_RETURN_TYPE void
 #endif /* not ALLOC_RETURN_TYPE */
 extern ALLOC_RETURN_TYPE *calloc (), *malloc (), *realloc ();
+#endif /* not __IPHONE__ */
 #endif /* not STDC_HEADERS */
 #endif /* not WIN32 */
 

@@ -1375,7 +1375,9 @@ options->job_name = job_name;
 #if defined(WIN32) && !defined(__MINGW32__) && defined(DLLPROC)
 extern __declspec(dllexport) int DLLPROC (int argc, char **argv);
 #else
+#ifndef __IPHONE__
 #undef DLLPROC
+#endif
 #endif
 
 @ Now this is really it: \MP\ starts and ends here.

@@ -3,6 +3,9 @@
    loop label.  Public domain. */
 
 #include <w2c/config.h>
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
 
 void
 uexit (int unix_code)

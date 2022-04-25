@@ -24,6 +24,10 @@ with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 #include "ptexlib.h"
 #define edit_var "TEXEDIT"
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
+
 /*tex
 
 When something anomalous is detected, \TeX\ typically does something like this:
@@ -255,10 +259,21 @@ void do_final_end(void)
     update_terminal();
     ready_already = 0;
     lua_close(Luas);
+#ifdef __IPHONE__
+	Luas = NULL;  // Need to make sure we don't close Luas a second time.
+#endif
     if ((history != spotless) && (history != warning_issued))
+#ifdef __IPHONE__
+		uexit_lua(1);
+#else
         uexit(1);
+#endif
     else
+#ifdef __IPHONE__
+        uexit_lua(defaultexitcode);
+#else
         uexit(defaultexitcode);
+#endif
 }
 
 __attribute__ ((noreturn))
@@ -403,7 +418,15 @@ static void luatex_calledit (int baseptr, int linenumber)
     fullcmd = command;
 #endif
     /*tex Execute the command. */
+#ifndef __IPHONE__
     if (system (fullcmd) != 0) {
+#else
+	int pid = ios_fork();
+	int status;
+	ios_system(fullcmd);
+	waitpid(pid, &status, 0);
+	if (WEXITSTATUS(status) != 0) {
+#endif
         fprintf (stderr, "! Trouble executing `%s'.\n", command);
     }
     /*tex Quit, since we found an error.  */

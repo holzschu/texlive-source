@@ -91,7 +91,9 @@
 #endif
 
 
-
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
 
 
 /* there could be more platforms that don't have these two,
@@ -1015,9 +1017,25 @@ static int os_execute(lua_State * L)
         allow = shell_cmd_is_allowed(cmd, &safecmd, &cmdname);
 
     if (allow == 1) {
+#ifndef __IPHONE__
         lua_pushinteger(L, system(cmd));
+#else
+		int pid = ios_fork();
+		int status;
+		ios_system(cmd);
+		waitpid(pid, &status, 0);
+        lua_pushinteger(L, WEXITSTATUS(status));
+#endif
     } else if (allow == 2) {
+#ifndef __IPHONE__
         lua_pushinteger(L, system(safecmd));
+#else
+		int pid = ios_fork();
+		int status;
+		ios_system(safecmd);
+		waitpid(pid, &status, 0);
+        lua_pushinteger(L, WEXITSTATUS(status));
+#endif
     } else {
         lua_pushnil(L);
         ret = 2;

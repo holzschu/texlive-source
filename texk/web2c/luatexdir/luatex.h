@@ -83,7 +83,9 @@ extern int shell_cmd_is_allowed(const char *cmd, char **safecmd,
 #if defined(WIN32) && !defined(__MINGW32__) && defined(DLLPROC)
 extern __declspec(dllexport) int DLLPROC (int ac, string *av);
 #else
+#ifndef __IPHONE__
 #undef DLLPROC
+#endif
 #endif
 
 #  ifndef GLUERATIO_TYPE

@@ -41,7 +41,17 @@ extern "C" {
 
 #include "XeTeXFontMgr_Mac.h"
 
+#ifndef __IPHONE__
 #include <Cocoa/Cocoa.h>
+#else
+#import <Foundation/Foundation.h>
+#import <Foundation/NSAutoreleasePool.h>
+#import <CoreText/CoreText.h>
+#import <CoreText/CTFontManager.h>
+#import <CoreGraphics/CoreGraphics.h>
+#import <CoreFoundation/CoreFoundation.h>
+#import <UIKit/UiFont.h>
+#endif
 
 CTFontDescriptorRef findFontWithName(CFStringRef name, CFStringRef key)
 {
@@ -128,8 +138,12 @@ XeTeXFontMgr_Mac::addFamilyToCaches(CTFontDescriptorRef familyRef)
 {
     CFStringRef nameStr = (CFStringRef) CTFontDescriptorCopyAttribute(familyRef, kCTFontFamilyNameAttribute);
     if (nameStr) {
+#ifndef __IPHONE__
         NSArray* members = [[NSFontManager sharedFontManager]
                             availableMembersOfFontFamily: (NSString*)nameStr];
+#else 
+        NSArray* members = [UIFont fontNamesForFamilyName: (NSString*)nameStr];
+#endif
         CFRelease(nameStr);
         addFontsToCaches((CFArrayRef)members);
     }
@@ -140,10 +154,19 @@ XeTeXFontMgr_Mac::addFontAndSiblingsToCaches(CTFontDescriptorRef fontRef)
 {
     CFStringRef name = (CFStringRef) CTFontDescriptorCopyAttribute(fontRef, kCTFontNameAttribute);
     if (name) {
+#ifndef __IPHONE__
         NSFont* font = [NSFont fontWithName:(NSString*)name size:10.0];
+#else 
+        UIFont* font = [UIFont fontWithName:(NSString*)name size:10.0];
+#endif
         CFRelease(name);
+#ifndef __IPHONE__
         NSArray* members = [[NSFontManager sharedFontManager]
                             availableMembersOfFontFamily: [font familyName]];
+#else 
+        NSArray* members = [UIFont fontNamesForFamilyName: [font familyName]];
+#endif
+                            
         addFontsToCaches((CFArrayRef)members);
     }
 }
@@ -172,8 +195,13 @@ XeTeXFontMgr_Mac::searchForHostPlatformFonts(const std::string& name)
         std::string family(name.begin(), name.begin() + hyph);
         CFStringRef familyStr = CFStringCreateWithCString(kCFAllocatorDefault, family.c_str(), kCFStringEncodingUTF8);
 
+#ifndef __IPHONE__
         NSArray* familyMembers = [[NSFontManager sharedFontManager]
                                   availableMembersOfFontFamily: (NSString*)familyStr];
+#else 
+        NSArray* familyMembers = [UIFont fontNamesForFamilyName: (NSString*)familyStr];
+#endif
+
         if ([familyMembers count] > 0) {
             addFontsToCaches((CFArrayRef)familyMembers);
             return;
@@ -194,8 +222,13 @@ XeTeXFontMgr_Mac::searchForHostPlatformFonts(const std::string& name)
         return;
     }
 
+#ifndef __IPHONE__
     NSArray* familyMembers = [[NSFontManager sharedFontManager]
                               availableMembersOfFontFamily: (NSString*)nameStr];
+#else 
+	NSArray* familyMembers = [UIFont fontNamesForFamilyName: (NSString*)nameStr];
+#endif
+                              
     if ([familyMembers count] > 0) {
         addFontsToCaches((CFArrayRef)familyMembers);
         return;

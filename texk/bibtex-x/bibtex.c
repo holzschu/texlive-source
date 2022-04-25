@@ -226,7 +226,12 @@ END
  * In addition, the program sends error messages and other remarks to the
  * |log_file| and terminal.
  ***************************************************************************/
+#ifndef __IPHONE__
 int                     main (int argc, char **argv)
+#else 
+#include "ios_error.h"
+int                     bibtex_main (int argc, char **argv)
+#endif
 BEGIN
     extern Integer8_T       history;
     int			    exit_status;

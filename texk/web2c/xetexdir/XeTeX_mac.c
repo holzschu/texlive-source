@@ -39,7 +39,15 @@ authorization from the copyright holders.
 #define EXTERN extern
 #include "xetexd.h"
 
+#ifndef __IPHONE__
 #include <ApplicationServices/ApplicationServices.h>
+#else
+#include <CoreText/CoreText.h>
+#include "xetexd.h"
+// Quickdraw arithmetics:
+typedef long fract;
+#define fract1             ((fract) 0x40000000)        /* = 1.0 for fract */
+#endif
 
 #include <teckit/TECkit_Engine.h>
 #include "XeTeX_ext.h"
@@ -706,7 +714,12 @@ loadAATfont(CTFontDescriptorRef descriptor, integer scaled_size, const char* cp1
         CGFloat green   = ((rgbValue & 0x00FF0000) >> 16) / 255.0;
         CGFloat blue    = ((rgbValue & 0x0000FF00) >> 8 ) / 255.0;
         CGFloat alpha   = ((rgbValue & 0x000000FF)  ) / 255.0;
+#ifndef __IPHONE__
         CGColorRef color = CGColorCreateGenericRGB(red, green, blue, alpha);
+#else 
+		CGFloat rgbacolor[] = {red, green, blue, alpha};
+        CGColorRef color = CGColorCreate(CGColorSpaceCreateDeviceRGB(), rgbacolor);
+#endif
         CFDictionaryAddValue(stringAttributes, kCTForegroundColorAttributeName, color);
         CGColorRelease(color);
     }

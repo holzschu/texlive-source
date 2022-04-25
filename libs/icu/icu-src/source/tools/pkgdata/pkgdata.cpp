@@ -59,6 +59,10 @@ U_CDECL_BEGIN
 #include "pkgtypes.h"
 U_CDECL_END
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
+
 #if U_HAVE_POPEN
 
 using icu::LocalPointerBase;
@@ -550,7 +554,15 @@ normal_command_mode:
     }
 
     printf("pkgdata: %s\n", cmd);
+#ifndef __IPHONE__
     int result = system(cmd);
+#else
+	int pid = ios_fork();
+	int status;
+	ios_system(cmd);
+	waitpid(pid, &status, 0);
+	int result = WEXITSTATUS(status); 
+#endif
     if (result != 0) {
         fprintf(stderr, "-- return status = %d\n", result);
         result = 1; // system() result code is platform specific.

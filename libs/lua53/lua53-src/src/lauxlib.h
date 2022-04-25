@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 #include "lua.h"
-
+#include "ios_error.h"
 
 
 /* extra error code for 'luaL_loadfilex' */
@@ -220,18 +220,18 @@ LUALIB_API void (luaL_openlib) (lua_State *L, const char *libname,
 
 /* print a string */
 #if !defined(lua_writestring)
-#define lua_writestring(s,l)   fwrite((s), sizeof(char), (l), stdout)
+#define lua_writestring(s,l)   fwrite((s), sizeof(char), (l), thread_stdout)
 #endif
 
 /* print a newline and flush the output */
 #if !defined(lua_writeline)
-#define lua_writeline()        (lua_writestring("\n", 1), fflush(stdout))
+#define lua_writeline()        (lua_writestring("\n", 1), fflush(thread_stdout))
 #endif
 
 /* print an error message */
 #if !defined(lua_writestringerror)
 #define lua_writestringerror(s,p) \
-        (fprintf(stderr, (s), (p)), fflush(stderr))
+        (fprintf(thread_stderr, (s), (p)), fflush(thread_stderr))
 #endif
 
 /* }================================================================== */

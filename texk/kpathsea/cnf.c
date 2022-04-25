@@ -247,6 +247,7 @@ read_all_cnf (kpathsea kpse)
       string line;
       string msg;
       unsigned lineno = 0;
+      /* debugging */
       FILE *cnf_file = xfopen (*cnf, FOPEN_R_MODE);
       if (kpse->record_input)
         kpse->record_input (*cnf);

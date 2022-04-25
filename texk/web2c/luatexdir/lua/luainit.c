@@ -280,6 +280,25 @@ static struct option long_options[] = {
     {0, 0, 0, 0}
 };
 
+#ifdef __IPHONE__
+void initFlagValues() {
+    safer_option = 0; 
+    utc_option = 0; 
+    nosocket_option = 0; 
+    ini_version = 0; 
+    haltonerrorp = false; 
+    shellenabledp = 0; 
+    debug_format_file = 0;
+    filelineerrorstylep = 0;
+    parsefirstlinep = 0; 
+	lua_only = 0;
+	lua_offset = 0;
+	show_luahashchars = 0;
+	user_progname = NULL;
+}
+#endif
+
+
 int lua_numeric_field_by_index(lua_State * L, int name_index, int dflt)
 {
     register int i = dflt;
@@ -318,6 +337,20 @@ static void parse_options(int ac, char **av)
      /*tex The `getopt' return code. */
     int g;
     int option_index;
+#ifdef __IPHONE__
+  lua_only = 0;
+  lua_offset = 0;
+  show_luahashchars = 0;
+  safer_option = 0;
+  nosocket_option = 0;
+  utc_option = 0;
+
+    initFlagValues();
+    optind = 1; 
+    opterr = 1;
+    optreset = 1;
+#endif
+  
     char *firstfile = NULL;
     /*tex Dont whine. */
     opterr = 0;
@@ -914,10 +947,13 @@ void lua_initialize(int ac, char **av)
     size_t len;
     int starttime;
     int utc;
+#ifndef __IPHONE__
+	// static variables placed in the environment cause iOS_system to crash.
     static char LC_CTYPE_C[] = "LC_CTYPE=C";
     static char LC_COLLATE_C[] = "LC_COLLATE=C";
     static char LC_NUMERIC_C[] = "LC_NUMERIC=C";
     static char engine_luatex[] = "engine=" my_name;
+#endif
     char *old_locale = NULL;
     char *env_locale = NULL;
     char *tmp = NULL;
@@ -1020,11 +1056,18 @@ void lua_initialize(int ac, char **av)
        fprintf(stderr,"Unable to store environment locale.\n");
     }
     /*tex make sure that the locale is 'sane' (for lua) */
+#ifndef __IPHONE__
     putenv(LC_CTYPE_C);
     putenv(LC_COLLATE_C);
     putenv(LC_NUMERIC_C);
     /*tex this is sometimes needed */
     putenv(engine_luatex);
+#else 
+    setenv("LC_CTYPE", "C", 1); 
+    setenv("LC_CTYPE", "C", 1); 
+    setenv("LC_NUMERIC", "C", 1); 
+    setenv("engine", my_name, 1); 
+#endif
     /*tex add user's cnf values*/
     if (user_cnf_lines) {
      unsigned i;

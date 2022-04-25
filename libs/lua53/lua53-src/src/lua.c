@@ -50,14 +50,18 @@
 #if defined(LUA_USE_POSIX)	/* { */
 
 #include <unistd.h>
+#ifdef __IPHONE__
+#include "ios_error.h"
+#define lua_stdin_is_tty()  ios_isatty(0)
+#else
 #define lua_stdin_is_tty()	isatty(0)
-
+#endif
 #elif defined(LUA_USE_WINDOWS)	/* }{ */
 
 #include <io.h>
 #include <windows.h>
 
-#define lua_stdin_is_tty()	_isatty(_fileno(stdin))
+#define lua_stdin_is_tty()	_isatty(_fileno(thread_stdin))
 
 #else				/* }{ */
 
@@ -88,8 +92,8 @@
 #else				/* }{ */
 
 #define lua_readline(L,b,p) \
-        ((void)L, fputs(p, stdout), fflush(stdout),  /* show prompt */ \
-        fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
+        ((void)L, fputs(p, thread_stdout), fflush(thread_stdout),  /* show prompt */ \
+        fgets(b, LUA_MAXINPUT, thread_stdin) != NULL)  /* get line */
 #define lua_saveline(L,line)	{ (void)L; (void)line; }
 #define lua_freeline(L,b)	{ (void)L; (void)b; }
 
@@ -607,6 +611,9 @@ int main (int argc, char **argv) {
   result = lua_toboolean(L, -1);  /* get result */
   report(L, status);
   lua_close(L);
+    // iOS: Remember to re-init variables:
+  L = NULL;
+  globalL = NULL;
   return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 

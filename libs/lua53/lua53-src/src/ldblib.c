@@ -18,7 +18,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
-
+#include "ios_error.h"
 
 /*
 ** The hook table at registry[&HOOKKEY] maps threads to their current
@@ -403,7 +403,7 @@ static int db_debug (lua_State *L) {
   for (;;) {
     char buffer[250];
     lua_writestringerror("%s", "lua_debug> ");
-    if (fgets(buffer, sizeof(buffer), stdin) == 0 ||
+    if (fgets(buffer, sizeof(buffer), thread_stdin) == 0 ||
         strcmp(buffer, "cont\n") == 0)
       return 0;
     if (luaL_loadbuffer(L, buffer, strlen(buffer), "=(debug command)") ||

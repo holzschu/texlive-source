@@ -76,7 +76,11 @@ static void check_stream_chunks (ppstream *stream)
 
 #define USE_BUFFERS_POOL 1
 
+#ifdef __IPHONE__
+int pptest3_main(int argc, const char **argv)
+#else
 int main (int argc, const char **argv)
+#endif
 {
   const char *filepath;
   int a;

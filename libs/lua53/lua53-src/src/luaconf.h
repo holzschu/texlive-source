@@ -11,6 +11,17 @@
 #include <limits.h>
 #include <stddef.h>
 
+#ifdef __IPHONE__
+#include <stdio.h>
+#include "ios_error.h"
+#undef stdout
+#undef stderr
+#undef stdin
+#define stdout thread_stdout
+#define stderr thread_stderr
+#define stdin thread_stdin
+#define printf(args...) fprintf(thread_stdout, args)
+#endif
 
 /*
 ** ===================================================================

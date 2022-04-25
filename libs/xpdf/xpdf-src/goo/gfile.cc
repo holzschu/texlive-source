@@ -46,6 +46,10 @@
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
+#ifdef __IPHONE__
+#include "ios_error.h"
+#include <sys/wait.h>
+#endif
 
 //------------------------------------------------------------------------
 
@@ -541,7 +545,15 @@ GBool executeCommand(char *cmd) {
 #ifdef VMS
   return system(cmd) ? gTrue : gFalse;
 #else
+#ifndef __IPHONE__
   return system(cmd) ? gFalse : gTrue;
+#else
+	int pid = ios_fork();
+	int status;
+	ios_system(cmd);
+	waitpid(pid, &status, 0);
+	return (WEXITSTATUS(status)) ? gFalse : gTrue;
+#endif
 #endif
 }
 

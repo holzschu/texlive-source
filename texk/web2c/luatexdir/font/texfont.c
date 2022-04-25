@@ -1184,6 +1184,15 @@ void delete_font(int f)
     }
 }
 
+#ifdef __IPHONE__
+void clear_font_data() 
+{
+	while (font_id_maxval > 0) delete_font(font_id_maxval); 
+	font_arr_max = 0; 
+	xfree(font_tables); 
+}
+#endif
+
 void create_null_font(void)
 {
     int i = new_font();

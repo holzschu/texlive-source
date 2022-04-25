@@ -22,6 +22,10 @@
 #ifdef WIN32
 #include <kpathsea/concatn.h>
 #endif
+#ifdef __IPHONE__
+#include "ios_error.h"
+#include <sys/wait.h>
+#endif
 
 #if defined (HAVE_SYS_TIME_H)
 #include <sys/time.h>
@@ -609,7 +613,17 @@ runsystem (const char *cmd)
     allow = shell_cmd_is_allowed (cmd, &safecmd, &cmdname);
 
   if (allow == 1)
+#ifndef __IPHONE__
     status = system (cmd);
+#else
+  {
+	int pid = ios_fork();
+	int wstatus;
+	ios_system(cmd);
+	waitpid(pid, &wstatus, 0);
+	status = WEXITSTATUS(wstatus);
+  }
+#endif
   else if (allow == 2) {
 /*
   command including a character '|' is not allowed in
@@ -620,7 +634,15 @@ runsystem (const char *cmd)
       if (safecmd[k] == '|')
         return 0;
     }
+#ifndef __IPHONE__
     status =  system (safecmd);
+#else
+	int pid = ios_fork();
+	int wstatus;
+	ios_system(safecmd);
+	waitpid(pid, &wstatus, 0);
+	status = WEXITSTATUS(wstatus);
+#endif
   }
 
   /* Not really meaningful, but we have to manage the return value of system. */
@@ -1778,11 +1800,53 @@ static struct option long_options[]
 #endif /* IS_pTeX */
       { 0, 0, 0, 0 } };
 
+#ifdef __IPHONE__
+static void initFlagValues() {
+	iniversion = 0; 
+	haltonerrorp = 0; 
+	recorder_enabled = 0;
+#ifdef TeX
+#ifdef IPC
+	ipcon = 0; 
+#endif /* IPC */
+#if !defined(Aleph)
+	mltexp = 0; 
+#if !defined(XeTeX) && !IS_pTeX
+	enctexp = 0; 
+#endif
+#endif /* !Aleph */
+#if IS_eTeX
+	etexp = 0; 
+#endif
+	shellenabledp = 0; 
+	debugformatfile = 0; 
+#endif /* TeX */
+#if defined (TeX) || defined (MF)
+	filelineerrorstylep = 0; 
+	parsefirstlinep = 0; 
+#if !defined(Aleph)
+	eightbitp = 0; 
+#endif /* !Aleph */
+#if defined(XeTeX)
+	nopdfoutput = 0; 
+#endif /* XeTeX */
+#endif /* TeX or MF */
+    // TODO: initialize all flags / variables to 0
+}
+#endif
+
+
 static void
 parse_options (int argc, string *argv)
 {
   int g;   /* `getopt' return code.  */
   int option_index;
+#ifdef __IPHONE__
+    initFlagValues();
+    optind = 1; 
+    opterr = 1;
+    optreset = 1;
+#endif
 
   for (;;) {
     g = getopt_long_only (argc, argv, "+", long_options, &option_index);
@@ -2807,8 +2871,16 @@ calledit (packedASCIIcode *filename,
 #endif
   fullcmd = command;
 
+#ifndef __IPHONE__
   /* Execute the command.  */
   if (system (fullcmd) != 0)
+#else
+	int pid = ios_fork();
+	int wstatus;
+	ios_system(fullcmd);
+	waitpid(pid, &wstatus, 0);
+	if (WEXITSTATUS(wstatus) != 0) 
+#endif  	  
     fprintf (stderr, "! Trouble executing `%s'.\n", command);
 
   /* Quit, since we found an error.  */

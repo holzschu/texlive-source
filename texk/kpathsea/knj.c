@@ -20,6 +20,12 @@
 #include <kpathsea/debug.h>
 #include <wchar.h>
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#undef stderr
+#define stderr thread_stderr
+#endif
+
 static int
 is_include_space(const char *s)
 {

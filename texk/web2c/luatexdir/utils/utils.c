@@ -76,6 +76,16 @@ void make_subset_tag(fd_entry * fd)
     md5_byte_t digest[16];
     void **aa;
     static struct avl_table *st_tree = NULL;
+#ifdef __IPHONE__
+	if (fd == NULL) {
+		// We are ending the program, erase st_tree: 
+		if (st_tree != NULL) {
+			avl_destroy(st_tree, NULL); 
+			st_tree = NULL; 
+		}
+		return; 
+	}
+#endif
     if (st_tree == NULL)
         st_tree = avl_create(comp_string_entry, NULL, &avl_xallocator);
     assert(fd != NULL);

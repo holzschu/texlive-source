@@ -112,6 +112,16 @@
 # define PROGNAME "bibtex8"
 #endif
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#undef stdin
+#undef stdout
+#undef stderr
+#define stdin thread_stdin
+#define stdout thread_stdout
+#define stderr thread_stderr
+#define printf(args...) fprintf(thread_stdout, args)
+#endif
 
 /***************************************************************************
  * WEB section number:   2

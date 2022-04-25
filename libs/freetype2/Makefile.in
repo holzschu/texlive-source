@@ -602,11 +602,12 @@ dist-hook:
 # be lost, even though it is not the cleanest solution. Similarly, don't
 # incorporate other libraries which are not needed or are elsewhere in TL.
 # They just complicate things.
+# __IPHONE__: add CFLAGS='$(CFLAGS)' or it won't compile
 ft-config:
 	rm -rf ft-build
 	$(MKDIR_P) ft-build
 	cd ft-build && \
-	  CC='$(CC)' CONFIG_SITE=/dev/null CONFIG_SHELL='$(SHELL)' \
+	  CC='$(CC)' CFLAGS='$(CFLAGS)' CONFIG_SITE=/dev/null CONFIG_SHELL='$(SHELL)' \
 	  $(SHELL) $(abs_srcdir)/$(FREETYPE_TREE)/configure \
 	    $(config_args) --disable-shared \
 	    --without-bzip2 \

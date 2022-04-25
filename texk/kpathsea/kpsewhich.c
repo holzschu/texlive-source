@@ -629,11 +629,43 @@ static struct option long_options[]
       { "version",              0, 0, 0 },
       { 0, 0, 0, 0 } };
 
+
+#ifdef __IPHONE__
+static void initFlagValues() {
+	var_to_expand = NULL;
+	braces_to_expand = NULL;
+	path_to_expand = NULL;
+	path_to_show = NULL;
+	var_to_value = NULL;
+	dpi = 600;
+	engine = NULL;
+	interactive = false;
+	mode = NULL;
+	must_exist = false;
+	progname = NULL;
+	safe_in_name = NULL;
+	safe_out_name = NULL;
+	show_all = false;
+	// TODO: must reinit this list
+	// if (STR_LIST_LENGTH (subdir_paths) > 0) {
+	// 	str_list_free(subdir_paths);
+	// }
+}
+#endif
+
+
 static void
 read_command_line (kpathsea kpse, int argc, string *argv)
 {
   int g;   /* `getopt' return code.  */
   int option_index;
+#ifdef __IPHONE__
+    initFlagValues();
+    kpse->debug = 0; 
+    optind = 1; 
+    opterr = 1;
+    optreset = 1;
+#endif
 
   for (;;) {
     g = getopt_long_only (argc, argv, "", long_options, &option_index);

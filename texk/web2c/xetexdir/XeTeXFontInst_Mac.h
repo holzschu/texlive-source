@@ -44,7 +44,11 @@ authorization from the copyright holders.
 
 #include "XeTeXFontInst.h"
 
+#ifndef __IPHONE__
 #include <ApplicationServices/ApplicationServices.h>
+#else
+#include <CoreText/CoreText.h>
+#endif
 
 class XeTeXFontInst_Mac : public XeTeXFontInst
 {

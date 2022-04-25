@@ -35,7 +35,11 @@ authorization from the copyright holders.
 #define __XETEX_FONT_MANAGER_H
 
 #ifdef XETEX_MAC
+#ifndef __IPHONE__
 #include <ApplicationServices/ApplicationServices.h>
+#else
+#include <CoreText/CoreText.h>
+#endif
 typedef CTFontDescriptorRef PlatformFontRef;
 #else
 #include <fontconfig/fontconfig.h>

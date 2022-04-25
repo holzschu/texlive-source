@@ -96,6 +96,10 @@ static time_t l_checktime (lua_State *L, int arg) {
 
 #endif				/* } */
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
+
 /* }================================================================== */
 
 
@@ -140,7 +144,15 @@ static time_t l_checktime (lua_State *L, int arg) {
 
 static int os_execute (lua_State *L) {
   const char *cmd = luaL_optstring(L, 1, NULL);
+#ifndef __IPHONE__
   int stat = system(cmd);
+#else
+  	int pid = ios_fork();
+	int status;
+	ios_system(cmd);
+	waitpid(pid, &status, 0);
+	int stat = WEXITSTATUS(status);
+#endif
   if (cmd != NULL)
     return luaL_execresult(L, stat);
   else {

@@ -32,6 +32,11 @@
 # include <unistd.h>
 #endif
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#include <sys/wait.h>
+#endif
+
 String
 read_file(String filename, ErrorHandler *errh, bool warning)
 {
@@ -158,7 +163,15 @@ mysystem(const char *command, ErrorHandler *errh)
     } else {
         if (verbose)
             errh->message("running %s", command);
+#ifndef __IPHONE__
         return system(command);
+#else
+	int pid = ios_fork();
+	int status;
+	ios_system(command);
+	waitpid(pid, &status, 0);
+	return WEXITSTATUS(status);
+#endif
     }
 }
 

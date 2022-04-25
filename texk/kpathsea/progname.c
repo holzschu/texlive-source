@@ -321,6 +321,21 @@ kpathsea_selfdir (kpathsea kpse, const_string argv0)
   string ret;
   string self = NULL;
 
+#ifdef __IPHONE__
+  // The binaries don't exist for real, but this is the directory where they should be:
+  // Use of texlive/YYYY/architecture/bin/argv0 ensures most config files are happy.
+  // TODO: change 2021 to 2022 next year
+  // TODO: make this user configureable. 
+  name = xstrdup(getenv("HOME"));
+  // if ($HOME) ends with "/Documents", remove "/Documents" before adding "/Library"
+  // (different iOS apps use different settings for $HOME)
+  string nameDocuments = strstr(name, "/Documents"); 
+  if (nameDocuments) {
+  	  nameDocuments[0] = 0x0; // end the string here.
+  }
+  name = concat3 (name, DIR_SEP_STRING, "Library/texlive/2021/bin/arm-darwin") ; 
+  name = concat3 (name, DIR_SEP_STRING, argv0) ; 
+#else   
   if (kpathsea_absolute_p (kpse, argv0, true)) {
     self = xstrdup (argv0);
   } else {
@@ -393,6 +408,7 @@ kpathsea_selfdir (kpathsea kpse, const_string argv0)
 #ifndef AMIGA
   free (self);
 #endif
+#endif  // __IPHONE__ 
 
   ret = xdirname (name);
   free (name);
@@ -478,6 +494,15 @@ void
 kpathsea_set_program_name (kpathsea kpse,  const_string argv0,
                            const_string progname)
 {
+#ifdef __IPHONE__
+	// Library / iOS version: if kpse was already started, we need to reinitialize:
+	if (kpse->program_name && progname) {
+		// kpathsea is already initialized 
+		kpathsea_reset_program_name(kpse, progname); 
+		// if progname & kpse->program_name are identical, does nothing, which is good
+		return;
+	}
+#endif
   const_string ext;
   string sdir, sdir_parent, sdir_grandparent, sdir_greatgrandparent;
   string s = getenv ("KPATHSEA_DEBUG");

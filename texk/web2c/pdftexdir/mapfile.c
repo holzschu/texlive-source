@@ -164,8 +164,12 @@ static void create_avl_trees(void)
     assert(ff_tree == NULL);
     ff_tree = avl_create(comp_ff_entry, NULL, &avl_xallocator);
     assert(ff_tree != NULL);
+#ifndef __IPHONE__
     assert(encname_tree == NULL);
     encname_tree = avl_create(comp_string_entry, NULL, &avl_xallocator);
+#else 
+	if (encname_tree == NULL) encname_tree = avl_create(comp_string_entry, NULL, &avl_xallocator);
+#endif
     assert(encname_tree != NULL);
 }
 
@@ -841,8 +845,13 @@ void pdfmapline(integer t)
 
 void pdfinitmapfile(const_string map_name)
 {
+#ifndef __IPHONE__
     assert(mitem == NULL);
     mitem = xtalloc(1, mapitem);
+#else
+	// allocate mitem only once
+	if (mitem == NULL) mitem = xtalloc(1, mapitem);
+#endif
     mitem->mode = FM_DUPIGNORE;
     mitem->type = MAPFILE;
     mitem->line = xstrdup(map_name);

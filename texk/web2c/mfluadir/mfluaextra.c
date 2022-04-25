@@ -4,6 +4,10 @@
 
 #define	EXTERN /* Instantiate data from mfluad.h here.  */
 
+#ifdef __IPHONE__
+#define DLLPROC mfluamain
+#endif
+
 /* This file defines MFLua.  */
 #include <mfluad.h>
 

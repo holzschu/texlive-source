@@ -1386,6 +1386,7 @@ nodist_initex_OBJECTS = initex-callexe.$(OBJEXT)
 initex_OBJECTS = $(nodist_initex_OBJECTS)
 initex_DEPENDENCIES =
 am__objects_37 = luatexdir/luahbtex-luatex.$(OBJEXT) \
+    luatexdir/luatex-uexit_lua.$(OBJEXT) \
 	mplibdir/luahbtex-lmplib.$(OBJEXT)
 nodist_luahbtex_OBJECTS = $(am__objects_37)
 luahbtex_OBJECTS = $(nodist_luahbtex_OBJECTS)
@@ -1395,17 +1396,21 @@ am__DEPENDENCIES_7 = libmplibcore.a $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) libmputil.a \
 	libunilib.a libmd5.a $(am__DEPENDENCIES_1)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 luahbtex_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(luahbtex_CXXFLAGS) \
-	$(CXXFLAGS) $(luahbtex_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(luahbtex_LDFLAGS) $(LDFLAGS) -o $@.dylib
 am__objects_38 = luatexdir/luajithbtex-luatex.$(OBJEXT) \
+    luatexdir/luatex-uexit_lua.$(OBJEXT) \
 	mplibdir/luajithbtex-lmplib.$(OBJEXT)
 nodist_luajithbtex_OBJECTS = $(am__objects_38)
 luajithbtex_OBJECTS = $(nodist_luajithbtex_OBJECTS)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 luajithbtex_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(luajithbtex_CXXFLAGS) \
-	$(CXXFLAGS) $(luajithbtex_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(luajithbtex_LDFLAGS) $(LDFLAGS) -o $@.dylib
 am__objects_39 = luatexdir/luajittex-luatex.$(OBJEXT) \
+    luatexdir/luatex-uexit_lua.$(OBJEXT) \
 	mplibdir/luajittex-lmplib.$(OBJEXT)
 nodist_luajittex_OBJECTS = $(am__objects_39)
 luajittex_OBJECTS = $(nodist_luajittex_OBJECTS)
@@ -1417,12 +1422,14 @@ luajittex_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(luajittex_LDFLAGS) $(LDFLAGS) -o $@
 am__objects_40 = luatexdir/luatex-luatex.$(OBJEXT) \
+    luatexdir/luatex-uexit_lua.$(OBJEXT) \
 	mplibdir/luatex-lmplib.$(OBJEXT)
 nodist_luatex_OBJECTS = $(am__objects_40)
 luatex_OBJECTS = $(nodist_luatex_OBJECTS)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 luatex_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(luatex_LDFLAGS) $(LDFLAGS) -o $@
+	$(luatex_LDFLAGS) $(LDFLAGS) -o $@.dylib
 am_md5main_OBJECTS = libmd5/md5main-md5main.$(OBJEXT)
 md5main_OBJECTS = $(am_md5main_OBJECTS)
 md5main_DEPENDENCIES = libmd5.a
@@ -1441,17 +1448,19 @@ dist_mflua_OBJECTS = mfluadir/mflua-mfluaextra.$(OBJEXT)
 mflua_OBJECTS = $(dist_mflua_OBJECTS)
 mflua_DEPENDENCIES = libmflua.a libmfluaotfcc.a $(am__DEPENDENCIES_2) \
 	$(windowlib) $(am__DEPENDENCIES_9) $(am__DEPENDENCIES_6)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 mflua_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(mflua_LDFLAGS) $(LDFLAGS) -o $@
+	$(mflua_LDFLAGS) $(LDFLAGS) -o $@.dylib
 am__objects_41 = mfluadir/mflua_nowin-mfluaextra.$(OBJEXT)
 nodist_mflua_nowin_OBJECTS = $(am__objects_41)
 mflua_nowin_OBJECTS = $(nodist_mflua_nowin_OBJECTS)
 mflua_nowin_DEPENDENCIES = libmflua.a libmfluaotfcc.a \
 	$(am__DEPENDENCIES_2) $(windowlib) $(am__DEPENDENCIES_6)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 mflua_nowin_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(mflua_nowin_LDFLAGS) $(LDFLAGS) -o $@
+	$(mflua_nowin_LDFLAGS) $(LDFLAGS) -o $@.dylib
 dist_mfluajit_OBJECTS = mfluajitdir/mfluajit-mfluajitextra.$(OBJEXT)
 mfluajit_OBJECTS = $(dist_mfluajit_OBJECTS)
 mfluajit_DEPENDENCIES = libmfluajit.a libmfluaotfcc.a \
@@ -1512,18 +1521,20 @@ am__dist_pdftex_SOURCES_DIST = pdftexdir/pdftexextra.c \
 dist_pdftex_OBJECTS = pdftexdir/pdftex-pdftexextra.$(OBJEXT) \
 	$(am__objects_44)
 am__objects_45 = pdftex-pdftexini.$(OBJEXT) pdftex-pdftex0.$(OBJEXT)
-nodist_pdftex_OBJECTS = $(am__objects_45) pdftex-pdftex-pool.$(OBJEXT)
+nodist_pdftex_OBJECTS = $(am__objects_45) pdftex-pdftex-pool.$(OBJEXT) pdfuexit.o
 pdftex_OBJECTS = $(dist_pdftex_OBJECTS) $(nodist_pdftex_OBJECTS)
 am__DEPENDENCIES_11 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) libmd5.a
+# __IPHONE__ change: create a dynamic library, not an executable. 
 pdftex_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftex_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(AM_LDFLAGS) $(dynamic_LDFLAGS) $(LDFLAGS) -o $@.dylib
 am_pdftosrc_OBJECTS = pdftexdir/pdftosrc-pdftosrc.$(OBJEXT)
 pdftosrc_OBJECTS = $(am_pdftosrc_OBJECTS)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 pdftosrc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pdftosrc_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(AM_LDFLAGS) $(dynamic_LDFLAGS) $(LDFLAGS) -o $@.dylib
 am_pdvitype_OBJECTS =
 nodist_pdvitype_OBJECTS = pdvitype-pdvitype.$(OBJEXT)
 pdvitype_OBJECTS = $(am_pdvitype_OBJECTS) $(nodist_pdvitype_OBJECTS)
@@ -1709,9 +1720,10 @@ am__DEPENDENCIES_19 = $(libxetex) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) libmd5.a $(am__DEPENDENCIES_18)
 xetex_DEPENDENCIES = $(am__DEPENDENCIES_19) $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_1)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 xetex_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(xetex_CXXFLAGS) \
-	$(CXXFLAGS) $(xetex_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(xetex_LDFLAGS) $(LDFLAGS) -o $@.dylib
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -2409,9 +2421,10 @@ am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(AM_LDFLAGS) $(dynamic_LDFLAGS) $(LDFLAGS) -o $@.dylib
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
@@ -2426,9 +2439,10 @@ AM_V_CXX = $(am__v_CXX_@AM_V@)
 am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
 am__v_CXX_0 = @echo "  CXX     " $@;
 am__v_CXX_1 = 
+# __IPHONE__ change: create a dynamic library, not an executable. 
 CXXLINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(AM_LDFLAGS) $(dynamic_LDFLAGS) $(LDFLAGS) -o $@.dylib
 AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
@@ -2444,9 +2458,10 @@ am__v_OBJCXX_ = $(am__v_OBJCXX_@AM_DEFAULT_V@)
 am__v_OBJCXX_0 = @echo "  OBJCXX  " $@;
 am__v_OBJCXX_1 = 
 OBJCXXLD = $(OBJCXX)
+# __IPHONE__ change: create a dynamic library, not an executable. 
 OBJCXXLINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(OBJCXXLD) $(AM_OBJCXXFLAGS) $(OBJCXXFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(AM_LDFLAGS) $(dynamic_LDFLAGS) $(LDFLAGS) -o $@.dylib
 AM_V_OBJCXXLD = $(am__v_OBJCXXLD_@AM_V@)
 am__v_OBJCXXLD_ = $(am__v_OBJCXXLD_@AM_DEFAULT_V@)
 am__v_OBJCXXLD_0 = @echo "  OBJCXXLD" $@;
@@ -3822,11 +3837,13 @@ call_mflua_LDADD =
 dist_mflua_SOURCES = mfluadir/mfluaextra.c mfluadir/mfluaextra.h mfluadir/mflua_version.h
 mflua_CPPFLAGS = $(AM_CPPFLAGS) $(X_CFLAGS) $(LUA_INCLUDES)
 mflua_LDADD = libmflua.a libmfluaotfcc.a $(LDADD) $(windowlib) $(mf_x_libs) $(LUA_LIBS)
-mflua_LDFLAGS = -export-dynamic
+# __IPHONE__ change: create a dynamic library, not an executable
+mflua_LDFLAGS = -dynamiclib -export-dynamic -L$(SYSROOT)/usr/lib/
 nodist_mflua_nowin_SOURCES = $(dist_mflua_SOURCES)
 mflua_nowin_CPPFLAGS = $(mflua_CPPFLAGS) -DMFNOWIN $(LUA_INCLUDES)
 mflua_nowin_LDADD = libmflua.a libmfluaotfcc.a $(LDADD) $(windowlib) $(LUA_LIBS)
-mflua_nowin_LDFLAGS = -export-dynamic
+# __IPHONE__ change: create a dynamic library, not an executable
+mflua_nowin_LDFLAGS = -dynamiclib -export-dynamic -L$(SYSROOT)/usr/lib/
 
 # MFLua C sources
 mflua_c_h = mfluaini.c mflua0.c mfluacoerce.h mfluad.h
@@ -5130,10 +5147,14 @@ luajithbtex_CPPFLAGS = $(luahbtex_preflags) $(LUAJIT_INCLUDES) \
 	$(LUAJIT_DEFINES) $(luahbtex_postflags) -DLuajitTeX
 luahbtex_CXXFLAGS = $(WARNING_CXXFLAGS)
 luajithbtex_CXXFLAGS = $(WARNING_CXXFLAGS)
-luatex_LDFLAGS = -export-dynamic
+# __IPHONE__ change: create a dynamic library, not an executable
+luatex_LDFLAGS = -dynamiclib -export-dynamic -L$(SYSROOT)/usr/lib/
+# __IPHONE__ change: create a dynamic library, not an executable. See also all lines with dynamic_LDFLAGS
+dynamic_LDFLAGS=-dynamiclib -L$(SYSROOT)/usr/lib/
+
 luajittex_LDFLAGS = -export-dynamic $(LUAJIT_LDEXTRA)
-luahbtex_LDFLAGS = -export-dynamic
-luajithbtex_LDFLAGS = -export-dynamic $(LUAJIT_LDEXTRA)
+luahbtex_LDFLAGS = -dynamiclib -export-dynamic
+luajithbtex_LDFLAGS = -dynamiclib -export-dynamic $(LUAJIT_LDEXTRA)
 luatex_postldadd = libmplibcore.a $(ZZIPLIB_LIBS) $(LIBPNG_LIBS) \
 	$(PPLIB_LIBS) $(ZLIB_LIBS) $(LDADD) libmputil.a libunilib.a \
 	libmd5.a $(lua_socketlibs)
@@ -5161,6 +5182,7 @@ luatex_sources = \
 	luatexdir/luatex_svnversion.h \
 	luatexdir/luatex.c \
 	luatexdir/luatex.h \
+	luatexdir/uexit_lua.c \
 	mplibdir/lmplib.c
 
 call_luatex_CPPFLAGS = -DEXEPROG=\"luatex.exe\"
@@ -5226,6 +5248,9 @@ xetex_dependencies = $(proglib) $(KPATHSEA_DEPEND) $(ICU_DEPEND) \
 	$(PPLIB_DEPEND) libmd5.a
 @XETEX_MACOSX_TRUE@xetex_LDFLAGS = -framework ApplicationServices -framework Cocoa
 xetex_CPPFLAGS = $(xetex_cppflags) $(am__append_151)
+# __IPHONE__ change: create a dynamic library, not an executable. 
+@XETEX_IPHONE_TRUE@xetex_LDFLAGS = -framework CoreText -framework CoreFoundation -framework CoreGraphics -lobjc -framework UIKit -framework Foundation -dynamiclib -L$(SYSROOT)/usr/lib/ 
+
 xetex_CFLAGS = $(WARNING_CFLAGS)
 xetex_CXXFLAGS = # $(WARNING_CXXFLAGS)
 xetex_LDADD = $(xetex_ldadd) $(LDADD) $(ipc_socketlibs)
@@ -13684,6 +13709,20 @@ luatexdir/tex/libluatex_a-equivalents.obj: luatexdir/tex/equivalents.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libluatex_a_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o luatexdir/tex/libluatex_a-equivalents.obj `if test -f 'luatexdir/tex/equivalents.c'; then $(CYGPATH_W) 'luatexdir/tex/equivalents.c'; else $(CYGPATH_W) '$(srcdir)/luatexdir/tex/equivalents.c'; fi`
 
+luatexdir/luatex-uexit_lua.o: luatexdir/uexit_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(luatex_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT luatexdir/luatex-uexit_lua.o -MD -MP -MF luatexdir/$(DEPDIR)/luatex-uexit_lua.Tpo -c -o luatexdir/luatex-uexit_lua.o `test -f 'luatexdir/uexit_lua.c' || echo '$(srcdir)/'`luatexdir/uexit_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) luatexdir/$(DEPDIR)/luatex-uexit_lua.Tpo luatexdir/$(DEPDIR)/luatex-uexit_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='luatexdir/uexit_lua.c' object='luatexdir/luatex-uexit_lua.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(luatex_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o luatexdir/luatex-uexit_lua.o `test -f 'luatexdir/uexit_lua.c' || echo '$(srcdir)/'`luatexdir/uexit_lua.c
+
+luatexdir/luatex-uexit_lua.obj: luatexdir/uexit_lua.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(luatex_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT luatexdir/luatex-uexit_lua.obj -MD -MP -MF luatexdir/$(DEPDIR)/luatex-uexit_lua.Tpo -c -o luatexdir/luatex-uexit_lua.obj `if test -f 'luatexdir/uexit_lua.c'; then $(CYGPATH_W) 'luatexdir/uexit_lua.c'; else $(CYGPATH_W) '$(srcdir)/luatexdir/uexit_lua.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) luatexdir/$(DEPDIR)/luatex-uexit_lua.Tpo luatexdir/$(DEPDIR)/luatex-uexit_lua.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='luatexdir/uexit_lua.c' object='luatexdir/luatex-uexit_lua.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(luatex_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o luatexdir/luatex-uexit_lua.obj `if test -f 'luatexdir/uexit_lua.c'; then $(CYGPATH_W) 'luatexdir/uexit_lua.c'; else $(CYGPATH_W) '$(srcdir)/luatexdir/uexit_lua.c'; fi`
+
 luatexdir/tex/libluatex_a-errors.o: luatexdir/tex/errors.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libluatex_a_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT luatexdir/tex/libluatex_a-errors.o -MD -MP -MF luatexdir/tex/$(DEPDIR)/libluatex_a-errors.Tpo -c -o luatexdir/tex/libluatex_a-errors.o `test -f 'luatexdir/tex/errors.c' || echo '$(srcdir)/'`luatexdir/tex/errors.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) luatexdir/tex/$(DEPDIR)/libluatex_a-errors.Tpo luatexdir/tex/$(DEPDIR)/libluatex_a-errors.Po
@@ -21874,7 +21913,7 @@ $(libluaffi_a_OBJECTS): $(LUA_DEPEND)
 #liblua53ffi_sources = $(libluaffi_sources)
 #EXTRA_DIST 
 
-$(luatex_OBJECTS): libluatex.a
+$(luatex_OBJECTS): libluatex.a 
 $(luajittex_OBJECTS): libluajittex.a
 
 $(luahbtex_OBJECTS): libluatex.a

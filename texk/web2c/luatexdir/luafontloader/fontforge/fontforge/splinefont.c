@@ -241,6 +241,11 @@ struct compressors compressors[] = {
     { NULL, NULL, NULL }
 };
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#include <sys/wait.h>
+#endif
+
 char *Decompress(char *name, int compression) {
     char *dir = getenv("TMPDIR");
     char buf[1500];
@@ -263,7 +268,15 @@ return( NULL );
 #else
     snprintf( buf, sizeof(buf), "%s < \"%s\" > \"%s\"", compressors[compression].decomp, name, tmpfile );
 #endif
+#ifdef __IPHONE__
+	int pid = ios_fork();
+	int status;
+	ios_system(buf);
+	waitpid(pid, &status, 0);
+	if (WEXITSTATUS(status) == 0)
+#else
     if ( system(buf)==0 )
+#endif
 return( tmpfile );
     free(tmpfile);
 return( NULL );

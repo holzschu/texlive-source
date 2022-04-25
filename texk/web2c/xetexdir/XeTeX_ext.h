@@ -52,7 +52,9 @@ typedef struct UFILE* unicodefile;
 
 #ifdef XETEX_MAC
 #include <CoreFoundation/CoreFoundation.h>
+#ifndef __IPHONE__
 #include <ApplicationServices/ApplicationServices.h>
+#endif
 #else
 typedef int32_t         Fixed;
 typedef struct {
@@ -173,6 +175,11 @@ extern FT_Library gFreeTypeLibrary;
 #endif
 
 #include "trans.h"
+
+#ifdef __IPHONE__
+#include <w2c/config.h>
+#define HAVE_STDBOOL_H 1
+#endif
 
 #ifdef HAVE_STDBOOL_H
 # include <stdbool.h>

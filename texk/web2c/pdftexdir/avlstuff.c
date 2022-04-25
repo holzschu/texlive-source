@@ -151,20 +151,25 @@ typedef struct {
 /**********************************************************************/
 /* cleaning up... */
 
-#if 0 /* unused */
+#ifdef __IPHONE__ /* unused */ /* used to be #if 0 */
 static void destroy_oentry(void *pa, void *pb)
 {
     oentry *p = (oentry *) pa;
     xfree(p);
 }
 
-static void PdfObjTree_free(void)
+#ifndef __IPHONE__
+static 
+#endif
+void PdfObjTree_free(void)
 {
     int i;
 
     for (i = 0; i <= pdfobjtypemax; i++) {
-        if (PdfObjTree[i] != NULL)
+        if (PdfObjTree[i] != NULL) {
             avl_destroy(PdfObjTree[i], destroy_oentry);
+            PdfObjTree[i] = NULL; 
+		}
     }
 }
 #endif

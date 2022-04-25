@@ -11,7 +11,12 @@
 /* include this here to avoid conflict between clang's emmintrin.h and
  * texmfmem.h. Should be removed once a fixed clang is widely available
  * http://llvm.org/bugs/show_bug.cgi?id=14964 */
+#ifndef __IPHONE__
 #include <ApplicationServices/ApplicationServices.h>
+#else
+#include <CoreText/CoreText.h>
+#endif
+
 #endif
 /* added typedefs for unicodefile and voidpointer */
 #define XETEX_UNICODE_FILE_DEFINED	1
@@ -157,7 +162,9 @@ extern void maininit (int ac, string *av);
 #if defined(WIN32) && !defined(__MINGW32__) && defined(DLLPROC)
 extern __declspec(dllexport) int DLLPROC (int ac, string *av);
 #else
+#ifndef __IPHONE__
 #undef DLLPROC
+#endif
 #endif
 
 /* All but the Omega family use this. */

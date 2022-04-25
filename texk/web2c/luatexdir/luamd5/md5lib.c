@@ -114,7 +114,11 @@ static void decodestream (lua_State *L, const char *cypher, size_t lcypher,
 *  @return  The cyphertext (as a binary string).
 */
 
+#ifdef __IPHONE__ /* name conflict inside unistd.h */
+static int lua_crypt (lua_State *L) {
+#else
 static int crypt (lua_State *L) {
+#endif
     size_t lmsg;
     const char *msg = luaL_checklstring(L, 1, &lmsg);
     size_t lseed;
@@ -182,7 +186,11 @@ static int pdfelib_md_5(lua_State * L)
 static struct luaL_Reg md5lib[] = {
     { "sum",     lmd5},
     { "exor",    ex_or},
+#ifdef __IPHONE__
+    { "crypt",   lua_crypt},
+#else
     { "crypt",   crypt},
+#endif
     { "decrypt", decrypt},
     { NULL,      NULL}
 };

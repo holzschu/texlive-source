@@ -61,7 +61,11 @@ static int usage (const char *argv0)
   return 0;
 }
 
+#ifdef __IPHONE__
+int pptest1_main(int argc, const char **argv)
+#else
 int main (int argc, const char **argv)
+#endif
 {
   const char *filepath;
   int a;

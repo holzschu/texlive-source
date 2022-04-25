@@ -24,6 +24,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "ios_error.h"
 
 
 
@@ -773,9 +774,15 @@ LUAMOD_API int luaopen_io (lua_State *L) {
   luaL_newlib(L, iolib);  /* new module */
   createmeta(L);
   /* create (and set) default files */
+#ifdef __IPHONE__
+  createstdfile(L, thread_stdin, IO_INPUT, "stdin");
+  createstdfile(L, thread_stdout, IO_OUTPUT, "stdout");
+  createstdfile(L, thread_stderr, NULL, "stderr");
+#else
   createstdfile(L, stdin, IO_INPUT, "stdin");
   createstdfile(L, stdout, IO_OUTPUT, "stdout");
   createstdfile(L, stderr, NULL, "stderr");
+#endif
   return 1;
 }
 
