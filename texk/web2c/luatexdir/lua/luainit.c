@@ -292,7 +292,7 @@ void initFlagValues() {
     shellenabledp = 0; 
     debug_format_file = 0;
     filelineerrorstylep = 0;
-    parsefirstlinep = 0; 
+    /* parsefirstlinep = 0; */
 	lua_only = 0;
 	lua_offset = 0;
 	show_luahashchars = 0;

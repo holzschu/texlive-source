@@ -30,6 +30,9 @@
 #include <kpathsea/tex-glyph.h>
 #include <kpathsea/variable.h>
 #include <kpathsea/version.h>
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
 
 /* For variable and path expansion.  (-expand-var, -expand-path,
    -show-path, etc.)  */
@@ -637,6 +640,9 @@ static void initFlagValues() {
 	path_to_expand = NULL;
 	path_to_show = NULL;
 	var_to_value = NULL;
+	var_to_brace_value = NULL;
+	user_cnf_lines = NULL;
+	user_cnf_nlines = 0;
 	dpi = 600;
 	engine = NULL;
 	interactive = false;
@@ -665,6 +671,8 @@ read_command_line (kpathsea kpse, int argc, string *argv)
     optind = 1; 
     opterr = 1;
     optreset = 1;
+    option_index = 0; 
+    g = 0;
 #endif
 
   for (;;) {

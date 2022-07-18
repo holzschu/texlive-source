@@ -23,6 +23,9 @@
 #include <kpathsea/fn.h>
 #include <kpathsea/expand.h>
 #include <kpathsea/variable.h>
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
 
 
 /* Here's the simple one, when a program just wants a value.  */

@@ -27,6 +27,9 @@
 extern int putenv (char* entry);
 #endif
 #endif /* not WIN32 */
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
 
 /*
  * We have different arguments from the "standard" function.  A separate

@@ -277,7 +277,13 @@ extern char *FindResourceTtfFont(char *filename, char *fontname);       /* luafo
 extern char charsetstr[];       /* from mpdir/psout.w */
 
 #ifndef WIN32
+#ifdef __IPHONE__
+/* Environment variables are specific to the current process */
+#define environ  environmentVariables(ios_currentPid())
+#include "ios_error.h"
+#else
 extern char **environ;
+#endif
 #endif
 
 #ifdef __cplusplus

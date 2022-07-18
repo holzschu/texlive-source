@@ -638,6 +638,7 @@ runsystem (const char *cmd)
 	status = WEXITSTATUS(wstatus);
   }
 #endif
+#endif
   else if (allow == 2) {
 /*
   command including a character '|' is not allowed in
@@ -2444,6 +2445,14 @@ catch_interrupt (DWORD arg)
     /* No need to set interrupt as we are exiting anyway */
     return FALSE;
   }
+}
+#elif defined __IPHONE__
+// iOS: we need the signal function to be not static.
+RETSIGTYPE
+catch_interrupt (int arg)
+{
+  interrupt = 1;
+  (void) signal (SIGINT, SIG_DFL);
 }
 #else /* not WIN32 */
 static RETSIGTYPE
