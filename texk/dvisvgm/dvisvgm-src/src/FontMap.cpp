@@ -2,7 +2,7 @@
 ** FontMap.cpp                                                          **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2022 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2023 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -125,13 +125,13 @@ bool FontMap::apply (const MapLine& mapline, char modechar) {
  *  @return true if at least one of the given map files was found */
 bool FontMap::read (const string &fname_seq) {
 	bool found = false;
-	size_t left=0;
+	string::size_type left=0;
 	while (left < fname_seq.length()) {
 		const char modechar = fname_seq[left];
 		if (strchr("+-=", modechar))
 			left++;
 		string fname;
-		size_t right = fname_seq.find(',', left);
+		auto right = fname_seq.find(',', left);
 		if (right != string::npos)
 			fname = fname_seq.substr(left, right-left);
 		else {

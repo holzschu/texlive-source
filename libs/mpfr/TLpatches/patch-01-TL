@@ -1,9 +1,9 @@
-diff -ur mpfr-4.1.0/src/mparam_h.in mpfr-src/src/mparam_h.in
---- mpfr-4.1.0/src/mparam_h.in	Thu Jan 09 03:11:13 2020
-+++ mpfr-src/src/mparam_h.in	Sun Jul 12 16:40:20 2020
-@@ -31,6 +31,8 @@
- /* Note: the different macros used here are those defined by gcc,
-    for example with gcc -mtune=native -dM -E -xc /dev/null */
+diff -ur mpfr-4.2.0/src/mparam_h.in mpfr-src/src/mparam_h.in
+--- mpfr-4.2.0/src/mparam_h.in	Fri Jan 06 02:09:48 2023
++++ mpfr-src/src/mparam_h.in	Thu Jan 12 13:20:19 2023
+@@ -38,6 +38,8 @@
+    -march=... and -mtune=...).
+    See https://gcc.gnu.org/pipermail/gcc-help/2021-September/140720.html */
  
 +#elif 1 /* no processor specific optimization for TeX Live */
 +#define MPFR_TUNE_CASE "default"

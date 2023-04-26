@@ -25,10 +25,12 @@ hdr_links = \
 	$(HARFBUZZ_SRC)/hb-font.h \
 	$(HARFBUZZ_SRC)/hb-map.h \
 	$(HARFBUZZ_SRC)/hb-ot-deprecated.h \
+	$(HARFBUZZ_SRC)/hb-paint.h \
 	$(HARFBUZZ_SRC)/hb-set.h \
 	$(HARFBUZZ_SRC)/hb-shape.h \
 	$(HARFBUZZ_SRC)/hb-shape-plan.h \
 	$(HARFBUZZ_SRC)/hb-style.h \
+	$(HARFBUZZ_SRC)/hb-subset-repacker.h \
 	$(HARFBUZZ_SRC)/hb-unicode.h \
 	$(HARFBUZZ_BLD)/hb-version.h
 

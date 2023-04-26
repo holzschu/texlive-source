@@ -1244,11 +1244,13 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
+m4_include([dvisvgm-src/m4/ax_gcc_builtin.m4])
 m4_include([../../m4/ax_cxx_compile_stdcxx.m4])
 m4_include([../../m4/kpse-common.m4])
 m4_include([../../m4/kpse-cxx-hack.m4])
 m4_include([../../m4/kpse-freetype2-flags.m4])
 m4_include([../../m4/kpse-kpathsea-flags.m4])
+m4_include([../../m4/kpse-potrace-flags.m4])
 m4_include([../../m4/kpse-warnings.m4])
 m4_include([../../m4/kpse-win32.m4])
 m4_include([../../m4/kpse-zlib-flags.m4])

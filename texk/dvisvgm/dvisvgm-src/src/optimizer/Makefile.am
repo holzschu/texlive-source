@@ -1,6 +1,6 @@
-noinst_LIBRARIES = liboptimizer.a
+noinst_LTLIBRARIES = liboptimizer.la
 
-liboptimizer_a_SOURCES = \
+liboptimizer_la_SOURCES = \
 	AttributeExtractor.hpp      AttributeExtractor.cpp \
 	ClipPathReassigner.hpp      ClipPathReassigner.cpp \
 	DependencyGraph.hpp \
@@ -10,7 +10,7 @@ liboptimizer_a_SOURCES = \
 	SVGOptimizer.hpp            SVGOptimizer.cpp \
 	TextSimplifier.hpp          TextSimplifier.cpp \
 	TransformSimplifier.hpp     TransformSimplifier.cpp \
-  	WSNodeRemover.hpp           WSNodeRemover.cpp
+	WSNodeRemover.hpp           WSNodeRemover.cpp
 
 include ../../libs/defs.am
 

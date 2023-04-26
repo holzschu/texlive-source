@@ -90,11 +90,13 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = dvisvgm-src/libs/md5
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/../../m4/ax_cxx_compile_stdcxx.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/dvisvgm-src/m4/ax_gcc_builtin.m4 \
+	$(top_srcdir)/../../m4/ax_cxx_compile_stdcxx.m4 \
 	$(top_srcdir)/../../m4/kpse-common.m4 \
 	$(top_srcdir)/../../m4/kpse-cxx-hack.m4 \
 	$(top_srcdir)/../../m4/kpse-freetype2-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-kpathsea-flags.m4 \
+	$(top_srcdir)/../../m4/kpse-potrace-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-warnings.m4 \
 	$(top_srcdir)/../../m4/kpse-win32.m4 \
 	$(top_srcdir)/../../m4/kpse-zlib-flags.m4 \
@@ -229,6 +231,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 FREETYPE2_DEPEND = @FREETYPE2_DEPEND@
 FREETYPE2_INCLUDES = @FREETYPE2_INCLUDES@
 FREETYPE2_LIBS = @FREETYPE2_LIBS@
@@ -273,6 +276,9 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+POTRACE_DEPEND = @POTRACE_DEPEND@
+POTRACE_INCLUDES = @POTRACE_INCLUDES@
+POTRACE_LIBS = @POTRACE_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -641,8 +647,6 @@ uninstall-am:
 
 
 @USE_BUNDLED_MD5_TRUE@md5.c: md5.h
-
-@USE_BUNDLED_MD5_TRUE@@CODE_COVERAGE_RULES@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

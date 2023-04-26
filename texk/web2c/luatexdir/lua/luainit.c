@@ -998,6 +998,7 @@ void lua_initialize(int ac, char **av)
     interactionoption = 4;
     filelineerrorstylep = false;
     haltonerrorp = false;
+    haltingonerrorp = false;
     tracefilenames = 1;
     dump_name = NULL;
     /*tex
@@ -1032,7 +1033,7 @@ void lua_initialize(int ac, char **av)
         */
         env_locale = setlocale (LC_ALL, "");
         if (!env_locale && !lua_only) {
-            fprintf(stderr,"Unable to read environment locale: exit now.\n");
+            fprintf(stderr,"Unable to read locale data: please check the 'locale' settings of your environment for consistency. Exiting now.\n");
             exit(1);
         }
         tmp = setlocale (LC_CTYPE, NULL);
@@ -1053,7 +1054,7 @@ void lua_initialize(int ac, char **av)
         */
         env_locale = setlocale (LC_ALL, old_locale);
         if (!env_locale) {
-          fprintf(stderr,"Unable to restore original locale %s: exit now.\n",old_locale);
+          fprintf(stderr,"Unable to restore original locale %s: exiting now.\n",old_locale);
           exit(1);
         }
         xfree(old_locale);

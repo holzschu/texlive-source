@@ -1,3 +1,76 @@
+2023-02-21  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-7.0.1 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/7.0.1/
+
+2023-02-12  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-7.0.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/7.0.0/
+
+2022-12-18  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-6.0.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/6.0.0/
+
+2022-10-20  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-5.3.1 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/5.3.1/
+
+2022-10-09  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-5.3.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/5.3.0/
+
+2022-09-19  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-5.2.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/5.2.0/
+
+2022-08-02  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-5.1.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/5.1.0/
+
+2022-07-24  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-5.0.1 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/5.0.1/
+	* 0001-Fix-harfbuzz-4.4.1-for-older-g.patch: Remove.
+	* 0002-Fix-dispatch_recurse_func-for-older-g.patch: Remove.
+
+2022-07-18  Andreas Scherer  <andreas_github@freenet.de>
+
+	* 0001-Fix-harfbuzz-4.4.1-for-older-g.patch,
+	* 0002-Fix-dispatch_recurse_func-for-older-g.patch:
+	Try to fix namespace/template conundrum for g++ 5 and 6.
+
+2022-06-30  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-4.4.1 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/4.4.1/
+
+2022-06-28  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-4.4.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/4.4.0/
+
+2022-05-21  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-4.3.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/4.3.0/
+
+2022-04-25  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-4.2.1 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/4.2.1/
+
+2022-04-04  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Imported harfbuzz-4.2.0 source tree from:
+	https://github.com/harfbuzz/harfbuzz/releases/download/4.2.0/
+
 2022-02-13  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
 
 	Imported harfbuzz-3.4.0 source tree from:

@@ -1,3 +1,23 @@
+2023-02-24  Karl Berry  <karl@freefriends.org>
+
+	* freetype-src/configure: test for grep -E, don't assume it.
+	Not present on Solaris 5.10, for which we still build TL.
+
+2023-02-11  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Import freetype-2.13.0.
+	* version.ac: Adjusted.
+
+2022-11-06  Sam James  <sam@gentoo.org>
+
+	* freetype-src/builds/unix/freetype2.m4: placate clang16.
+	https://tug.org/pipermail/tlbuild/2022q4/005273.html
+
+2022-05-07  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	Import freetype-2.12.1.
+	* version.ac: Adjusted.
+
 2021-12-03  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
 
 	Import freetype-2.11.1.

@@ -1,75 +1,79 @@
-diff --strip-trailing-cr -u1 -r dvisvgm-2.13/Makefile.am dvisvgm-src/Makefile.am
---- dvisvgm-2.13/Makefile.am	2022-01-18 05:39:00.000000000 -0800
-+++ dvisvgm-src/Makefile.am	2022-01-21 09:15:51.800456322 -0800
-@@ -7,3 +7,3 @@
+--- dvisvgm-3.0.3/./Makefile.am	2023-02-03 04:02:06.000000000 -0800
++++ dvisvgm-src/./Makefile.am	2023-02-21 17:45:25.221197991 -0800
+@@ -4,9 +4,9 @@
+ ## Process this file with automake.
+ 
+-include $(top_srcdir)/aminclude_static.am
++include $(top_srcdir)/dvisvgm-src/aminclude_static.am
+ 
+ AUTOMAKE_OPTIONS = foreign
  EXTRA_DIST = COPYING
--SUBDIRS = libs m4 src tests doc
+-SUBDIRS = libs src tests doc
 +SUBDIRS = libs src #not for TL: m4 tests doc
  ACLOCAL_AMFLAGS = -I m4
-Only in dvisvgm-2.13: aclocal.m4
-Only in dvisvgm-2.13: ar-lib
-Only in dvisvgm-2.13: compile
-Only in dvisvgm-2.13: config.guess
-Only in dvisvgm-2.13: config.sub
-Only in dvisvgm-2.13: configure
-Only in dvisvgm-2.13: depcomp
-Only in dvisvgm-2.13: install-sh
-diff --strip-trailing-cr -u1 -r dvisvgm-2.13/libs/ff-woff/Makefile.am dvisvgm-src/libs/ff-woff/Makefile.am
---- dvisvgm-2.13/libs/ff-woff/Makefile.am	2019-04-12 07:39:46.000000000 -0700
-+++ dvisvgm-src/libs/ff-woff/Makefile.am	2022-01-21 09:15:51.801456314 -0800
-@@ -85,3 +85,3 @@
  
--AM_CFLAGS = -I$(srcdir)/inc -I$(srcdir)/fontforge $(ZLIB_CFLAGS)
-+AM_CFLAGS = -I$(srcdir)/inc -I$(srcdir)/fontforge $(ZLIB_INCLUDES)
+--- dvisvgm-3.0.3/./libs/defs.am	2019-03-09 04:09:01.000000000 -0800
++++ dvisvgm-src/./libs/defs.am	2023-02-21 17:45:25.221197991 -0800
+@@ -5,6 +5,14 @@
  
-Only in dvisvgm-2.13: ltmain.sh
-Only in dvisvgm-2.13: m4
-Only in dvisvgm-2.13: missing
-diff --strip-trailing-cr -u1 -r dvisvgm-2.13/src/Makefile.am dvisvgm-src/src/Makefile.am
---- dvisvgm-2.13/src/Makefile.am	2022-01-18 05:39:00.000000000 -0800
-+++ dvisvgm-src/src/Makefile.am	2022-01-21 09:15:51.801456314 -0800
-@@ -6,3 +6,3 @@
- bin_PROGRAMS     = dvisvgm
--noinst_LTLIBRARIES = libdvisvgm.la
-+noinst_LIBRARIES = libdvisvgm.a
- SUBDIRS = optimizer
-@@ -16,9 +16,7 @@
- dvisvgm_LDADD = \
--	$(noinst_LTLIBRARIES) \
-+	$(noinst_LIBRARIES) \
-+	optimizer/liboptimizer.a \
+ if !HAVE_POTRACE
+-POTRACE_CFLAGS = -I$(dvisvgm_srcdir)/libs/potrace
+-POTRACE_LIBS = ../libs/potrace/libpotrace.a
++# Gets automake warnings:
++#   dvisvgm-src/src/../libs/defs.am:9: warning: POTRACE_LIBS was already defined in condition TRUE, which includes condition !HAVE_POTRACE and !TEXLIVE_BUILD ...
++#   dvisvgm-src/src/Makefile.am:14:   'dvisvgm-src/src/../libs/defs.am' included from here
++#   configure.ac:51: ... 'POTRACE_LIBS' previously defined here
++#if !TEXLIVE_BUILD
++#POTRACE_CFLAGS = -I$(dvisvgm_srcdir)/libs/potrace
++#POTRACE_LIBS = ../libs/potrace/libpotrace.a
++#else
++POTRACE_CFLAGS = $(POTRACE_INCLUDES)
++#endif TEXLIVE_BUILD
+ endif
+ 
+--- dvisvgm-3.0.3/./libs/Makefile.am	2023-02-03 04:02:06.000000000 -0800
++++ dvisvgm-src/./libs/Makefile.am	2023-02-21 17:45:25.221197991 -0800
+@@ -4,5 +4,9 @@
+ ## Process this file with automake.
+ 
+-SUBDIRS = boost clipper md5 potrace variant xxHash
++SUBDIRS = boost clipper md5 variant xxHash
++
++if !TEXLIVE_BUILD
++SUBDIRS += potrace
++endif
+ 
+ if ENABLE_WOFF
+--- dvisvgm-3.0.3/./src/Makefile.am	2023-02-03 04:02:06.000000000 -0800
++++ dvisvgm-src/./src/Makefile.am	2023-02-21 17:45:25.221197991 -0800
+@@ -17,8 +17,6 @@
+ 	$(noinst_LTLIBRARIES) \
  	../libs/clipper/libclipper.a \
 -	$(FREETYPE_LIBS) \
--	$(FONTFORGE_LIBS) \
  	$(POTRACE_LIBS) \
 -	$(XXHASH_LIBS) \
 -	$(ZLIB_LIBS)
 +	$(XXHASH_LIBS)
  
-@@ -37,5 +35,13 @@
+ if ENABLE_WOFF
+@@ -36,5 +34,16 @@
+ endif
  
--dvisvgm_DEPENDENCIES = $(noinst_LTLIBRARIES)
 +dvisvgm_LDADD += \
 +	$(KPATHSEA_LIBS) \
 +	$(FREETYPE2_LIBS) \
-+	$(FONTFORGE_LIBS) \
 +	$(ZLIB_LIBS) \
 +	$(LIBGS_LIBS)
- 
--libdvisvgm_la_SOURCES = \
-+dvisvgm_DEPENDENCIES = $(noinst_LIBRARIES)
++
+ dvisvgm_DEPENDENCIES = $(noinst_LTLIBRARIES)
 +dvisvgm_DEPENDENCIES += $(KPATHSEA_DEPEND) $(ZLIB_DEPEND) $(FREETYPE2_DEPEND)
 +
-+libdvisvgm_a_SOURCES = \
- 	AGLTable.hpp \
-@@ -164,20 +170,14 @@
- if ENABLE_WOFF
--libdvisvgm_la_SOURCES += ffwrapper.c ffwrapper.h
-+libdvisvgm_a_SOURCES += ffwrapper.c ffwrapper.h
- endif
++if TEXLIVE_BUILD
++dvisvgm_DEPENDENCIES += $(POTRACE_DEPEND)
++endif
  
--libdvisvgm_la_LIBADD = optimizer/liboptimizer.la
--
+ libdvisvgm_la_SOURCES = \
+@@ -171,19 +180,25 @@
  EXTRA_DIST = options.xml options.dtd iapi.h ierrors.h MiKTeXCom.hpp MiKTeXCom.cpp
  
 -AM_CFLAGS = -Wall \
@@ -88,7 +92,7 @@ diff --strip-trailing-cr -u1 -r dvisvgm-2.13/src/Makefile.am dvisvgm-src/src/Mak
 -	$(CODE_COVERAGE_CFLAGS)
 +	-I$(dvisvgm_srcdir)/libs/variant/include
  
-@@ -185,3 +185,13 @@
+ AM_CXXFLAGS += \
  	$(POTRACE_CFLAGS) \
 -	$(XXHASH_CFLAGS)
 +	$(XXHASH_CFLAGS) \
@@ -103,41 +107,38 @@ diff --strip-trailing-cr -u1 -r dvisvgm-2.13/src/Makefile.am dvisvgm-src/src/Mak
 +AM_CXXFLAGS += -DTEXLIVEWIN32
 +endif WIN32
  
-@@ -196,4 +206,2 @@
- 
--AM_CXXFLAGS += $(TTFAUTOHINT_CFLAGS)
--
- AM_CXXFLAGS +=  \
-@@ -208,5 +216,6 @@
- 
--AM_LDFLAGS += $(TTFAUTOHINT_LIBS)
+ AM_LDFLAGS = \
+@@ -207,5 +222,6 @@
  endif
  
+-
 +# TL: do not try to rebuild these source files.
-+if ! TEXLIVE_BUILD
++if !TEXLIVE_BUILD
  
-@@ -224,2 +233,3 @@
+ # the command-line parser class is generated from options.xml by opt2cpp
+@@ -221,4 +237,16 @@
+ 
  psdefs.ps: ;
-+endif ! TEXLIVE_BUILD
++endif !TEXLIVE_BUILD
  
-@@ -228 +238,8 @@
  CLEANFILES = *.gcda *.gcno
 +
++if TEXLIVE_BUILD
 +# Rebuild libkpathsea:
 +@KPATHSEA_RULE@
 +# Rebuild libfreetype:
 +@FREETYPE2_RULE@
 +# Rebuild libz:
 +@ZLIB_RULE@
-Only in dvisvgm-src/src: Makefile.am~
-diff --strip-trailing-cr -u1 -r dvisvgm-2.13/src/optimizer/Makefile.am dvisvgm-src/src/optimizer/Makefile.am
---- dvisvgm-2.13/src/optimizer/Makefile.am	2019-12-06 00:42:54.000000000 -0800
-+++ dvisvgm-src/src/optimizer/Makefile.am	2022-01-21 09:15:51.801456314 -0800
-@@ -1,4 +1,4 @@
--noinst_LTLIBRARIES = liboptimizer.la
-+noinst_LIBRARIES = liboptimizer.a
- 
--liboptimizer_la_SOURCES = \
-+liboptimizer_a_SOURCES = \
- 	AttributeExtractor.hpp      AttributeExtractor.cpp \
-Only in dvisvgm-2.13: test-driver
++# Rebuild potrace:
++@POTRACE_RULE@
++endif TEXLIVE_BUILD
+
+--- dvisvgm-3.0.3/src/ttf/Makefile.am	(revision 66252)
++++ dvisvgm-src/src/ttf/Makefile.am	(working copy)
+@@ -22,4 +22,5 @@ include ../../libs/defs.am
+ AM_CXXFLAGS = \
+ 	-I$(dvisvgm_srcdir)/libs/boost \
+ 	-I$(dvisvgm_srcdir)/libs/variant/include \
++        $(ZLIB_INCLUDES) \
+ 	$(BROTLI_CFLAGS) $(WOFF2_CFLAGS)
