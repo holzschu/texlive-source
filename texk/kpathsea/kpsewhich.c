@@ -634,6 +634,8 @@ static struct option long_options[]
 
 
 #ifdef __IPHONE__
+extern void str_list_free (str_list_type *l);
+
 static void initFlagValues() {
 	var_to_expand = NULL;
 	braces_to_expand = NULL;
@@ -652,14 +654,16 @@ static void initFlagValues() {
 	safe_in_name = NULL;
 	safe_out_name = NULL;
 	show_all = false;
-	// TODO: must reinit this list
-	// if (STR_LIST_LENGTH (subdir_paths) > 0) {
-	// 	str_list_free(subdir_paths);
-	// }
+	// reinitialize this list:
+	if (STR_LIST_LENGTH (subdir_paths) > 0) {
+		str_list_free(&subdir_paths);
+	}
 }
 #endif
 
-
+#ifdef __IPHONE__
+extern int __getopt_initialized;
+#endif
 static void
 read_command_line (kpathsea kpse, int argc, string *argv)
 {
@@ -668,10 +672,13 @@ read_command_line (kpathsea kpse, int argc, string *argv)
 #ifdef __IPHONE__
     initFlagValues();
     kpse->debug = 0; 
-    optind = 1; 
+    optind = 0; 
     opterr = 1;
+    optopt = '?';
     optreset = 1;
-    option_index = 0; 
+    option_index = 0;
+    optarg = NULL;
+    __getopt_initialized = 0;
     g = 0;
 #endif
 

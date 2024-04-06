@@ -109,4 +109,16 @@ extern int dvi_is_tracking_boxes(void);
 
 extern void  dvi_set_compensation (double x, double y);
 
+#ifdef __IPHONE__
+// ios_system uses these for separate output streams on each thread:
+#include "ios_error.h"
+#undef stdin
+#undef stdout
+#undef stderr
+#define stdin thread_stdin
+#define stdout thread_stdout
+#define stderr thread_stderr
+#define printf(args...) fprintf(thread_stdout, args)
+#endif
+
 #endif /* _DVI_H_ */

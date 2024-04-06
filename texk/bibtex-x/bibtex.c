@@ -229,6 +229,9 @@ END
 int                     main (int argc, char **argv)
 #else 
 #include "ios_error.h"
+#ifndef xfree
+#  define xfree(p)            do { if (p != NULL) free(p); p = NULL; } while (0)
+#endif
 int                     bibtex_main (int argc, char **argv)
 #endif
 BEGIN
@@ -515,6 +518,41 @@ Exit_Program_Label:
             break;
     END
 
+#ifdef __IPHONE__
+  // Deallocate kpse->db (list of files):
+  kpathsea_finish(kpse_def);
+  // free everything that was allocated:
+  xfree(entry_ints); 
+  xfree(entry_strs); 
+  xfree(name_of_file); 
+  xfree(bib_file);
+  xfree(bib_list);
+  xfree(buffer);
+  xfree(cite_info);
+  xfree(cite_list);
+  xfree(entry_exists);
+  xfree(ex_buf);
+  xfree(field_info);
+  xfree(fn_type);
+  xfree(glb_str_end);
+  xfree(glb_str_ptr);
+  xfree(global_strs);
+  xfree(hash_ilk);
+  xfree(hash_next);
+  xfree(hash_text);
+  xfree(ilk_info);
+  xfree(lit_stack);
+  xfree(lit_stk_type);
+  xfree(name_sep_char);
+  xfree(name_tok);
+  xfree(out_buf);
+  xfree(s_preamble);
+  xfree(str_pool);
+  xfree(str_start);
+  xfree(sv_buffer);
+  xfree(type_list);
+  xfree(wiz_functions);
+#endif
     exit (exit_status);
     return (exit_status);
 END

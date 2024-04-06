@@ -44,6 +44,18 @@
 #include "dpxcrypt.h"
 #define MAX_KEY_LEN 16
 
+#ifdef __IPHONE__
+// ios_system uses these for separate output streams on each thread:
+#include "ios_error.h"
+#undef stdin
+#undef stdout
+#undef stderr
+#define stdin thread_stdin
+#define stdout thread_stdout
+#define stderr thread_stderr
+#define printf(args...) fprintf(thread_stdout, args)
+#endif
+
 #include <kpathsea/lib.h>
 #include <string.h>
 #ifdef WIN32
@@ -313,6 +325,19 @@ static int exec_spawn (char *cmd)
   }
 #endif
 #else
+#ifdef __IPHONE__
+  // This most likely won't work (we don't have a way to convert eps to pdf
+  // but it also won't cause the program to hang.
+  i = ios_fork();
+  if (i < 0)
+    ret = -1;
+  else {
+	  execvp (*cmdv, cmdv);
+	  int wstatus;
+	  waitpid(i, &wstatus, 0);
+	  ret = (WIFEXITED (wstatus) ? WEXITSTATUS (wstatus) : -1);
+  }
+#else 
   i = fork ();
   if (i < 0)
     ret = -1;
@@ -326,6 +351,7 @@ static int exec_spawn (char *cmd)
       ret = -1;
     }
   }
+#endif
 #endif
 done:
   qv = cmdv;

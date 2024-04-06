@@ -1347,7 +1347,8 @@ dist_euptex_OBJECTS = euptexdir/euptex-euptexextra.$(OBJEXT) \
 	$(am__objects_35)
 am__objects_36 = euptex-euptexini.$(OBJEXT) euptex-euptex0.$(OBJEXT)
 nodist_euptex_OBJECTS = $(am__objects_36) euptex-euptex-pool.$(OBJEXT)
-euptex_OBJECTS = $(dist_euptex_OBJECTS) $(nodist_euptex_OBJECTS)
+# iOS: addition of uexit_and_clear to euptex.
+euptex_OBJECTS = $(dist_euptex_OBJECTS) $(nodist_euptex_OBJECTS) euptexuexit.o
 @EUPTEX_SYNCTEX_TRUE@am__DEPENDENCIES_5 = $(am__DEPENDENCIES_1)
 am_gftodvi_OBJECTS =
 nodist_gftodvi_OBJECTS = gftodvi.$(OBJEXT)
@@ -1444,7 +1445,7 @@ dist_mflua_OBJECTS = mfluadir/mflua-mfluaextra.$(OBJEXT)
 mflua_OBJECTS = $(dist_mflua_OBJECTS)
 mflua_DEPENDENCIES = libmflua.a libmfluaotfcc.a libmfluapotrace.a \
 	libmflualpeg.a $(am__DEPENDENCIES_2) $(windowlib) \
-	$(am__DEPENDENCIES_9) $(am__DEPENDENCIES_6)
+	$(am__DEPENDENCIES_9) $(am__DEPENDENCIES_6) \
 	$(am__DEPENDENCIES_1)
 # __IPHONE__ change: create a dynamic library, not an executable. 
 mflua_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -1690,7 +1691,8 @@ am__dist_xetex_SOURCES_DIST = xetexdir/xetexextra.c \
 dist_xetex_OBJECTS = xetexdir/xetex-xetexextra.$(OBJEXT) \
 	$(am__objects_72)
 am__objects_73 = xetex-xetexini.$(OBJEXT) xetex-xetex0.$(OBJEXT)
-nodist_xetex_OBJECTS = $(am__objects_73) xetex-xetex-pool.$(OBJEXT)
+# __IPHONE__ add a cleanup function to free memory:
+nodist_xetex_OBJECTS = $(am__objects_73) xetex-xetex-pool.$(OBJEXT) xetexuexit.o
 xetex_OBJECTS = $(dist_xetex_OBJECTS) $(nodist_xetex_OBJECTS)
 @XETEX_MACOSX_FALSE@am__DEPENDENCIES_17 = $(am__DEPENDENCIES_1)
 am__DEPENDENCIES_18 = $(libxetex) $(am__DEPENDENCIES_1) \
@@ -4533,8 +4535,10 @@ euptex_CPPFLAGS = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS) \
 	-I$(srcdir)/libmd5 $(ZLIB_INCLUDES) $(am__append_142)
 
 # With --enable-ipc, e-upTeX may need to link with -lsocket.
+# __IPHONE__ addition: create dynamic library, not executable:
 euptex_LDADD = libukanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD) \
-	$(ipc_socketlibs) libmd5.a $(ZLIB_LIBS) $(am__append_143)
+	$(ipc_socketlibs) libmd5.a $(ZLIB_LIBS) $(am__append_143) \
+	-dynamiclib -export-dynamic -L$(SYSROOT)/usr/lib/
 euptex_DEPENDENCIES = libukanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies) libmd5.a $(ZLIB_DEPEND)
 
 # e-upTeX C sources
@@ -5379,7 +5383,9 @@ xetex_dependencies = $(proglib) $(KPATHSEA_DEPEND) $(ICU_DEPEND) \
 	$(TECKIT_DEPEND) $(HARFBUZZ_DEPEND) $(GRAPHITE2_DEPEND) \
 	$(LIBPNG_DEPEND) $(FREETYPE2_DEPEND) $(ZLIB_DEPEND) \
 	$(PPLIB_DEPEND) libmd5.a
-@XETEX_MACOSX_TRUE@xetex_LDFLAGS = -framework ApplicationServices -framework Cocoa
+# __IPHONE__ change: not ApplicationServices, but the other frameworks:
+# @XETEX_MACOSX_TRUE@xetex_LDFLAGS = -framework ApplicationServices -framework Cocoa
+@XETEX_MACOSX_TRUE@xetex_LDFLAGS = -framework CoreText -framework CoreFoundation -framework CoreGraphics -lobjc -framework UIKit -framework Foundation -dynamiclib -L$(SYSROOT)/usr/lib/ 
 # __IPHONE__ change: create a dynamic library, not an executable. 
 @XETEX_IPHONE_TRUE@xetex_LDFLAGS = -framework CoreText -framework CoreFoundation -framework CoreGraphics -lobjc -framework UIKit -framework Foundation -dynamiclib -L$(SYSROOT)/usr/lib/ 
 xetex_CPPFLAGS = $(xetex_cppflags) $(am__append_148)
@@ -18628,6 +18634,11 @@ xetex-xetex-pool.obj: xetex-pool.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xetex-pool.c' object='xetex-xetex-pool.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(xetex_CPPFLAGS) $(CPPFLAGS) $(xetex_CFLAGS) $(CFLAGS) -c -o xetex-xetex-pool.obj `if test -f 'xetex-pool.c'; then $(CYGPATH_W) 'xetex-pool.c'; else $(CYGPATH_W) '$(srcdir)/xetex-pool.c'; fi`
+
+# __IPHONE__ addition 
+xetexuexit.o: xetexuexit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(xetex_CPPFLAGS) $(CPPFLAGS) $(xetex_CFLAGS) $(CFLAGS) -MT xetexuexit.o -MD -MP -MF $(DEPDIR)/xetexuexit.Tpo -c -o xetexuexit.o `test -f 'xetexuexit.c' || echo '$(srcdir)/'`xetexuexit.c
+
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\

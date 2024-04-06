@@ -770,4 +770,11 @@ void fm_free(void)
         avl_destroy(ff_tree, destroy_ff_entry);
         ff_tree = NULL;
     }
+#ifdef __IPHONE__
+	if (fm_buffer != NULL) 
+		free(fm_buffer);
+	fm_buffer = NULL;
+	fm_curbyte = 0;
+	fm_size = 0;
+#endif
 }

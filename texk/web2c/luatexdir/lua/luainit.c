@@ -329,6 +329,9 @@ unsigned int lua_unsigned_numeric_field_by_index(lua_State * L, int name_index, 
 
 static int recorderoption = 0;
 
+#ifdef __IPHONE__
+extern int __getopt_initialized;
+#endif
 static void parse_options(int ac, char **av)
 {
 #ifdef WIN32
@@ -348,9 +351,12 @@ static void parse_options(int ac, char **av)
   utc_option = 0;
 
     initFlagValues();
-    optind = 1; 
+    optind = 0; 
     opterr = 1;
     optreset = 1;
+    option_index = 0;
+    optarg = NULL;
+    __getopt_initialized = 0;
 #endif
   
     char *firstfile = NULL;

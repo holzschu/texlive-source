@@ -1055,6 +1055,52 @@ main (int argc, char *argv[])
   char **av, *enc;
 #endif
 
+#ifdef __IPHONE__ /* Re-initialize all variables */
+/* Verbosity level */
+verbose          = 0;
+really_quiet     = 0;
+/* Compatibility option flags */
+opt_flags = 0;
+/* Basic PDF output settings */
+pdf_version_major = 1;
+pdf_version_minor = 5;
+compression_level = 9;
+/* PDF document navigation feature settings */
+annot_grow_x      = 0.0;
+annot_grow_y      = 0.0;
+bookmark_open     = 0;
+mag               = 1.0;
+enable_thumbnail  = 0;
+font_dpi          = 600;
+/* PDF output device settings */
+pdfdecimaldigits  = 3;
+ignore_colors     = 0;
+/* Image cache life in hours
+ *  0 means erase all old images and leave new images
+ * -1 means erase all old images and also erase new images
+ * -2 means ignore image cache (default)
+ */
+image_cache_life = -2;
+/* Image format conversion filter template */
+filter_template  = NULL;
+/* Encryption */
+do_encryption    = 0;
+key_bits         = 40;
+permission       = 0x003C;
+/* Page device */
+paper_width              = 595.0;
+paper_height             = 842.0;
+x_offset          = 72.0;
+y_offset          = 72.0;
+landscape_mode           = 0;
+dvi_ptex_with_vert       = 0;
+translate_origin  = 0;
+has_paper_option = 0;
+/* Input and output filenames */
+dvi_filename = NULL;
+pdf_filename = NULL;
+#endif // __IPHONE__ 
+
 #ifdef MIKTEX
   miktex_initialize();
 #else

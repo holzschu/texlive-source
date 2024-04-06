@@ -284,7 +284,12 @@ kpathsea_find_glyph (kpathsea kpse,
       source = kpse_glyph_source_maketex;
       /* `try_resolution' leaves the envvar set randomly.  */
       kpathsea_xputenv_int (kpse, "KPATHSEA_DPI", dpi);
+#ifdef __IPHONE__
+	  // Don't try to call mktexpk on iOS
+	  ret = 0;
+#else
       ret = kpathsea_make_tex (kpse, format, fontname);
+#endif
     }
 
     /* If mktex... succeeded, set return struct.  Doesn't make sense for

@@ -32,7 +32,7 @@ kpathsea_new (void)
     return ret;
 }
 
-#if KPATHSEA_CAN_FREE
+#if KPATHSEA_CAN_FREE || defined(__IPHONE__)
 
 #define string_free(a) if ((a) != NULL) free((char *)(a))
 
@@ -62,6 +62,10 @@ cache_free (cache_entry *the_cache, int cache_size)
 
 /* Sadly, quite a lot of the freeing is not safe:
    it seems there are literals used all over. */
+#ifdef __IPHONE__
+extern void hash_print (hash_table_type table,  boolean summary_only);
+extern void hash_free (hash_table_type table);
+#endif
 void
 kpathsea_finish (kpathsea kpse)
 {
@@ -71,6 +75,24 @@ kpathsea_finish (kpathsea kpse)
 #endif /* KPATHSEA_CAN_FREE */
     if (kpse==NULL)
         return;
+#ifdef __IPHONE__
+	// cnf calls build_db, db is the one storing over 4 MB.
+	// Still, we could free cnf_hash as well.
+	// link_table: cannot be touched (just scanning it causes a crash after the 1st lualatex run)
+	// kpse->db: around 4 MB of memory to be freed.
+	hash_free(kpse->db);
+	kpse->followup_search = false;
+	// Ensure that the db will be rebuilt:
+	kpse->cnf_hash.size = 0;
+	// Caches previous directories:
+    cache_free (kpse->the_cache, kpse->cache_length);
+    kpse->the_cache = NULL;
+    kpse->cache_length = 0;
+	// Function pointers, must be reinitialized:
+	kpse->record_input = NULL;
+	kpse->record_output = NULL; 
+	// TODO: try clearing other hash structures, one by one. Largest is: hash_free(kpse->cnf_hash);
+#endif
 #if KPATHSEA_CAN_FREE
     /* free internal stuff */
     hash_free (kpse->cnf_hash);
@@ -128,7 +150,6 @@ kpathsea_finish (kpathsea kpse)
 #endif
     free (kpse);
 }
-
 
 #if defined (KPSE_COMPAT_API)
 

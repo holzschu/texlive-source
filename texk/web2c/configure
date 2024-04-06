@@ -22285,6 +22285,9 @@ fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for Mac OS X ApplicationServices framework" >&5
 printf %s "checking for Mac OS X ApplicationServices framework... " >&6; }
+# iOS: force this to TRUE
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: (iOS): forcing to True" >&5
+printf %s "(iOS): forcing to True " >&6; }
 if test ${kpse_cv_have_ApplicationServices+y}
 then :
   printf %s "(cached) " >&6
@@ -22306,14 +22309,16 @@ then :
 else $as_nop
   kpse_cv_have_ApplicationServices=no
 fi
+# iOS: actual forcing
+kpse_cv_have_ApplicationServices=yes
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $kpse_cv_have_ApplicationServices" >&5
 printf "%s\n" "$kpse_cv_have_ApplicationServices" >&6; }
 if test "x$kpse_cv_have_ApplicationServices" = xyes
 then :
-
-printf "%s\n" "#define HAVE_APPLICATIONSERVICES 1" >>confdefs.h
+# iOS: but don't use ApplicationServices, that's a Mac-only framework
+# printf "%s\n" "#define HAVE_APPLICATIONSERVICES 1" >>confdefs.h
 
 fi
 

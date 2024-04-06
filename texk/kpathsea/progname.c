@@ -500,12 +500,14 @@ kpathsea_set_program_name (kpathsea kpse,  const_string argv0,
 #ifdef __IPHONE__
 	// Library / iOS version: if kpse was already started, we need to reinitialize:
 	// 6 mai 2022: seems this function has changed a lot recently. 
-	// if (kpse->program_name && progname) {
-	// 	// kpathsea is already initialized 
-	// 	kpathsea_reset_program_name(kpse, progname); 
-	// 	// if progname & kpse->program_name are identical, does nothing, which is good
-	// 	return;
-	// }
+	if (kpse->program_name != NULL) {
+		// 	kpathsea is already initialized 
+		if (argv0 && !progname) {
+			kpathsea_reset_program_name(kpse, argv0); 
+		} else {
+			kpathsea_reset_program_name(kpse, progname); 
+		}
+	}
 #endif
   const_string ext;
   string sdir, sdir_parent, sdir_grandparent, sdir_greatgrandparent;

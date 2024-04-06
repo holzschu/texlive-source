@@ -210,7 +210,7 @@ hash_lookup (hash_table_type table,  const_string key)
   return STR_LIST (ret);
 }
 
-#ifdef KPSE_DEBUG
+#if defined(KPSE_DEBUG) || defined(__IPHONE__)
 /* We only print nonempty buckets, to decrease output volume.  */
 
 void
@@ -236,8 +236,8 @@ hash_print (hash_table_type table,  boolean summary_only)
 
       if (!summary_only) {
         for (tb = bucket; tb != NULL; tb = tb->next)
-          fprintf (stderr, " %s=>%s", tb->key, tb->value);
-        putc ('\n', stderr);
+          fprintf (stderr, " %s (%x)=>%s (%x)", tb->key, tb->key, tb->value, tb->value);
+		fprintf (stderr, "\n");
       }
     }
   }
@@ -265,5 +265,56 @@ hash_free (hash_table_type table)
         free (p);
         p = q;
     }
+}
+#endif
+
+#ifdef __IPHONE__
+void
+hash_free (hash_table_type table)
+{
+  unsigned b;
+  unsigned i;
+  void** freedPointers;
+  freedPointers = (void*)malloc(table.size * sizeof(void*));
+  unsigned numPointersFreed = 0;
+
+  for (b = 0; b < table.size; b++) {
+    hash_element_type *bucket = table.buckets[b];
+
+    if (bucket) {
+      unsigned len = 1;
+      hash_element_type *tb;
+      hash_element_type *tbNext;
+
+	  for (tb = bucket; tb != NULL; tb = tbNext) {
+		  tbNext = tb->next;
+		  free((char *)tb->key);
+		  int alreadyFreed = 0;
+		  // tb->value can be a directory, shared by several files. We must free it only once.
+		  // O(n^2) approach: not efficient. Investigate replacing with hash table.
+		  for (i = 0; i < numPointersFreed; i++) {
+			  if (freedPointers[i] == (void*)tb->value) {
+				  alreadyFreed = 1;
+				  break;
+			  }
+		  }
+		  if (alreadyFreed == 0) {
+		  	  // Directory not found so far, we clean it:
+		  	  // In tests, with db, numPointersFreed goes to 5600, table.size is 64000
+			  if (numPointersFreed < table.size) {
+				  freedPointers[numPointersFreed] = tb->value;
+				  numPointersFreed += 1;
+				  free((char *)tb->value);
+			  }
+		  }
+		  free(tb);
+	  }
+	}
+  }
+  // Done cleaning the buckets, now clean the table:
+  free(table.buckets);
+  table.buckets = NULL;
+  table.size = 0;
+  free(freedPointers);
 }
 #endif

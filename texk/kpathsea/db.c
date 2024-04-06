@@ -714,7 +714,7 @@ kpathsea_db_search_list (kpathsea kpse, string* names,
       /* If we have aliases for this name, use them.  */
       if (kpse->alias_db.buckets)
           aliases = hash_lookup (kpse->alias_db, name);
-      else
+	  else
           aliases = NULL;
 
       if (!aliases) {

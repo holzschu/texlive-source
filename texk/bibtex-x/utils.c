@@ -978,6 +978,9 @@ FILE *open_op_file (void)
 **          --mwizfuns ##       ignored
 **============================================================================
 */
+#ifdef __IPHONE__
+extern int __getopt_initialized;
+#endif
 void parse_cmd_line (int argc, char **argv)
 {
     int                 c;
@@ -1003,6 +1006,17 @@ void parse_cmd_line (int argc, char **argv)
     Flag_location = FALSE;
     Str_location = NULL;
 #endif
+	
+#ifdef __IPHONE__
+	// reset everything for getopt_long:
+    optind = 0; 
+    opterr = 1;
+    optopt = '?';
+    optreset = 1;
+    optarg = NULL;
+    __getopt_initialized = 0;
+#endif
+	
 
     while (1) {
         int             option_index = 0;

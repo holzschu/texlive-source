@@ -238,6 +238,7 @@ static int spawn_command(const char *file, char *const *av, char *const *envp)
 {
     pid_t pid, wait_pid;
     int status;
+#ifndef __IPHONE__ 
     pid = fork();
     if (pid < 0) {
         return -1;              /* fork failed */
@@ -278,6 +279,27 @@ static int spawn_command(const char *file, char *const *av, char *const *envp)
             return -1;
         }
     }
+#else // __IPHONE__
+    pid = ios_fork();
+    if (pid < 0) {
+        return -1;              /* fork failed */
+    }
+	int f;
+	/* somewhat random upper limit. ignore errors on purpose */
+	for (f = 0; f < 256; f++)
+		(void) fsync(f);
+	exec_command(file, av, envp);
+	status = 0;
+	wait_pid = waitpid(pid, &status, 0);
+	if (wait_pid == pid) {
+		if (WIFEXITED(status))
+			return WEXITSTATUS(status);
+		else
+			return INVALID_RET_INTR;
+	} else {
+		return -1;          /* some waitpid error */
+	}
+#endif // __IPHONE__
     return 0;
 }
 

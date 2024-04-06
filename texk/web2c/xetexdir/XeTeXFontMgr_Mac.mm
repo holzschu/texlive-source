@@ -126,7 +126,12 @@ XeTeXFontMgr_Mac::addFontsToCaches(CFArrayRef fonts)
 {
     NSEnumerator* enumerator = [(NSArray*)fonts objectEnumerator];
     while (id aFont = [enumerator nextObject]) {
-        CTFontDescriptorRef fontRef = findFontWithName((CFStringRef)[aFont objectAtIndex: 0], kCTFontNameAttribute);
+#ifndef __IPHONE__
+        // get the name of the font. Either the first element of the NSArray (availableMembersOfFontFamily) or the element with fontNamesForFamilyName
+		CTFontDescriptorRef fontRef = findFontWithName((CFStringRef)[aFont objectAtIndex: 0], kCTFontNameAttribute);
+#else
+		CTFontDescriptorRef fontRef = findFontWithName((CFStringRef)aFont, kCTFontNameAttribute);
+#endif
         NameCollection* names = readNames(fontRef);
         addToMaps(fontRef, names);
         delete names;
@@ -139,9 +144,11 @@ XeTeXFontMgr_Mac::addFamilyToCaches(CTFontDescriptorRef familyRef)
     CFStringRef nameStr = (CFStringRef) CTFontDescriptorCopyAttribute(familyRef, kCTFontFamilyNameAttribute);
     if (nameStr) {
 #ifndef __IPHONE__
+// availableMembersOfFontFamily returns and NSArray of NSArray
         NSArray* members = [[NSFontManager sharedFontManager]
                             availableMembersOfFontFamily: (NSString*)nameStr];
 #else 
+// fontNamesForFamilyName returns a NSArray of NSString
         NSArray* members = [UIFont fontNamesForFamilyName: (NSString*)nameStr];
 #endif
         CFRelease(nameStr);
@@ -161,9 +168,11 @@ XeTeXFontMgr_Mac::addFontAndSiblingsToCaches(CTFontDescriptorRef fontRef)
 #endif
         CFRelease(name);
 #ifndef __IPHONE__
+// availableMembersOfFontFamily returns and NSArray of NSArray
         NSArray* members = [[NSFontManager sharedFontManager]
                             availableMembersOfFontFamily: [font familyName]];
 #else 
+// fontNamesForFamilyName returns a NSArray of NSString
         NSArray* members = [UIFont fontNamesForFamilyName: [font familyName]];
 #endif
                             
@@ -265,7 +274,8 @@ XeTeXFontMgr_Mac::getPlatformFontDesc(PlatformFontRef descriptor) const
     CTFontRef ctFont = CTFontCreateWithFontDescriptor(descriptor, 0.0, 0);
     if (ctFont) {
         CFURLRef url = NULL;
-#if !defined(MAC_OS_X_VERSION_10_6) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_6
+        /* iOS: CTFontGetPlatformFont is not defined on iOS */
+#if !defined(__IPHONE__) && (!defined(MAC_OS_X_VERSION_10_6) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_6)
         /* kCTFontURLAttribute was not avialable before 10.6 */
         FSRef fsref;
         ATSFontRef atsFont = CTFontGetPlatformFont(ctFont, NULL);

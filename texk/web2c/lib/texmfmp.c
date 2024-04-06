@@ -1918,6 +1918,9 @@ static void initFlagValues() {
 #endif
 
 
+#ifdef __IPHONE__
+extern int __getopt_initialized;
+#endif
 static void
 parse_options (int argc, string *argv)
 {
@@ -1925,10 +1928,32 @@ parse_options (int argc, string *argv)
   int option_index;
 #ifdef __IPHONE__
     initFlagValues();
-    optind = 1; 
+    optind = 0; 
     opterr = 1;
     optreset = 1;
+    option_index = 0;
+    optarg = NULL;
+    __getopt_initialized = 0;
+    user_progname = NULL;
+    dump_name = NULL;
+	dumpoption = false; 
+    c_job_name = NULL;
+	outputfilename = 0;
+    output_directory = NULL;
+#ifdef TeX
+    outputcomment = NULL;
+	insertsrcspecialeverypar = false;
+	insertsrcspecialauto = false;
+	srcspecialsoption = false;
+	srcspecialsp = false;
 #endif
+#if defined(pdfTeX)
+	pdfoutputoption = 0;
+	pdfoutputvalue = 0;
+	pdfdraftmodeoption = 0;
+	pdfdraftmodevalue = 0;
+#endif /* pdfTeX */
+#endif // __IPHONE__
 
   for (;;) {
     g = getopt_long_only (argc, argv, "+", long_options, &option_index);

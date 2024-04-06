@@ -327,6 +327,10 @@ static int show_path(lua_State * L)
     TEST_PROGRAM_NAME_SET;
     if (!kpse_format_info[user_format].type)    /* needed if arg was numeric */
         kpse_init_format(user_format);
+#ifdef __IPHONE__
+	else if (!kpse_format_info[user_format].path)    /* if path is null, we recompute it */
+        kpse_init_format(user_format);
+#endif
     lua_pushstring(L, kpse_format_info[user_format].path);
     return 1;
 }
@@ -338,6 +342,10 @@ static int lua_kpathsea_show_path(lua_State * L)
     unsigned user_format = filetypes[op];
     if (!(*kp)->format_info[user_format].type)  /* needed if arg was numeric */
         kpathsea_init_format(*kp, user_format);
+#ifdef __IPHONE__
+	else if (!(*kp)->format_info[user_format].path)    /* if path doesn't exist, recompute it */
+        kpathsea_init_format(*kp, user_format);
+#endif
     lua_pushstring(L, (*kp)->format_info[user_format].path);
     return 1;
 }

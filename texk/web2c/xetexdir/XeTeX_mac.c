@@ -43,7 +43,6 @@ authorization from the copyright holders.
 #include <ApplicationServices/ApplicationServices.h>
 #else
 #include <CoreText/CoreText.h>
-#include "xetexd.h"
 // Quickdraw arithmetics:
 typedef long fract;
 #define fract1             ((fract) 0x40000000)        /* = 1.0 for fract */
@@ -415,7 +414,8 @@ getFileNameFromCTFont(CTFontRef ctFontRef, uint32_t *index)
     char *ret = NULL;
     CFURLRef url = NULL;
 
-#if !defined(MAC_OS_X_VERSION_10_6) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_6
+        /* iOS: CTFontGetPlatformFont is not defined on iOS */
+#if !defined(__IPHONE__) && (!defined(MAC_OS_X_VERSION_10_6) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_6)
     /* kCTFontURLAttribute was not avialable before 10.6 */
     ATSFontRef atsFont;
     FSRef fsref;

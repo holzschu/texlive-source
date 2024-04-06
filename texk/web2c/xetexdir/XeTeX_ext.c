@@ -59,6 +59,10 @@ authorization from the copyright holders.
 #include <sys/timeb.h>
 #endif
 
+#ifdef __IPHONE__
+#include "ios_error.h"
+#endif
+
 #define EXTERN extern
 #include "xetexd.h"
 
@@ -174,7 +178,11 @@ void initversionstring(char **versions)
         "Compiled with libpng version %s; using %s\n"
         "Compiled with pplib version %s\n"
 #ifdef XETEX_MAC
+#ifdef __IPHONE__
+        "Using iOS/iPadOS Core Text and UIKit\n"
+#else
         "Using Mac OS X Core Text and Cocoa frameworks\n"
+#endif
 #else
         "Compiled with fontconfig version %d.%d.%d; using %d.%d.%d\n"
 #endif
@@ -1228,6 +1236,7 @@ findnativefont(unsigned char* uname, integer scaled_size)
             }
         }
     } else {
+    	
         fontRef = findFontByName(nameString, varString, Fix2D(scaled_size));
 
         if (fontRef != 0) {
@@ -1521,7 +1530,11 @@ cgColorToRGBA32(CGColorRef color)
 }
 #endif
 
+#ifndef __IPHONE__
 static int xdvBufSize = 0;
+#else
+int xdvBufSize = 0; 
+#endif
 
 int
 makeXDVGlyphArrayData(void* pNode)
@@ -1735,13 +1748,18 @@ makefontdef(integer f)
     return fontDefLength;
 }
 
+#ifdef __IPHONE__
+UInt32 outLength = 0;
+#endif
 int
 applymapping(void* pCnv, uint16_t* txtPtr, int txtLen)
 {
     TECkit_Converter cnv = (TECkit_Converter)pCnv;
     UInt32 inUsed, outUsed;
     TECkit_Status status;
+#ifndef __IPHONE__
     static UInt32 outLength = 0;
+#endif
 
     /* allocate outBuffer if not big enough */
     if (outLength < txtLen * sizeof(UniChar) + 32) {
@@ -2639,6 +2657,9 @@ Isspace(char c)
 }
 #endif
 
+#if TARGET_OS_IPHONE
+static int pid = 0;
+#endif
 int
 open_dvi_output(FILE** fptr)
 {
@@ -2731,6 +2752,9 @@ open_dvi_output(FILE** fptr)
             free(tmp1w);
         }
 #else
+#if TARGET_OS_IPHONE
+		pid = ios_fork();
+#endif
         *fptr = popen(cmd, "w");
 #endif
         free(cmd);
@@ -2745,7 +2769,15 @@ dviclose(FILE* fptr)
         if (fclose(fptr) != 0)
             return errno;
     } else {
+#if TARGET_OS_IPHONE
+		fclose(fptr);
+		int wstatus;
+		waitpid(pid, &wstatus, 0);
+		int status = WEXITSTATUS(wstatus);
+		return status;
+#else
         return pclose(fptr);
+#endif
     }
     return 0;
 }
