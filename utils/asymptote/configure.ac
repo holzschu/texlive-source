@@ -3,7 +3,7 @@
 # this file.
 
 AC_PREREQ(2)
-AC_INIT([Asymptote],[2.85],[https://github.com/vectorgraphics/asymptote/issues])
+AC_INIT([Asymptote],[2.88],[https://github.com/vectorgraphics/asymptote/issues])
 VERSION=$PACKAGE_VERSION
 AC_SUBST(VERSION)
 m4_include([ax_pthread.m4])
@@ -157,7 +157,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
 
 ASYGLVERSION=1.02
 
-GCVERSION=8.2.0
+GCVERSION=8.2.4
 ATOMICVERSION=7.6.12
 
 GCFILE=gc-$GCVERSION
@@ -182,7 +182,7 @@ GCPPLIB=
 INCL="-I."
 GCNAME="Boehm Garbage Collector"
 if test "x$ac_cv_use_gc" != "xno" ; then
-   OPTIONS=$OPTIONS"-DUSEGC "
+   OPTIONS=$OPTIONS"-DUSEGC -DLSPCPP_USEGC "
    case _$ac_cv_use_gc in
    _|_system|_*[[\\/]]*)
       if test "x$ac_cv_use_gc" = "xsystem" ; then
@@ -414,7 +414,7 @@ esac
 
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "xstream.h"])],
                    [AC_SEARCH_LIBS([xdrstdio_create],[nsl tirpc])
-                    AC_DEFINE(HAVE_RPC_RPC_H,1,
+                    AC_DEFINE(HAVE_LIBTIRPC,1,
                    DEFINE([a working <tirpc/rpc/rpc.h> header]))],
    AC_MSG_WARN([*** Broken rpc headers; XDR/V3D support disabled ***]))
 

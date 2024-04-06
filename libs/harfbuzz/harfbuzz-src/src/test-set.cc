@@ -91,7 +91,7 @@ main (int argc, char **argv)
     s << 12;
 
     /* Sink a range. */
-    s << hb_pair_t<hb_codepoint_t, hb_codepoint_t> {1, 3};
+    s << hb_codepoint_pair_t {1, 3};
 
     hb_set_t v (hb_iter (s));
 
@@ -135,6 +135,30 @@ main (int argc, char **argv)
     assert (s.is_inverted ());
     /* Inverted set returns true for invalid value; oh well. */
     assert (s.has (HB_SET_VALUE_INVALID));
+  }
+
+  /* Adding HB_SET_VALUE_INVALID */
+  {
+    hb_set_t s;
+
+    s.add(HB_SET_VALUE_INVALID);
+    assert(!s.has(HB_SET_VALUE_INVALID));
+
+    s.clear();
+    assert(!s.add_range(HB_SET_VALUE_INVALID - 2, HB_SET_VALUE_INVALID));
+    assert(!s.has(HB_SET_VALUE_INVALID));
+
+    hb_codepoint_t array[] = {(unsigned) HB_SET_VALUE_INVALID, 0, 2};
+    s.clear();
+    s.add_array(array, 3);
+    assert(!s.has(HB_SET_VALUE_INVALID));
+    assert(s.has(2));
+
+    hb_codepoint_t sorted_array[] = {0, 2, (unsigned) HB_SET_VALUE_INVALID};
+    s.clear();
+    s.add_sorted_array(sorted_array, 3);
+    assert(!s.has(HB_SET_VALUE_INVALID));
+    assert(s.has(2));
   }
 
   return 0;

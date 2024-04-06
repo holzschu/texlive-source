@@ -1,6 +1,6 @@
 // Enum class for v3dheadertypes
 // AUTO-GENERATED from v3dheadertypes.csv
-// Generated at 2023-02-09 04:54:07
+// Generated at 2024-03-08 08:14:52
 
 struct v3dheadertypes
 {
