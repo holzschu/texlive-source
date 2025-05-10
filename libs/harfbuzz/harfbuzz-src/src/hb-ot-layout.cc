@@ -87,7 +87,7 @@ using OT::Layout::GPOS;
 bool
 hb_ot_layout_has_kerning (hb_face_t *face)
 {
-  return face->table.kern->has_data ();
+  return face->table.kern->table->has_data ();
 }
 
 /**
@@ -103,7 +103,7 @@ hb_ot_layout_has_kerning (hb_face_t *face)
 bool
 hb_ot_layout_has_machine_kerning (hb_face_t *face)
 {
-  return face->table.kern->has_state_machine ();
+  return face->table.kern->table->has_state_machine ();
 }
 
 /**
@@ -123,7 +123,7 @@ hb_ot_layout_has_machine_kerning (hb_face_t *face)
 bool
 hb_ot_layout_has_cross_kerning (hb_face_t *face)
 {
-  return face->table.kern->has_cross_stream ();
+  return face->table.kern->table->has_cross_stream ();
 }
 
 void
@@ -132,7 +132,7 @@ hb_ot_layout_kern (const hb_ot_shape_plan_t *plan,
 		   hb_buffer_t  *buffer)
 {
   hb_blob_t *blob = font->face->table.kern.get_blob ();
-  const AAT::kern& kern = *blob->as<AAT::kern> ();
+  const auto& kern = *font->face->table.kern;
 
   AAT::hb_aat_apply_context_t c (plan, font, buffer, blob);
 
@@ -246,6 +246,18 @@ OT::GDEF::is_blocklisted (hb_blob_t *blob,
     /* sha1sum: c26e41d567ed821bed997e937bc0c41435689e85  Padauk.ttf
      *  "Padauk Regular" "Version 2.5", see https://crbug.com/681813 */
     case HB_CODEPOINT_ENCODE3 (1004, 59092, 14836):
+    /* 88d2006ca084f04af2df1954ed714a8c71e8400f  Courier New.ttf from macOS 15 */
+    case HB_CODEPOINT_ENCODE3 (588, 5078, 14418):
+    /* 608e3ebb6dd1aee521cff08eb07d500a2c59df68  Courier New Bold.ttf from macOS 15 */
+    case HB_CODEPOINT_ENCODE3 (588, 5078, 14238):
+    /* d13221044ff054efd78f1cd8631b853c3ce85676  cour.ttf from Windows 10 */
+    case HB_CODEPOINT_ENCODE3 (894, 17162, 33960):
+    /* 68ed4a22d8067fcf1622ac6f6e2f4d3a2e3ec394  courbd.ttf from Windows 10 */
+    case HB_CODEPOINT_ENCODE3 (894, 17154, 34472):
+    /* 4cdb0259c96b7fd7c103821bb8f08f7cc6b211d7  cour.ttf from Windows 8.1 */
+    case HB_CODEPOINT_ENCODE3 (816, 7868, 17052):
+    /* 920483d8a8ed37f7f0afdabbe7f679aece7c75d8  courbd.ttf from Windows 8.1 */
+    case HB_CODEPOINT_ENCODE3 (816, 7868, 17138):
       return true;
   }
   return false;
@@ -1443,8 +1455,12 @@ hb_ot_layout_table_find_feature_variations (hb_face_t    *face,
 					    unsigned int *variations_index /* out */)
 {
   const OT::GSUBGPOS &g = get_gsubgpos_table (face, table_tag);
+  const OT::GDEF &gdef = *face->table.GDEF->table;
 
-  return g.find_variations_index (coords, num_coords, variations_index);
+  auto instancer = OT::ItemVarStoreInstancer(&gdef.get_var_store(), nullptr,
+					     hb_array (coords, num_coords));
+
+  return g.find_variations_index (coords, num_coords, variations_index, &instancer);
 }
 
 
@@ -2127,7 +2143,7 @@ hb_ot_layout_get_font_extents (hb_font_t         *font,
 			       hb_tag_t           language_tag,
 			       hb_font_extents_t *extents)
 {
-  hb_position_t min, max;
+  hb_position_t min = 0, max = 0;
   if (font->face->table.BASE->get_min_max (font, direction, script_tag, language_tag, HB_TAG_NONE,
 					   &min, &max))
   {

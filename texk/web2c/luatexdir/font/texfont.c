@@ -1887,7 +1887,7 @@ void read_expand_font(void)
 
 /*tex
 
-    Here's an old (sort of obsolete) letterspace-a-font helper. It does so by by
+    Here's an old (sort of obsolete) letterspace-a-font helper. It does so by
     creating a virtual font.
 
 */
