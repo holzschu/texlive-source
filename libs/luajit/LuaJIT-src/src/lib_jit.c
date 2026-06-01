@@ -411,7 +411,53 @@ LJLIB_CF(jit_util_ircalladdr)
   return 0;
 }
 
-#endif
+#else // LJ_HASJIT
+// iOS change: we need those functions in order to compile (I don't know why)
+
+/* local info = jit.util.traceinfo(tr) */
+int lj_cf_jit_util_traceinfo()
+{
+  return 0;
+}
+
+/* local m, ot, op1, op2, prev = jit.util.traceir(tr, idx) */
+int lj_cf_jit_util_traceir()
+{
+  return 0;
+}
+
+/* local k, t [, slot] = jit.util.tracek(tr, idx) */
+int lj_cf_jit_util_tracek()
+{
+  return 0;
+}
+
+/* local snap = jit.util.tracesnap(tr, sn) */
+int lj_cf_jit_util_tracesnap()
+{
+  return 0;
+}
+
+/* local mcode, addr, loop = jit.util.tracemc(tr) */
+int lj_cf_jit_util_tracemc()
+{
+  return 0;
+}
+
+/* local addr = jit.util.traceexitstub([tr,] exitno) */
+int lj_cf_jit_util_traceexitstub()
+{
+  return 0;
+}
+
+int lj_cf_jit_util_ircalladdr()
+{
+  return 0;
+}
+
+
+
+#endif // LJ_HASJIT
 
 #include "lj_libdef.h"
 

@@ -277,6 +277,12 @@ hash_free (hash_table_type table)
   void** freedPointers;
   freedPointers = (void*)malloc(table.size * sizeof(void*));
   unsigned numPointersFreed = 0;
+  
+  // If the database doesn't exist (first install) we can have table.buckets == NULL and size != 0
+  if (table.buckets == NULL) {
+  	  table.size = 0;
+  	  return;
+  }
 
   for (b = 0; b < table.size; b++) {
     hash_element_type *bucket = table.buckets[b];
@@ -288,6 +294,9 @@ hash_free (hash_table_type table)
 
 	  for (tb = bucket; tb != NULL; tb = tbNext) {
 		  tbNext = tb->next;
+		  // debugging hash_free:
+		  // fprintf (stderr, "Freeing %s (%x)=>%s (%x)\n", tb->key, tb->key, tb->value, tb->value);
+		  // fflush(stderr);
 		  free((char *)tb->key);
 		  int alreadyFreed = 0;
 		  // tb->value can be a directory, shared by several files. We must free it only once.

@@ -25,6 +25,7 @@ BUILD_SIMULATOR=0
 echo "Building for iOS:"
 
 export SYSROOT=$(xcrun --sdk iphoneos --show-sdk-path) 
+export OSX_SYSROOT=$(xcrun --show-sdk-path) 
 export STRIP="strip -x"
 ./Build --host=arm-apple-darwin --build=x86_64-apple-darwin \
 --disable-native-texlive-build \
@@ -72,11 +73,12 @@ export STRIP="strip -x"
 CC=clang \
 CXX=clang++ \
 OBJCXX=clang++ \
-CFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -DPNG_ARM_NEON_OPT=0\ -I${PWD}\ -I${PWD}/texk/ptexenc" \
+MAKE=/usr/local/bin/make \
+CFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -DPNG_ARM_NEON_OPT=0\ -I${PWD}\ -I${PWD}/texk/ptexenc\ " \
 CPPFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}" \
 LDFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -F${PWD}/ios_system.xcframework/ios-arm64\ -framework\ ios_system\ " \
-CXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++11\ -D\ __IPHONE__\ -stdlib=libc++ " \
-OBJCXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++11\ -D\ __IPHONE__\ -stdlib=libc++ " \
+CXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
+OBJCXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
 >& build_cross.log
 
 # exit 0 # When debugging
@@ -349,11 +351,12 @@ export SYSROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
 CC=clang \
 CXX=clang++ \
 OBJCXX=clang++ \
+MAKE=/usr/local/bin/make \
 CFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}\ -I${PWD}/texk/ptexenc" \
 CPPFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}" \
 LDFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -F${PWD}/ios_system.xcframework/ios-arm64_x86_64-simulator\ -framework\ ios_system\ " \
-CXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++11\ -D\ __IPHONE__\ -stdlib=libc++ " \
-OBJCXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++11\ -D\ __IPHONE__\ -stdlib=libc++ " \
+CXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
+OBJCXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
 >& build_simulator.log
 
 echo "Compilation done, generating frameworks"

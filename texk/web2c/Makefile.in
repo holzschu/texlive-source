@@ -1354,7 +1354,8 @@ am__dist_etex_SOURCES_DIST = etexdir/etexextra.c etexdir/etexextra.h \
 dist_etex_OBJECTS = etexdir/etex-etexextra.$(OBJEXT) $(am__objects_32)
 am__objects_33 = etex-etexini.$(OBJEXT) etex-etex0.$(OBJEXT)
 nodist_etex_OBJECTS = $(am__objects_33) etex-etex-pool.$(OBJEXT)
-etex_OBJECTS = $(dist_etex_OBJECTS) $(nodist_etex_OBJECTS)
+# iOS: addition of uexit_and_clear to etex.
+etex_OBJECTS = $(dist_etex_OBJECTS) $(nodist_etex_OBJECTS) etexuexit.o
 @ETEX_SYNCTEX_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
 am__dist_euptex_SOURCES_DIST = euptexdir/euptexextra.c \
 	euptexdir/euptexextra.h synctexdir/synctex.c \
@@ -4606,7 +4607,7 @@ euptex_CPPFLAGS = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS) \
 # With --enable-ipc, e-upTeX may need to link with -lsocket.
 # __IPHONE__ addition: create dynamic library, not executable:
 euptex_LDADD = libukanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD) \
-	$(ipc_socketlibs) libmd5.a $(ZLIB_LIBS) $(am__append_139)
+	$(ipc_socketlibs) libmd5.a $(ZLIB_LIBS) $(am__append_139) \
 	-dynamiclib -export-dynamic -L$(SYSROOT)/usr/lib/
 euptex_DEPENDENCIES = libukanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies) libmd5.a $(ZLIB_DEPEND)
 

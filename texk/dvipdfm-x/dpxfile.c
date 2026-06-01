@@ -834,6 +834,13 @@ dpx_find_opentype_file (const char *filename)
     fqpn = NULL;
   }
 
+#ifdef __IPHONE__
+  // if filename exists and is a valid OTF font, then return it:
+  if (!fqpn && is_absolute_path(filename) && qcheck_filetype(filename, DPX_RES_TYPE_OTFONT)) {
+	  fqpn = xstrdup(filename);
+  }
+#endif
+
   return  fqpn;
 }
 
