@@ -128,7 +128,6 @@ ltximg/ltximg.pl
 luafindfont/luafindfont.lua
 luaotfload/luaotfload-tool.lua
 lwarp/lwarpmk.lua
-m-tx/m-tx.lua
 makedtx/makedtx.pl
 make4ht/make4ht
 markdown/markdown2tex.lua
@@ -170,7 +169,9 @@ pygmentex/pygmentex.py
 pythontex/depythontex.py
 pythontex/pythontex.py
 rubik/rubikrotation.pl
+runtexfile/runtexfile.lua
 runtexshebang/runtexshebang.lua
+show-pdf-tags/show-pdf-tags.lua
 spix/spix.py
 splitindex/splitindex.pl
 sqltex/sqltex

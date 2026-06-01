@@ -19,16 +19,28 @@
  *
  *************/
 
-#ifdef __CYGWIN__
-#define _POSIX_C_SOURCE 200809L
-#endif
-
 #include <iostream>
 #include <cstdlib>
 #include <cerrno>
 #include <sys/types.h>
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
+#include <signal.h>
+
+int _matherr(struct _exception *except)
+{
+  unsigned int cw = 0;
+  _controlfp_s(&cw, 0, 0);
+
+  if((except->type == _SING     && !(cw & _EM_ZERODIVIDE)) ||
+     (except->type == _DOMAIN   && !(cw & _EM_INVALID))    ||
+     (except->type == _OVERFLOW && !(cw & _EM_OVERFLOW))) {
+    std::cerr << "Floating exception" << std::endl;
+    raise(SIGFPE);
+  }
+  return 0;
+}
+#else
 #include <sys/wait.h>
 #endif
 
@@ -215,14 +227,12 @@ void *asymain(void *A)
   vm::dumpProfile();
 #endif
 
+#if !defined(_WIN32)
   if(getSetting<bool>("wait")) {
-#if defined(_WIN32)
-#pragma message("TODO: wait option not implement yet")
-#else
     int status;
     while(wait(&status) > 0);
-#endif
   }
+#endif
 #ifdef HAVE_GL
 #ifdef HAVE_PTHREAD
   if(gl::glthread) {
@@ -241,13 +251,8 @@ void *asymain(void *A)
 int main(int argc, char *argv[])
 {
 #ifdef HAVE_LIBGSL
-#if defined(_WIN32)
-  _putenv("GSL_RNG_SEED=");
-  _putenv("GSL_RNG_TYPE=");
-#else
   unsetenv("GSL_RNG_SEED");
   unsetenv("GSL_RNG_TYPE");
-#endif
 #endif
   setsignal(signalHandler);
 
@@ -260,11 +265,6 @@ int main(int argc, char *argv[])
   Args args(argc,argv);
 #ifdef HAVE_GL
 #if defined(__APPLE__) || defined(_WIN32)
-
-#if defined(_WIN32)
-#pragma message("TODO: Check if (1) we need detach-based gl renderer")
-#endif
-
   bool usethreads=true;
 #else
   bool usethreads=view();

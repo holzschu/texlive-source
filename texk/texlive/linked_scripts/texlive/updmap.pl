@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $Id: updmap.pl 70707 2024-03-19 22:03:22Z karl $
+# $Id: updmap.pl 78104 2026-02-24 16:08:16Z karl $
 # updmap - maintain map files for outline fonts.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
-# Copyright 2011-2024 Norbert Preining
+# Copyright 2011-2026 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 #
@@ -13,23 +13,42 @@
 # later adaptions by Reinhard Kotucha, and Karl Berry.
 # The current implementation is a complete rewrite.
 
-my $svnid = '$Id: updmap.pl 70707 2024-03-19 22:03:22Z karl $';
+my $svnid = '$Id: updmap.pl 78104 2026-02-24 16:08:16Z karl $';
+
+use strict; use warnings;
 
 my $TEXMFROOT;
 BEGIN {
   $^W = 1;
+  # make subprograms (including kpsewhich) have the right path:
+  my $bindir;
+  my $Master = __FILE__;
+  if ($^O =~ /^MSWin/i) {
+    # on w32 $0 and __FILE__ point directly to this script; they can be relative
+    $Master =~ s!\\!/!g;
+    $Master =~ s![^/]*$!../../..!
+      unless ($Master =~ s!/texmf-dist/scripts/texlive/tlmgr\.pl$!!i);
+    $bindir = "$Master/bin/windows";
+  } else {
+    $Master =~ s,/*[^/]*$,,;
+    $bindir = $Master;
+    $Master = "$Master/../..";
+  }
+  $ENV{"PATH"} = "$bindir:$ENV{PATH}";
   $TEXMFROOT = `kpsewhich -var-value=TEXMFROOT`;
-  if ($?) {
-    die "$0: kpsewhich -var-value=TEXMFROOT failed, aborting early.\n";
+  if ($? || ! $TEXMFROOT) {
+    warn "$0: kpsewhich -var-value=TEXMFROOT failed, aborting early.\n";
+    warn "$0:   got TEXMFROOT value: $TEXMFROOT" if $TEXMFROOT;
+    die  "$0:   had PATH: $ENV{PATH}\n";
   }
   chomp($TEXMFROOT);
   unshift(@INC, "$TEXMFROOT/tlpkg");
 }
 
-my $lastchdate = '$Date: 2024-03-19 23:03:22 +0100 (Tue, 19 Mar 2024) $';
+my $lastchdate = '$Date: 2026-02-24 17:08:16 +0100 (Tue, 24 Feb 2026) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 70707 $';
+my $svnrev = '$Revision: 78104 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
@@ -65,6 +84,9 @@ if (wndws()) {
 
 my $texmfconfig = $TEXMFCONFIG;
 my $texmfvar    = $TEXMFVAR;
+
+# warn about warnings.
+my $printed_warning = 0;
 
 # copy by default for portability.
 my %opts = ( quiet => 0, nohash => 0, nomkmap => 0, copy => 1 );
@@ -484,6 +506,10 @@ sub main {
     my $not = $opts{"dry-run"} ? " not (-n)" : "";
     print "$prg:$not updating ls-R files.\n" if !$opts{'quiet'};
     $updLSR->{exec}() unless $opts{"dry-run"};
+  }
+
+  if ($printed_warning) {
+    print STDERR "$prg [WARNING]: please check warnings above.\n";
   }
 
   return 0;
@@ -1342,6 +1368,11 @@ sub mkMaps {
 
   # all kinds of warning messages
   if ($first_time_creation_in_usermode) {
+    # Well, not technically a warning, but we want people to see it and
+    # there was a complaint that the messages are too long.
+    # https://tug.org/pipermail/tex-live/2026-February/052200.html
+    $printed_warning = 1;
+    #
     print_and_log("
 *************************************************************
 *                                                           *
@@ -1367,8 +1398,9 @@ If you want to undo this, remove the files mentioned above.
 (Run $prg --help for full documentation of updmap.)
 ");
   }
-
+  
   if (keys %mismatch) {
+    $printed_warning = 1;
     print_and_log("
 WARNING: $prg has found mismatched files!
 
@@ -2244,7 +2276,10 @@ sub reset_root_home {
 }
 
 sub print_warning {
-  print STDERR "$prg [WARNING]: ", @_ if (!$opts{'quiet'}) 
+  if (!$opts{'quiet'}) {
+    print STDERR "$prg [WARNING]: ", @_;
+    $printed_warning = 1;
+  }
 }
 sub print_error {
   print STDERR "$prg [ERROR]: ", @_;
@@ -2531,6 +2566,7 @@ For step-by-step instructions on making new fonts known to TeX, read
 https://tug.org/fonts/fontinstall.html.  For even more terse
 instructions, read the beginning of the main updmap.cfg file.
 
+Executable location: $0
 Report bugs to: tex-live\@tug.org
 TeX Live home page: <https://tug.org/texlive/>
 EOF

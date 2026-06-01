@@ -1,5 +1,3 @@
-% $Id$
-%
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
 % See the <Show version...> code in mpost.w for more info.
@@ -20,6 +18,7 @@
 @ Introduction.
 
 @c 
+#include "mpconfig.h"
 #include <w2c/config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,7 +29,7 @@
 @h
 
 @ @c
-@<Declarations@>;
+@<Declarations@>
 
 @ @(mpmathdecimal.h@>=
 #ifndef MPMATHDECIMAL_H
@@ -39,7 +38,7 @@
 #include "mpmp.h" /* internal header */
 #define  DECNUMDIGITS 1000
 #include "decNumber.h"
-@<Internal library declarations@>;
+@<Internal library declarations@>
 #endif
 
 @* Math initialization.
@@ -54,9 +53,9 @@ First, here are some very important constants.
 @ Here are the functions that are static as they are not used elsewhere
 
 @<Declarations@>=
-#define DEBUG 0
-static void mp_decimal_scan_fractional_token (MP mp, int n);
-static void mp_decimal_scan_numeric_token (MP mp, int n);
+
+static void mp_decimal_scan_fractional_token (MP mp, integer64 n);
+static void mp_decimal_scan_numeric_token (MP mp, integer64 n);
 static void mp_ab_vs_cd (MP mp, mp_number *ret, mp_number a, mp_number b, mp_number c, mp_number d);
 /*|static void mp_decimal_ab_vs_cd (MP mp, mp_number *ret, mp_number a, mp_number b, mp_number c, mp_number d);|*/
 static void mp_decimal_crossing_point (MP mp, mp_number *ret, mp_number a, mp_number b, mp_number c);
@@ -79,15 +78,15 @@ static void mp_decimal_pyth_sub (MP mp, mp_number *r, mp_number a, mp_number b);
 static void mp_decimal_pyth_add (MP mp, mp_number *r, mp_number a, mp_number b);
 static void mp_decimal_n_arg (MP mp, mp_number *ret, mp_number x, mp_number y);
 static void mp_decimal_velocity (MP mp, mp_number *ret, mp_number st, mp_number ct, mp_number sf,  mp_number cf, mp_number t);
-static void mp_set_decimal_from_int(mp_number *A, int B);
-static void mp_set_decimal_from_boolean(mp_number *A, int B);
-static void mp_set_decimal_from_scaled(mp_number *A, int B);
+static void mp_set_decimal_from_int(mp_number *A, integer64 B);
+static void mp_set_decimal_from_boolean(mp_number *A, integer64 B);
+static void mp_set_decimal_from_scaled(mp_number *A, integer64 B);
 static void mp_set_decimal_from_addition(mp_number *A, mp_number B, mp_number C);
 static void mp_set_decimal_from_substraction (mp_number *A, mp_number B, mp_number C);
 static void mp_set_decimal_from_div(mp_number *A, mp_number B, mp_number C);
 static void mp_set_decimal_from_mul(mp_number *A, mp_number B, mp_number C);
-static void mp_set_decimal_from_int_div(mp_number *A, mp_number B, int C);
-static void mp_set_decimal_from_int_mul(mp_number *A, mp_number B, int C);
+static void mp_set_decimal_from_int_div(mp_number *A, mp_number B, integer64 C);
+static void mp_set_decimal_from_int_mul(mp_number *A, mp_number B, integer64 C);
 static void mp_set_decimal_from_of_the_way(MP mp, mp_number *A, mp_number t, mp_number B, mp_number C);
 static void mp_number_negate(mp_number *A);
 static void mp_number_add(mp_number *A, mp_number B);
@@ -95,16 +94,16 @@ static void mp_number_substract(mp_number *A, mp_number B);
 static void mp_number_half(mp_number *A);
 static void mp_number_halfp(mp_number *A);
 static void mp_number_double(mp_number *A);
-static void mp_number_add_scaled(mp_number *A, int B); /* also for negative B */
-static void mp_number_multiply_int(mp_number *A, int B);
-static void mp_number_divide_int(mp_number *A, int B);
+static void mp_number_add_scaled(mp_number *A, integer64 B); /* also for negative B */
+static void mp_number_multiply_int(mp_number *A, integer64 B);
+static void mp_number_divide_int(mp_number *A, integer64 B);
 static void mp_decimal_abs(mp_number *A);   
 static void mp_number_clone(mp_number *A, mp_number B);
 static void mp_number_swap(mp_number *A, mp_number *B);
-static int mp_round_unscaled(mp_number x_orig);
-static int mp_number_to_int(mp_number A);
-static int mp_number_to_scaled(mp_number A);
-static int mp_number_to_boolean(mp_number A);
+static integer64 mp_round_unscaled(mp_number x_orig);
+static integer64 mp_number_to_int(mp_number A);
+static integer64 mp_number_to_scaled(mp_number A);
+static integer64 mp_number_to_boolean(mp_number A);
 static double mp_number_to_double(mp_number A);
 static int mp_number_odd(mp_number A);
 static int mp_number_equal(mp_number A, mp_number B);
@@ -126,6 +125,7 @@ static void mp_check_decNumber (MP mp, decNumber *dec, decContext *context);
 static int decNumber_check (decNumber *dec, decContext *context);
 static char * mp_decnumber_tostring (decNumber *n);
 
+static void decNumber_from_int64(decNumber *result, integer64 A,decContext *context);
 @ We do not want special numbers as return values for functions, so:
 
 
@@ -168,6 +168,33 @@ void mp_check_decNumber (MP mp, decNumber *dec, decContext *context)
 {
   mp->arith_error = decNumber_check (dec, context);
 }
+void decNumber_from_int64(decNumber *result, integer64 A,decContext *context){
+  if((INT32_MIN<=A) && (A<=INT32_MAX)){
+    decNumberFromInt32(result, (int32_t)(A));
+    return;
+   } else {
+    decNumber sc,dec_ms,dec_ls;
+    int s = 1;
+    uint32_t ms,ls;;
+    if (A<0){
+      s=-1;
+      A=-A;
+     }
+     ms=(uint32_t)( (integer64)0x00000000ffffffff & (A>>32));
+     ls=(uint32_t)( (integer64)0x00000000ffffffff & (A));
+     decNumberFromUInt32(&sc,UINT32_MAX);    /* sc =1<<32 - 1 */
+     decNumberAdd(&sc, &sc, &one, context);  /* sc =1<<32 */
+     decNumberFromUInt32(&dec_ms,ms);
+     decNumberFromUInt32(&dec_ls,ls);
+     decNumberMultiply(&dec_ms, &dec_ms, &sc, context);
+     decNumberAdd(result, &dec_ms, &dec_ls, context);
+     if (s==-1){
+      decNumberCopyNegate(result,result);
+     }
+   }
+  
+}
+
 
 
 
@@ -608,9 +635,9 @@ void mp_free_decimal_math (MP mp) {
   free_number (((math_data *)mp->math)->equation_threshold_t);
   free_number (((math_data *)mp->math)->tfm_warn_threshold_t);
   /* For sake of speed, we accept this memory leak. */
-  /* for (i = 0; i <= last_cached_factorial; i++) {*/
+  /* for (i = 0; i <= last_cached_factorial; i++) \{*/
   /*  free(factorials[i]);*/
-  /* }*/
+  /* \}*/
   /* free(factorials); */
   free(mp->math);
 }
@@ -638,16 +665,19 @@ void mp_free_number (MP mp, mp_number *n) {
 @ Here are the low-level functions on |mp_number| items, setters first.
 
 @c 
-void mp_set_decimal_from_int(mp_number *A, int B) {
-  decNumberFromInt32(A->data.num,B);
+void mp_set_decimal_from_int(mp_number *A, integer64 B) {
+  decNumber_from_int64(A->data.num,B,&set);
+  //decNumberFromInt32(A->data.num,B);
 }
-void mp_set_decimal_from_boolean(mp_number *A, int B) {
-  decNumberFromInt32(A->data.num,B);
+void mp_set_decimal_from_boolean(mp_number *A, integer64 B) {
+  decNumber_from_int64(A->data.num,B,&set);
+  //decNumberFromInt32(A->data.num,B);
 }
-void mp_set_decimal_from_scaled(mp_number *A, int B) {
+void mp_set_decimal_from_scaled(mp_number *A, integer64 B) {
   decNumber c;
   decNumberFromInt32(&c, 65536);
-  decNumberFromInt32(A->data.num,B);
+  decNumber_from_int64(A->data.num,B,&set);
+  //decNumberFromInt32(A->data.num,B);
   decNumberDivide(A->data.num,A->data.num,&c, &set);
 }
 void mp_set_decimal_from_double(mp_number *A, double B) {
@@ -665,14 +695,16 @@ void mp_set_decimal_from_div(mp_number *A, mp_number B, mp_number C) {
 void mp_set_decimal_from_mul(mp_number *A, mp_number B, mp_number C) {
   decNumberMultiply(A->data.num,B.data.num,C.data.num, &set);
 }
-void mp_set_decimal_from_int_div(mp_number *A, mp_number B, int C) {
+void mp_set_decimal_from_int_div(mp_number *A, mp_number B, integer64 C) {
   decNumber c;
-  decNumberFromInt32(&c, C);
+  decNumber_from_int64(&c,C,&set);
+  //decNumberFromInt32(&c, C);
   decNumberDivide(A->data.num,B.data.num,&c, &set);
 }
-void mp_set_decimal_from_int_mul(mp_number *A, mp_number B, int C) {
+void mp_set_decimal_from_int_mul(mp_number *A, mp_number B, integer64 C) {
   decNumber c;
-  decNumberFromInt32(&c, C);
+  decNumber_from_int64(&c,C,&set);
+  //decNumberFromInt32(&c, C);
   decNumberMultiply(A->data.num,B.data.num,&c, &set);
 }
 void mp_set_decimal_from_of_the_way(MP mp, mp_number *A, mp_number t, mp_number B, mp_number C) {
@@ -708,21 +740,24 @@ void mp_number_double(mp_number *A) {
   decNumberFromInt32(&c, 2);
   decNumberMultiply(A->data.num,A->data.num, &c, &set);
 }
-void mp_number_add_scaled(mp_number *A, int B) { /* also for negative B */
+void mp_number_add_scaled(mp_number *A, integer64 B) { /* also for negative B */
   decNumber b,c;
   decNumberFromInt32(&c, 65536);
-  decNumberFromInt32(&b, B);
+  decNumber_from_int64(&b,B,&set);
+  //decNumberFromInt32(&b, B);
   decNumberDivide(&b,&b, &c, &set);
   decNumberAdd(A->data.num,A->data.num, &b, &set);
 }
-void mp_number_multiply_int(mp_number *A, int B) {
+void mp_number_multiply_int(mp_number *A, integer64 B) {
   decNumber b;
-  decNumberFromInt32(&b, B);
+  decNumber_from_int64(&b,B,&set);
+  //decNumberFromInt32(&b, B);
   decNumberMultiply(A->data.num,A->data.num, &b, &set);
 }
-void mp_number_divide_int(mp_number *A, int B) {
+void mp_number_divide_int(mp_number *A, integer64 B) {
   decNumber b;
-  decNumberFromInt32(&b, B);
+  decNumber_from_int64(&b,B,&set);
+  //decNumberFromInt32(&b, B);
   decNumberDivide(A->data.num,A->data.num,&b, &set);
 }
 void mp_decimal_abs(mp_number *A) {   
@@ -762,22 +797,22 @@ able to make this conversion properly, so instead we are using
 |decNumberToDouble| and a typecast. Bad!
 
 @c
-int mp_number_to_scaled(mp_number A) {
-  int32_t result;
+integer64 mp_number_to_scaled(mp_number A) {
+  integer64 result;
   decNumber corrected;
   decNumberFromInt32(&corrected, 65536);
   decNumberMultiply(&corrected,&corrected,A.data.num, &set);
   decNumberReduce(&corrected, &corrected, &set);
-  result = (int)floor(decNumberToDouble(&corrected)+0.5);
+  result = (integer64)floor(decNumberToDouble(&corrected)+0.5);
   return result;
 }
 
 @ 
 
-@d odd(A)   (abs(A)%2==1)
+@d odd(A)   (MPOST_ABS(A)%2==1)
 
 @c
-int mp_number_to_int(mp_number A) {
+integer64 mp_number_to_int(mp_number A) {
   int32_t result;
   set.status = 0;
   result = decNumberToInt32(A.data.num, &set);
@@ -786,10 +821,10 @@ int mp_number_to_int(mp_number A) {
      /* |mp->arith_error = 1;| */
      return 0; /* whatever */
   } else {
-     return result;
+     return (integer64)result;
   }
 }
-int mp_number_to_boolean(mp_number A) {
+integer64 mp_number_to_boolean(mp_number A) {
   uint32_t result;
   set.status = 0;
   result = decNumberToUInt32(A.data.num, &set);
@@ -798,7 +833,7 @@ int mp_number_to_boolean(mp_number A) {
      /* |mp->arith_error = 1;| */
      return mp_false_code; /* whatever */
   } else {
-     return result ;
+     return (integer64)result ;
   }
 }
 double mp_number_to_double(mp_number A) {
@@ -874,6 +909,7 @@ char * mp_decnumber_tostring (decNumber *n) {
   return buffer;
 }
 char * mp_decimal_number_tostring (MP mp, mp_number n) {
+  (void)mp;
   return mp_decnumber_tostring(n.data.num);
 }
 
@@ -894,6 +930,7 @@ is used.
 
 @c
 void mp_decimal_slow_add (MP mp, mp_number *ret, mp_number A, mp_number B) {
+  (void)mp;
   decNumberAdd(ret->data.num,A.data.num,B.data.num, &set);
 }
 
@@ -960,6 +997,7 @@ time during typical jobs, so a machine-language substitute is advisable.
 
 @c
 void mp_decimal_take_fraction (MP mp, decNumber *ret, decNumber *p, decNumber *q) {
+  (void)mp;
   decNumberMultiply(ret, p, q, &set);
   decNumberDivide(ret, ret, &fraction_multiplier_decNumber, &set);
 }
@@ -982,6 +1020,7 @@ when the Computer Modern fonts are being generated.
 
 @c
 void mp_decimal_number_take_scaled (MP mp, mp_number *ret, mp_number p_orig, mp_number q_orig) {
+  (void)mp;
   decNumberMultiply(ret->data.num, p_orig.data.num, q_orig.data.num, &set);
 }
 
@@ -1017,8 +1056,17 @@ static void mp_wrapup_numeric_token(MP mp, unsigned char *start, unsigned char *
 @c
 void mp_wrapup_numeric_token(MP mp, unsigned char *start, unsigned char *stop) {
   decNumber result;
-  size_t l = stop-start+1;
-  char *buf = mp_xmalloc(mp, l+1, 1);
+  size_t l ;
+  char *buf ;
+
+  if ((stop-start+1)<0) {
+    const char *hlp[] = {"I could not handle this number specification",
+                           "because an error of the internal buffer.",
+                            NULL };
+    mp_error (mp, "Internal buffer error", hlp, false);
+  }
+  l = (size_t)(stop-start+1);
+  buf = mp_xmalloc(mp, l+1, 1);
   buf[l] = '\0';
   (void)strncpy(buf,(const char *)start, l);
   set.status = 0;
@@ -1079,9 +1127,10 @@ static void find_exponent (MP mp)  {
      }
   }
 }
-void mp_decimal_scan_fractional_token (MP mp, int n) { /* n: scaled */
+void mp_decimal_scan_fractional_token (MP mp, integer64 n) { /* n: scaled */
   unsigned char *start = &mp->buffer[mp->cur_input.loc_field -1];
   unsigned char *stop;
+  (void)n;
   while (mp->char_class[mp->buffer[mp->cur_input.loc_field]] == digit_class) {
      mp->cur_input.loc_field++;
   }
@@ -1094,9 +1143,10 @@ void mp_decimal_scan_fractional_token (MP mp, int n) { /* n: scaled */
 @ We just have to collect bytes.
 
 @c
-void mp_decimal_scan_numeric_token (MP mp, int n) { /* n: scaled */
+void mp_decimal_scan_numeric_token (MP mp, integer64 n) { /* n: scaled */
   unsigned char *start = &mp->buffer[mp->cur_input.loc_field -1];
   unsigned char *stop;
+  (void)n;
   while (mp->char_class[mp->buffer[mp->cur_input.loc_field]] == digit_class) {
      mp->cur_input.loc_field++;
   }
@@ -1201,7 +1251,7 @@ void mp_decimal_velocity (MP mp, mp_number *ret, mp_number st, mp_number ct, mp_
   } else {
     mp_decimal_make_fraction (mp, ret->data.num, &num, &denom);
   }
-#if DEBUG
+#if MPOST_DEBUG
   fprintf(stdout, "\n%f = velocity(%f,%f,%f,%f,%f)", mp_number_to_double(*ret), 
 mp_number_to_double(st),mp_number_to_double(ct),
 mp_number_to_double(sf),mp_number_to_double(cf),
@@ -1268,7 +1318,7 @@ void mp_ab_vs_cd (MP mp, mp_number *ret, mp_number a_orig, mp_number b_orig, mp_
     decNumberCopy(&d,&r);
   }                             /* now |a>d>0| and |c>b>0| */
 RETURN:
-#if DEBUG
+#if MPOST_DEBUG
   fprintf(stdout, "\n%f = ab_vs_cd(%f,%f,%f,%f)", mp_number_to_double(*ret), 
 mp_number_to_double(a_orig),mp_number_to_double(b_orig),
 mp_number_to_double(c_orig),mp_number_to_double(d_orig));
@@ -1418,7 +1468,7 @@ static void mp_decimal_crossing_point (MP mp, mp_number *ret, mp_number aa, mp_n
   decNumberFromDouble(&scratch, d);
   decNumberSubtract(ret->data.num,&scratch, &fraction_one_decNumber, &set);
 RETURN:
-#if DEBUG
+#if MPOST_DEBUG
   fprintf(stdout, "\n%f = crossing_point(%f,%f,%f)", mp_number_to_double(*ret), 
 mp_number_to_double(aa),mp_number_to_double(bb),mp_number_to_double(cc));
 #endif
@@ -1433,9 +1483,9 @@ and truncation operations.
 
 @ |round_unscaled| rounds a |scaled| and converts it to |int|
 @c
-int mp_round_unscaled(mp_number x_orig) {
+integer64 mp_round_unscaled(mp_number x_orig) {
   double xx = mp_number_to_double(x_orig);
-  int x = (int)ROUND(xx);
+  integer64 x = (integer64)ROUND(xx);
   return x;
 }
 
@@ -1627,12 +1677,12 @@ void mp_decimal_n_arg (MP mp, mp_number *ret, mp_number x_orig, mp_number y_orig
     checkZero(y_orig.data.num);
     checkZero(x_orig.data.num);
     decNumberAtan2(&atan2val, y_orig.data.num, x_orig.data.num, &set);
-#if DEBUG
+#if MPOST_DEBUG
     fprintf(stdout, "\n%g = atan2(%g,%g)", decNumberToDouble(&atan2val),mp_number_to_double(x_orig),mp_number_to_double(y_orig)); 
 #endif
     decNumberMultiply(ret->data.num,&atan2val, &oneeighty_angle, &set);
     checkZero(ret->data.num);
-#if DEBUG
+#if MPOST_DEBUG
     fprintf(stdout, "\nn_arg(%g,%g,%g)", mp_number_to_double(*ret),
     mp_number_to_double(x_orig),mp_number_to_double(y_orig));
 #endif
@@ -1720,7 +1770,7 @@ void mp_decimal_sin_cos (MP mp, mp_number z_orig, mp_number *n_cos, mp_number *n
   decNumber one_eighty;
   tmp = mp_number_to_double(z_orig)/16.0;
   
-#if DEBUG
+#if MPOST_DEBUG
   fprintf(stdout, "\nsin_cos(%f)", mp_number_to_double(z_orig));
 #endif
 #if 0
@@ -1749,7 +1799,7 @@ void mp_decimal_sin_cos (MP mp, mp_number z_orig, mp_number *n_cos, mp_number *n
    decNumberMultiply(n_cos->data.num,n_cos->data.num,&fraction_multiplier_decNumber, &set);
    decNumberMultiply(n_sin->data.num,n_sin->data.num,&fraction_multiplier_decNumber, &set);
   }
-#if DEBUG
+#if MPOST_DEBUG
   fprintf(stdout, "\nsin_cos(%f,%f,%f)", decNumberToDouble(&rad),
 mp_number_to_double(*n_cos), mp_number_to_double(*n_sin));
 #endif
@@ -1855,7 +1905,7 @@ void mp_init_randoms (MP mp, int seed) {
   mp_new_randoms (mp);
   mp_new_randoms (mp);          /* ``warm up'' the array */
 
-  ran_start((unsigned long) seed);  
+  ran_start((long) seed);  
 
 }
 
@@ -1871,10 +1921,12 @@ void mp_decimal_number_modulo (mp_number *a, mp_number b) {
 static void mp_next_unif_random (MP mp, mp_number *ret) { 
   decNumber a; 
   decNumber b; 
-  unsigned long int op;
+  /*unsigned long int op;*/
+  uint32_t op;
   (void)mp;
-  op = (unsigned)ran_arr_next(); 
-  decNumberFromInt32(&a, op);
+  /*op = (unsigned)ran_arr_next(); */
+  op = (uint32_t)ran_arr_next(); 
+  decNumberFromUInt32(&a, op);
   decNumberFromInt32(&b, MM);
   decNumberDivide (&a, &a, &b, &set); /* a = a/b */
   decNumberCopy(ret->data.num, &a);

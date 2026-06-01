@@ -1,3 +1,33 @@
+2026-03-02  Karl Berry  <karl@tug.org>
+
+	* TL'26 release.
+
+2026-01-18  Karl Berry  <karl@freefriends.org>
+
+	* xetex.web (print_ignored_err): send "ignored error"
+	output only to log file.
+	* NEWS: mention this.
+	* xetex.ch: change for --file-line-error no longer worthwhile.
+
+2026-01-15  Karl Berry  <karl@freefriends.org>
+
+	* xetex.web,
+	* xetex.ch (print_ignored_err)
+	omit word "error" in message
+	to avoid false positives by humans and editors (cross-engine).
+	https://tug.org/pipermail/pdftex/2026-January/009463.html
+
+2026-01-07  Karl Berry  <karl@freefriends.org>
+
+        * NEWS,
+        * xetex_version.h,
+        * xetex.web (xetex_revision, xetex_version_string):
+        version 0.999998 for TL26.
+
+2025-11-10  Karl Berry  <karl@freefriends.org>
+
+	* xetex.web: typo.
+
 2025-03-07  Karl Berry  <karl@tug.org>
 
 	* TL'25 release.

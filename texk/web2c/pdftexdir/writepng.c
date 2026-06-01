@@ -1,5 +1,5 @@
 /*
-Copyright 1996-2017 Han The Thanh, <thanh@pdftex.org>
+Copyright 1996-2026 Han The Thanh, <thanh@pdftex.org>
 
 This file is part of pdfTeX.
 
@@ -531,7 +531,8 @@ void write_png(integer img)
     }
     /* alpha channel support */
     if (fixedpdfmajorversion == 1 && fixedpdfminorversion < 4
-        && png_get_color_type(png_ptr(img), png_info(img)) | PNG_COLOR_MASK_ALPHA) {
+        && png_get_color_type(png_ptr(img), png_info(img))
+           & PNG_COLOR_MASK_ALPHA) {
         png_set_strip_alpha(png_ptr(img));
         png_copy = false;
     }
@@ -607,7 +608,8 @@ void write_png(integer img)
             pdfendstream();
         }
     } else {
-        if (0) {
+        if (getenv("TEXMF_DEBUG_PNG_COPY") != NULL
+            && strcmp(getenv("TEXMF_DEBUG_PNG_COPY"), "1") == 0) {
             tex_printf(" *** PNG copy skipped because:");
             if (!png_copy)
                 tex_printf(" !png_copy");

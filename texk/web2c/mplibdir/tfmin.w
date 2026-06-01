@@ -33,14 +33,15 @@
 
 @d qi(A) (quarterword)(A) /* to store eight bits in a quarterword */
 @d null_font 0 /* the |font_number| for an empty font */
-@d false 0
-@d true 1
+@d False 0
+@d True 1
 @d hlp1(A) mp->help_line[0]=A; }
 @d hlp2(A,B) mp->help_line[1]=A; hlp1(B)
 @d hlp3(A,B,C) mp->help_line[2]=A; hlp2(B,C)
 @d help3  { mp->help_ptr=3; hlp3 /* use this with three help lines */
 
 @c 
+#include "mpconfig.h"
 #include <w2c/config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +50,7 @@
 #include "mpmp.h" /* internal header */
 #include "mpmath.h" /* internal header */
 #include "mpstrings.h" /* internal header */
-@<Declarations@>;
+@<Declarations@>
 @h
 
 @ The |font_ps_name| for a built-in font should be what PostScript expects.
@@ -103,13 +104,13 @@ and \.{PLtoTF} can be used to debug \.{TFM} files.
      hlp[2]="is right, try asking an expert to fix the TFM file";
    mp_snprintf(msg, 256, "Font %s not usable: TFM file %s", fname,
               ( file_opened ? "is bad" : "not found"));
-   mp_error(mp, msg, hlp, true);
+   mp_error(mp, msg, hlp, True);
 }
 
 @ @<Read data from |tfm_infile|; if there is no room, say so...@>=
-@<Read the \.{TFM} size fields@>;
-@<Use the size fields to allocate space in |font_info|@>;
-@<Read the \.{TFM} header@>;
+@<Read the \.{TFM} size fields@>
+@<Use the size fields to allocate space in |font_info|@>
+@<Read the \.{TFM} header@>
 @<Read the character data and the width, height, and depth tables and
   |goto done|@>
 
@@ -232,7 +233,7 @@ i++;
 a C string already.
 
 @<Open |tfm_infile| for input@>=
-file_opened=false;
+file_opened=False;
 mp_ptr_scan_file(mp, fname);
 if ( strlen(mp->cur_area)==0 ) { mp_xfree(mp->cur_area); mp->cur_area=NULL; }
 if ( strlen(mp->cur_ext)==0 )  { 
@@ -242,7 +243,7 @@ if ( strlen(mp->cur_ext)==0 )  {
 mp_pack_file_name(mp, mp->cur_name,mp->cur_area,mp->cur_ext);
 mp->tfm_infile = (mp->open_file)(mp, mp->name_of_file, "r",mp_filetype_metrics);
 if ( !mp->tfm_infile  ) goto BAD_TFM;
-file_opened=true
+file_opened=True
 
 
 

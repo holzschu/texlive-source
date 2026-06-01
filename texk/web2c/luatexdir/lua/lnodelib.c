@@ -1646,11 +1646,11 @@ static int lua_nodelib_direct_setleader(lua_State * L)
     write_tokens(n) = nodelib_gettoks(L, i); \
 } while (0)
 
-#define xget_write_direct_value(L,n) do {  \
+#define get_write_direct_value(L,n) do {  \
     tokenlist_to_lua(L, write_tokens(n)); \
 } while (0)
 
-#define get_write_direct_value(L,n) do {  \
+#define get_write_direct_data(L,n) do {  \
     int l; \
     char *s; \
     expand_macros_in_tokenlist(write_tokens(n)); \
@@ -1702,7 +1702,7 @@ static int lua_nodelib_direct_getdata(lua_State * L)
             } else if (s == special_node || s == late_special_node) {
                 get_special_direct_value(L, n);
             } else if (s == write_node) {
-                get_write_direct_value(L, n);
+                get_write_direct_data(L, n);
             } else {
                 lua_pushnil(L);
             }
@@ -1729,7 +1729,7 @@ static int lua_nodelib_direct_setdata(lua_State * L) /* data and value */
             } else if (s == pdf_literal_node || s == pdf_late_literal_node) {
                 if (lua_type(L,2) == LUA_TTABLE) {
                     set_pdf_literal_direct_token(L, n, 2);
-                } else { 
+                } else {
                     set_pdf_literal_direct_normal(L, n, 2);
                 }
                 if (lua_type(L,3) == LUA_TNUMBER) {
@@ -3008,7 +3008,7 @@ static int lua_nodelib_is_char(lua_State * L)
         lua_pushnil(L);             /* no glyph at all */
         lua_pushinteger(L,type(n)); /* can save a lookup call */
         return 2;
-    } else if (subtype(n) >= 256) {
+    } else if (is_protected_glyph_node(n)) {
         lua_pushboolean(L,0); /* a done glyph */
     } else if (lua_type(L,2) == LUA_TNUMBER) {
         halfword f = lua_tointeger(L, 2);
@@ -4005,8 +4005,8 @@ static int nodelib_direct_aux_next_char(lua_State * L)
         t = vlink(t);
         lua_settop(L,2);
     }
-    while (! ((t == null) || (type(t) == glyph_node && subtype(t) < 256))) {
-        t = vlink(t);
+    while ((t != null) && (type(t) != glyph_node || is_protected_glyph_node(t))) {
+       t = vlink(t);
     }
     if (t == null) {
         lua_pushnil(L);
@@ -4220,7 +4220,7 @@ static int nodelib_aux_next_char(lua_State * L)
         t = vlink(t);
         lua_settop(L,2);
     }
-    while (! ((t == null) || (type(t) == glyph_node && subtype(t) < 256))) {
+    while ((t != null) && (type(t) != glyph_node || is_protected_glyph_node(t))) {
         t = vlink(t);
     }
     if (t == null) {
@@ -4522,12 +4522,14 @@ static void lua_nodelib_getfield_whatsit(lua_State * L, int n, const char *s)
         if (lua_key_eq(s, stream)) {
             lua_pushinteger(L, write_stream(n));
         } else if (lua_key_eq(s, data)) {
+            get_write_direct_data(L,n);
+        } else if (lua_key_eq(s, value)) {
             get_write_direct_value(L,n);
         } else {
             lua_pushnil(L);
         }
     } else if (t == special_node || t == late_special_node) {
-        if (lua_key_eq(s, data)) {
+        if (lua_key_eq(s, data) || lua_key_eq(s, value)) {
             get_special_direct_value(L,n);
         } else {
             lua_pushnil(L);
@@ -5302,12 +5304,14 @@ static void lua_nodelib_direct_getfield_whatsit(lua_State * L, int n, const char
         if (lua_key_eq(s, stream)) {
             lua_pushinteger(L, write_stream(n));
         } else if (lua_key_eq(s, data)) {
+            get_write_direct_data(L,n);
+        } else if (lua_key_eq(s, value)) {
             get_write_direct_value(L,n);
         } else {
             lua_pushnil(L);
         }
     } else if (t == special_node || t == late_special_node) {
-        if (lua_key_eq(s, data)) {
+        if (lua_key_eq(s, data) || lua_key_eq(s, value)) {
             get_special_direct_value(L,n);
         } else {
             lua_pushnil(L);
@@ -6146,10 +6150,7 @@ static int lang_tex_direct_hyphenating(lua_State * L)
 
 #define protect_one_indeed(n) \
     if (n != null) { \
-        int s = subtype(n); \
-        if (s <= 256) { \
-            subtype(n) = (quarterword) (s == 1 ? 256 : 256 + s); \
-        } \
+        protect_glyph_node(n); \
     }
 
 #define protect_all_indeed(n) \
@@ -6157,10 +6158,7 @@ static int lang_tex_direct_hyphenating(lua_State * L)
     if (h != null) { \
         while (h != null) { \
             if (type(h) == glyph_node) { \
-                int s = subtype(h); \
-                if (s <= 256) { \
-                    subtype(h) = (quarterword) (s == 1 ? 256 : 256 + s); \
-                } \
+                protect_glyph_node(h); \
             } \
             h = vlink(h); \
         } \
@@ -6177,10 +6175,7 @@ static int lang_tex_direct_hyphenating(lua_State * L)
 
 #define unprotect_one_indeed(n) \
     if (n != null) { \
-        int s = subtype(n); \
-        if (s > 256) { \
-            subtype(n) = (quarterword) (s - 256); \
-        } \
+        unprotect_glyph_node(n); \
     }
 
 #define unprotect_all_indeed(n) \
@@ -6188,10 +6183,7 @@ static int lang_tex_direct_hyphenating(lua_State * L)
     if (h != null) { \
         while (h != null) { \
             if (type(h) == glyph_node) { \
-                int s = subtype(h); \
-                if (s <= 256) { \
-                    subtype(h) = (quarterword) (s - 256); \
-                } \
+                unprotect_glyph_node(h); \
             } \
             h = vlink(h); \
         } \
@@ -6715,7 +6707,7 @@ static int lua_nodelib_setfield_whatsit(lua_State * L, int n, const char *s)
     } else if (t == write_node) {
         if (lua_key_eq(s, stream)) {
             write_stream(n) = (halfword) lua_tointeger(L, 3);
-        } else if (lua_key_eq(s, data)) {
+        } else if (lua_key_eq(s, data) || lua_key_eq(s, value)) {
             set_write_direct_value(L,n,3);
         } else {
             return nodelib_cantset(L, n, s);
@@ -6749,7 +6741,7 @@ static int lua_nodelib_setfield_whatsit(lua_State * L, int n, const char *s)
             pdf_action_tokens(n) = nodelib_gettoks(L, 3);
         } else if (lua_key_eq(s, struct_id)) {
             if (lua_isnil(L, 3)) {
-               pdf_action_struct_id(n) = null;
+                pdf_action_struct_id(n) = null;
             } else if (pdf_action_named_id(n) & 2) {
                 pdf_action_struct_id(n) = nodelib_gettoks(L, 3);
             } else {
@@ -6779,7 +6771,7 @@ static int lua_nodelib_setfield_whatsit(lua_State * L, int n, const char *s)
             return nodelib_cantset(L, n, s);
         }
     } else if (t == special_node || t == late_special_node) {
-        if (lua_key_eq(s, data)) {
+        if (lua_key_eq(s, data) || lua_key_eq(s, value)) {
             set_special_direct_value(L,n,3);
         } else {
             return nodelib_cantset(L, n, s);
@@ -7469,8 +7461,8 @@ static int lua_nodelib_direct_setfield_whatsit(lua_State * L, int n, const char 
         }
     } else if (t == write_node) {
         if (lua_key_eq(s, stream)) {
-            set_write_direct_value(L,n,3);
-        } else if (lua_key_eq(s, data)) {
+            write_stream(n) = (halfword) lua_tointeger(L, 3);
+        } else if (lua_key_eq(s, data) || lua_key_eq(s, value)) {
             set_write_direct_value(L,n,3);
         } else {
             return nodelib_cantset(L, n, s);
@@ -7534,7 +7526,7 @@ static int lua_nodelib_direct_setfield_whatsit(lua_State * L, int n, const char 
             return nodelib_cantset(L, n, s);
         }
     } else if (t == special_node || t == late_special_node) {
-        if (lua_key_eq(s, data)) {
+        if (lua_key_eq(s, data) || lua_key_eq(s, value)) {
             set_special_direct_value(L, n, 3);
         } else {
             return nodelib_cantset(L, n, s);
@@ -7576,7 +7568,7 @@ static int lua_nodelib_direct_is_char(lua_State * L)
         lua_pushnil(L); /* no glyph at all */
         lua_pushinteger(L,type(n)); /* can save a lookup call */
         return 2;
-    } else if (subtype(n) >= 256) {
+    } else if (is_protected_glyph_node(n)) {
         lua_pushboolean(L,0); /* a done glyph */
     } else if (lua_type(L,2) == LUA_TNUMBER) {
         halfword f = lua_tointeger(L, 2);
@@ -8542,12 +8534,12 @@ static int lua_nodelib_direct_effective_glue(lua_State * L)
 
 */
 
-static void check_disc(halfword p) 
-{ 
-    if (p != null) { 
-        if (vlink(p) != null) { 
+static void check_disc(halfword p)
+{
+    if (p != null) {
+        if (vlink(p) != null) {
             tlink(p) = tail_of_list(vlink(p));
-        } else { 
+        } else {
             tlink(p) = null;
         }
     }
@@ -8558,8 +8550,8 @@ static int lua_nodelib_direct_check_discretionaries(lua_State * L) {
     while (c != null) {
         if (type(c) == disc_node) {
             check_disc(no_break(c));
-            check_disc(pre_break(c)); 
-            check_disc(post_break(c)); 
+            check_disc(pre_break(c));
+            check_disc(post_break(c));
         }
         c = vlink(c) ;
     }
@@ -8569,9 +8561,9 @@ static int lua_nodelib_direct_check_discretionaries(lua_State * L) {
 static int lua_nodelib_direct_check_discretionary(lua_State * L) {
     halfword c = lua_tointeger(L, 1);
     if (c != null && type(c) == disc_node) {
-        check_disc(no_break(c)); 
-        check_disc(pre_break(c)); 
-        check_disc(post_break(c)); 
+        check_disc(no_break(c));
+        check_disc(pre_break(c));
+        check_disc(post_break(c));
     }
     return 0;
 }
@@ -8620,9 +8612,9 @@ static int lua_nodelib_check_discretionaries(lua_State * L) {
     halfword c = *check_isnode(L, 1);
     while (c != null) {
         if (type(c) == disc_node) {
-            check_disc(no_break(c)); 
-            check_disc(pre_break(c)); 
-            check_disc(post_break(c)); 
+            check_disc(no_break(c));
+            check_disc(pre_break(c));
+            check_disc(post_break(c));
         }
         c = vlink(c) ;
     }
@@ -8632,9 +8624,9 @@ static int lua_nodelib_check_discretionaries(lua_State * L) {
 static int lua_nodelib_check_discretionary(lua_State * L) {
     halfword c = *check_isnode(L, 1);
     if (c != null && type(c) == disc_node) {
-        check_disc(no_break(c)); 
-        check_disc(pre_break(c)); 
-        check_disc(post_break(c)); 
+        check_disc(no_break(c));
+        check_disc(pre_break(c));
+        check_disc(post_break(c));
     }
     return 0;
 }

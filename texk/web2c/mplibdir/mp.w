@@ -71,12 +71,11 @@ undergoes any modifications, so that it will be clear which version of
 @^extensions to \MP@>
 @^system dependencies@>
 
-@d default_banner "This is MetaPost, Version 2.11" /* printed when \MP\ starts */
-@d true 1
-@d false 0
+@d default_banner "This is MetaPost, Version "metapost_version /* printed when \MP\ starts */
+
 
 @<\MP\ version header@>=
-#define metapost_version "2.11"
+#define metapost_version "3.00"
 
 @ The external library header for \MP\ is |mplib.h|. It contains a
 few typedefs and the header defintions for the externally used
@@ -93,6 +92,7 @@ large |MP_instance| structure.
 #ifndef HAVE_BOOLEAN
 typedef int boolean;
 #endif
+
 @<\MP\ version header@>@;
 typedef struct MP_instance *MP;
 @<Exported types@>@;
@@ -127,17 +127,18 @@ typedef int boolean;
 typedef int integer;
 #define MPOST_ABS abs
 #else
-/* See \.{source/texk/web2c/w2c/config.h} */
-#if INTEGER_MAX == LONG_MAX /* this should mean |INTEGER_TYPE == long| */
-#ifdef HAVE_LABS
-#define MPOST_ABS labs
-#else
-#define MPOST_ABS abs
-#endif
-#else
-#define MPOST_ABS abs
-#endif /* |if INTEGER_TYPE == long| */
+#define MPOST_ABS llabs
 #endif /* |ifndef INTEGER_TYPE| */
+/* integer64 should be alredy defined in source/texk/web2c/w2c/config.h */
+/* but just in case */
+#ifndef integer64 
+# if defined(WIN32)
+  typedef __int64 integer64;
+# else
+  typedef int64_t integer64;
+# endif
+#endif 
+typedef int16_t QUARTERWORD; /* Same as quarterword.*/
 
 
 @<Declare helpers@>@;
@@ -153,29 +154,30 @@ typedef struct MP_instance {
 #endif
 
 @ @c
-/*\#define DEBUGENVELOPE */
-#ifdef DEBUGENVELOPE
-static int DEBUGENVELOPECOUNTER=0;
-#define dbg_str(A)	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] %s",		   DEBUGENVELOPECOUNTER++, #A)@]
-#define dbg_n(A) 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%s, ",	   DEBUGENVELOPECOUNTER++, #A, number_tostring(A))@]
-#define dbg_in(A) 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%d, ",	   DEBUGENVELOPECOUNTER++, #A, (int)(A))@]
-#define dbg_dn(A) 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%.100f, ",DEBUGENVELOPECOUNTER++, #A, (double)(A))@]
-#define dbg_key(A) 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']= ",	   DEBUGENVELOPECOUNTER++, #A)@]
-#define dbg_key_nval(K,V) @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%s",	   DEBUGENVELOPECOUNTER++, #K,number_tostring(V))@]
-#define dbg_key_ival(K,V) @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%d",	   DEBUGENVELOPECOUNTER++, #K,(int)(V))@]
-#define dbg_key_dval(K,V) @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%.100f",  DEBUGENVELOPECOUNTER++, #K,(double)(V))@]
-#define dbg_comment(A) 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] --[==[%s]==]",   DEBUGENVELOPECOUNTER++, #A)@]
-#define dbg_sp 		  @[printf("\n--[==[%03d DEBUGENVELOPE ]==]  ",   	   DEBUGENVELOPECOUNTER++)@]
-#define dbg_open_t 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] {",   	   DEBUGENVELOPECOUNTER++)@]
-#define dbg_close_t 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] }",   	   DEBUGENVELOPECOUNTER++)@]
-#define dbg_comma 	  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] ,",   	   DEBUGENVELOPECOUNTER++)@]
-#define dbg_nl 		  @[printf("\n--[==[%03d DEBUGENVELOPE ]==] \n",   	   DEBUGENVELOPECOUNTER++)@]
+/*\#define MPOST_DEBUG_ENVELOPE */
+#ifdef MPOST_DEBUG_ENVELOPE
+static int MPOST_DEBUG_ENVELOPECOUNTER=0;
+#define dbg_str(A)	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] %s",		   MPOST_DEBUG_ENVELOPECOUNTER++, #A)@]
+#define dbg_n(A) 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ['%s']=%s, ",	   MPOST_DEBUG_ENVELOPECOUNTER++, #A, number_tostring(A))@]
+#define dbg_in(A) 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ['%s']=%d, ",	   MPOST_DEBUG_ENVELOPECOUNTER++, #A, (int)(A))@]
+#define dbg_dn(A) 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ['%s']=%.100f, ",MPOST_DEBUG_ENVELOPECOUNTER++, #A, (double)(A))@]
+#define dbg_key(A) 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ['%s']= ",	   MPOST_DEBUG_ENVELOPECOUNTER++, #A)@]
+#define dbg_key_nval(K,V) @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ['%s']=%s",	   MPOST_DEBUG_ENVELOPECOUNTER++, #K,number_tostring(V))@]
+#define dbg_key_ival(K,V) @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ['%s']=%d",	   MPOST_DEBUG_ENVELOPECOUNTER++, #K,(int)(V))@]
+#define dbg_key_dval(K,V) @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ['%s']=%.100f",  MPOST_DEBUG_ENVELOPECOUNTER++, #K,(double)(V))@]
+#define dbg_comment(A) 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] --[==[%s]==]",   MPOST_DEBUG_ENVELOPECOUNTER++, #A)@]
+#define dbg_sp 		  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==]  ",   	   MPOST_DEBUG_ENVELOPECOUNTER++)@]
+#define dbg_open_t 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] {",   	   MPOST_DEBUG_ENVELOPECOUNTER++)@]
+#define dbg_close_t 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] }",   	   MPOST_DEBUG_ENVELOPECOUNTER++)@]
+#define dbg_comma 	  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] ,",   	   MPOST_DEBUG_ENVELOPECOUNTER++)@]
+#define dbg_nl 		  @[printf("\n--[==[%03d MPOST_DEBUG_ENVELOPE ]==] \n",   	   MPOST_DEBUG_ENVELOPECOUNTER++)@]
 #define dbg_CUBIC         dbg_n(p->x_coord); dbg_n(p->y_coord); \
 			  dbg_n(p->right_x); dbg_n(p->right_y); \
 			  dbg_n(q->left_x);  dbg_n(q->left_y);  \
 			  dbg_n(q->x_coord); dbg_n(q->y_coord)@;
 #endif
-#define KPATHSEA_DEBUG_H 1
+#define KPATHSEA_DEBUG_H   1
+#include "mpconfig.h"
 #include <w2c/config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -267,16 +269,23 @@ most compilers understand the non-debug version.
 @^system dependencies@>
 
 @<MPlib internal header stuff@>=
-/*\#define DEBUG 2*/
-#if DEBUG
+#if MPOST_DEBUG
+/* This function occasionally crashes (if something is written after the */
+/* log file is already closed), but that is not so important while debugging. */
+
+extern void do_debug_printf(MP mp, const char *prefix, const char *fmt, ...);
+
+#endif
+
+#if MPOST_DEBUG
 #define debug_number(A) @[printf("%d: %s=%.32f (%d)\n", __LINE__, #A, number_to_double(A), number_to_scaled(A))@]
 #else
 #define debug_number(A) @[@]
 #endif
-#if DEBUG>1
-void do_debug_printf(MP mp, const char *prefix, const char *fmt, ...);
+#if MPOST_DEBUG>1
+/*void do_debug_printf(MP mp, const char *prefix, const char *fmt, ...);*/
 #  define debug_printf(a1,a2,a3) @[do_debug_printf(mp, "", a1,a2,a3)@]
-#  define FUNCTION_TRACE1(a1) do_@[debug_printf(mp, "FTRACE: ", a1)@]
+#  define FUNCTION_TRACE1(a1) @[do_debug_printf(mp, "FTRACE: ", a1)@]
 #  define FUNCTION_TRACE2(a1,a2) @[do_debug_printf(mp, "FTRACE: ", a1,a2)@]
 #  define FUNCTION_TRACE3(a1,a2,a3) @[do_debug_printf(mp, "FTRACE: ", a1,a2,a3)@]
 #  define FUNCTION_TRACE3X(a1,a2,a3) @[(void)mp@]
@@ -290,11 +299,11 @@ void do_debug_printf(MP mp, const char *prefix, const char *fmt, ...);
 #  define FUNCTION_TRACE4(a1,a2,a3,a4) @[(void)mp@]
 #endif
 
-@ This function occasionally crashes (if something is written after the
-log file is already closed), but that is not so important while debugging.
+@ This function occasionally crashes (if something is written after the */
+log file is already closed), but that is not so important while debugging. */
 
 @c
-#if DEBUG
+#if MPOST_DEBUG
 void do_debug_printf(MP mp, const char *prefix, const char *fmt, ...) {
   va_list ap;
   va_start (ap, fmt);
@@ -320,7 +329,7 @@ void do_debug_printf(MP mp, const char *prefix, const char *fmt, ...) {
   }
 #endif
 }
-#endif /* |if DEBUG| */
+#endif /* |if MPOST_DEBUG| */
 
 @ Here are the functions that set up the \MP\ instance.
 
@@ -344,7 +353,7 @@ MP_options *mp_options (void) {
 |left_point| and |right_point| of a number |a| simply return |a|, while
 |interval_set| of the pair |(a,b)|  returns the mid point.
 
-@s mp_number int
+@s mp_number integer64
 
 @<Declarations@>=
 static void mp_stub_m_get_left_endpoint(MP mp, mp_number * r, mp_number a);
@@ -434,7 +443,7 @@ typedef enum {
 typedef union {
   void *num;
   double dval;
-  int val;
+  integer64 val;
 } mp_number_store;
 typedef struct mp_number_data {
   mp_number_store data;
@@ -454,16 +463,16 @@ typedef void @[@] (*n_arg_func) (MP mp, mp_number *r, mp_number a, mp_number b);
 typedef void @[@] (*velocity_func) (MP mp, mp_number *r, mp_number a, mp_number b, mp_number c, mp_number d, mp_number e);
 typedef void @[@] (*ab_vs_cd_func) (MP mp, mp_number *r, mp_number a, mp_number b, mp_number c, mp_number d);
 typedef void @[@] (*crossing_point_func) (MP mp, mp_number *r, mp_number a, mp_number b, mp_number c);
-typedef void @[@] (*number_from_int_func) (mp_number *A, int B);
-typedef void @[@] (*number_from_boolean_func) (mp_number *A, int B);
-typedef void @[@] (*number_from_scaled_func) (mp_number *A, int B);
+typedef void @[@] (*number_from_int_func) (mp_number *A, integer64 B);
+typedef void @[@] (*number_from_boolean_func) (mp_number *A, integer64 B);
+typedef void @[@] (*number_from_scaled_func) (mp_number *A, integer64 B);
 typedef void @[@] (*number_from_double_func) (mp_number *A, double B);
 typedef void @[@] (*number_from_addition_func) (mp_number *A, mp_number B, mp_number C);
 typedef void @[@] (*number_from_substraction_func) (mp_number *A, mp_number B, mp_number C);
 typedef void @[@] (*number_from_div_func) (mp_number *A, mp_number B, mp_number C);
 typedef void @[@] (*number_from_mul_func) (mp_number *A, mp_number B, mp_number C);
-typedef void @[@] (*number_from_int_div_func) (mp_number *A, mp_number B, int C);
-typedef void @[@] (*number_from_int_mul_func) (mp_number *A, mp_number B, int C);
+typedef void @[@] (*number_from_int_div_func) (mp_number *A, mp_number B, integer64 C);
+typedef void @[@] (*number_from_int_mul_func) (mp_number *A, mp_number B, integer64 C);
 typedef void @[@] (*number_from_oftheway_func) (MP mp, mp_number *A, mp_number t, mp_number B, mp_number C);
 typedef void @[@] (*number_negate_func) (mp_number *A);
 typedef void @[@] (*number_add_func) (mp_number *A, mp_number B);
@@ -475,13 +484,13 @@ typedef void @[@] (*number_double_func) (mp_number *A);
 typedef void @[@] (*number_abs_func) (mp_number *A);
 typedef void @[@] (*number_clone_func) (mp_number *A, mp_number B);
 typedef void @[@] (*number_swap_func) (mp_number *A, mp_number *B);
-typedef void @[@] (*number_add_scaled_func) (mp_number *A, int b);
-typedef void @[@] (*number_multiply_int_func) (mp_number *A, int b);
-typedef void @[@] (*number_divide_int_func) (mp_number *A, int b);
-typedef int @[@] (*number_to_int_func) (mp_number A);
-typedef int @[@] (*number_to_boolean_func) (mp_number A);
-typedef int @[@] (*number_to_scaled_func) (mp_number A);
-typedef int @[@] (*number_round_func) (mp_number A);
+typedef void @[@] (*number_add_scaled_func) (mp_number *A, integer64 b);
+typedef void @[@] (*number_multiply_int_func) (mp_number *A, integer64 b);
+typedef void @[@] (*number_divide_int_func) (mp_number *A, integer64 b);
+typedef integer64 @[@] (*number_to_int_func) (mp_number A);
+typedef integer64 @[@] (*number_to_boolean_func) (mp_number A);
+typedef integer64 @[@] (*number_to_scaled_func) (mp_number A);
+typedef integer64 @[@] (*number_round_func) (mp_number A);
 typedef void @[@] (*number_floor_func) (mp_number *A);
 typedef double @[@] (*number_to_double_func) (mp_number A);
 typedef int @[@] (*number_odd_func) (mp_number A);
@@ -502,7 +511,7 @@ typedef void @[@] (*free_number_func) (MP mp, mp_number *n);
 typedef void @[@] (*fraction_to_round_scaled_func) (mp_number *n);
 typedef void @[@] (*print_func) (MP mp, mp_number A);
 typedef char * (*tostring_func) (MP mp, mp_number A);
-typedef void @[@] (*scan_func) (MP mp, int A);
+typedef void @[@] (*scan_func) (MP mp, integer64 A);
 typedef void @[@] (*mp_free_func) (MP mp);
 typedef void @[@] (*set_precision_func) (MP mp);
 /* math interval new primitives */
@@ -657,7 +666,7 @@ MP mp_initialize (MP_options * opt) {
   if (mp->noninteractive)
     @<Prepare function pointers for non-interactive use@>@;
   t_open_out(); /* open the terminal for output */
-#if DEBUG
+#if MPOST_DEBUG
   setvbuf(stdout, (char *) NULL, _IONBF, 0);
   setvbuf(mp->term_out, (char *) NULL, _IONBF, 0);
 #endif
@@ -775,7 +784,7 @@ strange behavior that sometimes occurs when \MP\ is being installed or
 when system wizards are fooling around with \MP\ without quite knowing
 what they are doing. Such code will not normally be compiled; it is
 delimited by the preprocessor test|
-#ifdef DEBUG| $\ldots$|
+#ifdef MPOST_DEBUG| $\ldots$|
 #endif|.
 
 @ The following parameters can be changed at compile time to extend or
@@ -850,8 +859,7 @@ mp->bad = 0;
 @d incr(A)   (A)=(A)+1 /* increase a variable by unity */
 @d decr(A)   (A)=(A)-1 /* decrease a variable by unity */
 @d negate(A) (A)=-(A) /* change the sign of a variable */
-@d double(A) (A)=(A)+(A)
-@d odd(A)   (abs(A)%2==1)
+@d odd(A)   (MPOST_ABS(A)%2==1)
 
 @* The character set.
 In order to make \MP\ readily portable to a wide variety of
@@ -966,7 +974,7 @@ differentiate file searches if a library like kpathsea is used,
 the fopen mode is passed along for the same reason.
 
 @<Types...@>=
-typedef unsigned char eight_bits;       /* unsigned one-byte quantity */
+typedef uint8_t eight_bits;       /* unsigned one-byte quantity */
 
 @ @<Exported types@>=
 enum mp_filetype {
@@ -1029,7 +1037,8 @@ static char *mp_run_script (MP mp, const char *str, size_t len) {
 
 @ @c
 static char *mp_make_text (MP mp, const char *str, size_t len, int mode) {
-  (void) mp;
+  (void)mp;
+  (void)mode;
   return mp_strldup (str, len);
 }
 
@@ -1839,9 +1848,9 @@ given integer |n|, assumes that all integers fit nicely into a |int|.
 @^system dependencies@>
 
 @<Basic print...@>=
-void mp_print_int (MP mp, integer n) {                               /* prints an integer in decimal form */
+void mp_print_int (MP mp, mpinteger64 n) {                               /* prints an integer in decimal form */
   char s[12];
-  mp_snprintf (s, 12, "%d", (int) n);
+  mp_snprintf (s, 12, "%" PRId64,  n);
   mp_print (mp, s);
 }
 void mp_print_pointer (MP mp, void *n) {                               /* prints an pointer in hexadecimal form */
@@ -1851,14 +1860,14 @@ void mp_print_pointer (MP mp, void *n) {                               /* prints
 }
 
 @ @<Internal library ...@>=
-void mp_print_int (MP mp, integer n);
+void mp_print_int (MP mp, mpinteger64 n);
 void mp_print_pointer (MP mp, void *n);
 
 @ \MP\ also makes use of a trivial procedure to print two digits. The
 following subroutine is usually called with a parameter in the range |0<=n<=99|.
 
 @c
-static void mp_print_dd (MP mp, integer n) {                               /* prints two least significant digits */
+static void mp_print_dd (MP mp, mpinteger64 n) {                               /* prints two least significant digits */
   n = MPOST_ABS (n) % 100;
   mp_print_char (mp, xord ('0' + (n / 10)));
   mp_print_char (mp, xord ('0' + (n % 10)));
@@ -1866,7 +1875,7 @@ static void mp_print_dd (MP mp, integer n) {                               /* pr
 
 
 @ @<Declarations@>=
-static void mp_print_dd (MP mp, integer n);
+static void mp_print_dd (MP mp, mpinteger64 n);
 
 @ Here is a procedure that asks the user to type a line of input,
 assuming that the |selector| setting is either |term_only| or |term_and_log|.
@@ -1933,7 +1942,7 @@ enum mp_interaction_mode {
 };
 
 @ @<Option variables@>=
-int interaction;        /* current level of interaction */
+integer64 interaction;        /* current level of interaction */
 int noninteractive;     /* do we have a terminal? */
 int extensions;
 
@@ -2096,7 +2105,9 @@ in reverse order, i.e., with |help_line[0]| appearing last.
 @c
 void mp_error (MP mp, const char *msg, const char **hlp, boolean deletions_allowed) {
   ASCII_code c; /* what the user types */
-  integer s1, s2;       /* used to save global variables when deleting tokens */
+  //uint32_t s1; 
+  quarterword s1; 
+  mpinteger64 s2;       /* used to save global variables when deleting tokens */
   mp_sym s3;    /* likewise */
   int i = 0;
   const char *help_line[6];       /* helps for the next |error| */
@@ -2110,7 +2121,7 @@ void mp_error (MP mp, const char *msg, const char **hlp, boolean deletions_allow
     }
     cnt = hlp;
   }
-  help_ptr=i;
+  help_ptr=(unsigned int)i;
   while (i>0) {
     help_line[--i]= *cnt++;
   }
@@ -2165,7 +2176,7 @@ edited and the relevant line number.
 @^system dependencies@>
 
 @<Exported types@>=
-typedef void @[@] (*mp_editor_cmd) (MP, char *, int);
+typedef void @[@] (*mp_editor_cmd) (MP, char *, integer64);
 
 @ @<Option variables@>=
 mp_editor_cmd run_editor;
@@ -2174,12 +2185,12 @@ mp_editor_cmd run_editor;
 set_callback_option (run_editor);
 
 @ @<Declarations@>=
-static void mp_run_editor (MP mp, char *fname, int fline);
+static void mp_run_editor (MP mp, char *fname, integer64 fline);
 
 @ @c
-void mp_run_editor (MP mp, char *fname, int fline) {
+void mp_run_editor (MP mp, char *fname, integer64 fline) {
   char *s = xmalloc (256, 1);
-  mp_snprintf (s, 256, "You want to edit file %s at line %d\n", fname, fline);
+  mp_snprintf (s, 256, "You want to edit file %s at line %" PRId64 "\n", fname, fline);
   wterm_ln (s);
 @.You want to edit file x@>
 }
@@ -2844,11 +2855,11 @@ from quarterwords. These are legacy macros.
 typedef struct mp_value_node_data *mp_value_node;
 typedef struct mp_node_data *mp_node;
 typedef struct mp_symbol_entry *mp_sym;
-typedef short quarterword;      /* 1/4 of a word */
-typedef int halfword;   /* 1/2 of a word */
+typedef int16_t quarterword;      /* 1/4 of a word */
+typedef int32_t halfword;   /* 1/2 of a word */
 typedef struct {
   integer scale; /* only for |indep_scale|, used together with |serial| */
-  integer serial; /* only for |indep_value|, used together with |scale| */
+  halfword serial; /* only for |indep_value|, used together with |scale| */
 } mp_independent_data;
 typedef struct {
   mp_independent_data indep;
@@ -3005,7 +3016,7 @@ void *mp_xrealloc (MP mp, void *p, size_t nmem, size_t size) {
 }
 void *mp_xmalloc (MP mp, size_t nmem, size_t size) {
   void *w;
-#if DEBUG
+#if MPOST_DEBUG
   if ((max_size_test / size) < nmem) {
     mp_fputs ("Memory size overflow!\n", mp->err_out);
     mp->history = mp_fatal_error_stop;
@@ -3050,7 +3061,7 @@ control of what error messages the user receives.
 #define NODE_BODY                       \
   mp_variable_type type;                \
   mp_name_type_type name_type;          \
-  unsigned short has_number;		\
+  uint16_t has_number;		        \
   struct mp_node_data *link@;
 @#@t\2\2\4\4@>
 typedef struct mp_node_data {
@@ -3075,7 +3086,7 @@ size_t var_used_max;    /* how much memory was in use max */
 @ These redirect to function to aid in debugging.
 
 @c
-#if DEBUG
+#if MPOST_DEBUG
 #define mp_sym_info(A)       @[get_mp_sym_info(mp,(A))@]
 #define set_mp_sym_info(A,B) @[do_set_mp_sym_info(mp,(A),(B))@]
 #define mp_sym_sym(A)        @[get_mp_sym_sym(mp,(A))@]
@@ -3110,7 +3121,7 @@ static mp_sym get_mp_sym_sym (MP mp, mp_node p) {
 #endif
 
 @ @<Declarations@>=
-#if DEBUG
+#if MPOST_DEBUG
 static void do_set_mp_sym_info (MP mp, mp_node A, halfword B);
 static halfword get_mp_sym_info (MP mp, mp_node p);
 static void do_set_mp_sym_sym (MP mp, mp_node A, mp_sym B);
@@ -3299,7 +3310,11 @@ At any rate, here is the list, for future reference.
 
 
 @<Enumeration types@>=
-typedef enum {
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >=202311L)
+typedef enum mp_command_code: QUARTERWORD {
+#else 
+typedef enum  {
+#endif
 mp_start_tex=1, /* begin \TeX\ material (\&{btex}, \&{verbatimtex}) */
 mp_etex_marker, /* end \TeX\ material (\&{etex}) */
 mp_mpx_break, /* stop reading an \.{MPX} file (\&{mpxbreak}) */
@@ -3407,7 +3422,11 @@ and |string_type| in that order.
   case mp_unknown_pen: case mp_unknown_picture: case mp_unknown_path
 
 @<Enumeration types@>=
-typedef enum {
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >=202311L)
+typedef enum mp_variable_type: QUARTERWORD {
+#else 
+typedef enum  {
+#endif
   mp_undefined = 0,       /* no type has been declared */
   mp_vacuous,                   /* no expression was present */
   mp_boolean_type,              /* \&{boolean} with a known value */
@@ -4382,7 +4401,7 @@ set_internal_string (mp_output_format_options, mp_intern (mp, ""));
 set_internal_string (mp_number_system, mp_intern (mp, "scaled"));
 set_internal_from_number (mp_number_precision, precision_default);
 set_internal_from_number (mp_texscriptmode, unity_t);
-#if DEBUG
+#if MPOST_DEBUG
 number_clone (internal_value (mp_tracing_titles), three_t);
 number_clone (internal_value (mp_tracing_equations), three_t);
 number_clone (internal_value (mp_tracing_capsules), three_t);
@@ -4471,7 +4490,7 @@ static void mp_fix_date_and_time (MP mp) {
   source_date_epoch = getenv("SOURCE_DATE_EPOCH");
   if (source_date_epoch) {
     errno = 0;
-    epoch = strtoull(source_date_epoch, &endptr, 10);
+    epoch = (time_t)strtoull(source_date_epoch, &endptr, 10);
     if (*endptr != '\0' || errno != 0) {
       FATAL1("invalid epoch-seconds-timezone value for environment variable $SOURCE_DATE_EPOCH: %s",
               source_date_epoch);
@@ -4673,7 +4692,7 @@ that holds the current command value of the token, and an
 } while (0)@;
 
 @ @c
-#if DEBUG
+#if MPOST_DEBUG
 #define text(A)         @[do_get_text(mp, (A))@]
 #define eq_type(A)      @[do_get_eq_type(mp, (A))@]
 #define equiv(A)        @[do_get_equiv(mp, (A))@]
@@ -4708,7 +4727,7 @@ static mp_sym do_get_equiv_sym (MP mp, mp_sym A) {
 #endif
 
 @ @<Declarations...@>=
-#if DEBUG
+#if MPOST_DEBUG
 static mp_string do_get_text (MP mp, mp_sym A);
 static halfword do_get_eq_type (MP mp, mp_sym A);
 static halfword do_get_equiv (MP mp, mp_sym A);
@@ -5342,7 +5361,7 @@ printer's sense. It's curious that the same word is used in such different ways.
 typedef struct mp_node_data *mp_token_node;
 
 @ @c
-#if DEBUG
+#if MPOST_DEBUG
 #define value_sym(A)    @[do_get_value_sym(mp,(mp_token_node)(A))@]
 @[@]/*|
 #define value_number(A) @[do_get_value_number(mp,(mp_token_node)(A))@]
@@ -5399,7 +5418,7 @@ static void do_set_value_knot(MP mp, mp_token_node A, mp_knot B) {
 
 
 @ @c
-#if DEBUG
+#if MPOST_DEBUG
 static mp_sym do_get_value_sym (MP mp, mp_token_node A) {
   /* |A->type| can be structured in this case */
   FUNCTION_TRACE3 ("%p = get_value_sym(%p)\n", A->data.sym, A);
@@ -5420,16 +5439,16 @@ static mp_knot do_get_value_knot (MP mp, mp_token_node A) {
   FUNCTION_TRACE3 ("%p = get_value_knot(%p)\n", A->data.p, A);
   return  A->data.p ;
 }
-static mp_number do_get_value_number (MP mp, mp_token_node A) {
-  assert (A->type != mp_structured);
-  FUNCTION_TRACE3 ("%d = get_value_number(%p)\n", A->data.n.type, A);
-  return  A->data.n ;
-}
+/* static mp_number do_get_value_number (MP mp, mp_token_node A) \{ */
+/*   assert (A->type != mp_structured); */
+/*   FUNCTION_TRACE3 ("%d = get_value_number(%p)\n", A->data.n.type, A); */
+/*   return  A->data.n ; */
+/* \} */
 #endif
 
 @ @<Declarations@>=
-#if DEBUG
-static mp_number do_get_value_number (MP mp, mp_token_node A);
+#if MPOST_DEBUG
+/* static mp_number do_get_value_number (MP mp, mp_token_node A); */
 static mp_sym    do_get_value_sym    (MP mp, mp_token_node A);
 static mp_node   do_get_value_node   (MP mp, mp_token_node A);
 static mp_string do_get_value_str    (MP mp, mp_token_node A) ;
@@ -5898,43 +5917,44 @@ static mp_node mp_get_value_node (MP mp) {
   FUNCTION_TRACE2 ("%p = mp_get_value_node()\n", p);
   return (mp_node)p;
 }
-#if DEBUG > 1
+#if MPOST_DEBUG > 1
+static void debug_dump_value_node (mp_node x) __attribute__((unused)) ;
 static void debug_dump_value_node (mp_node x) {
   mp_value_node qq = (mp_value_node)x;
-  fprintf (stdout, "\nnode %p:\n", qq);
+  fprintf (stdout, "\nnode %p:\n", (void*)qq);
   fprintf (stdout, "  type=%s\n", mp_type_string(qq->type));
   fprintf (stdout, "  name_type=%d\n", qq->name_type);
-  fprintf (stdout, "  link=%p\n", qq->link);
+  fprintf (stdout, "  link=%p\n", (void*)qq->link);
   fprintf (stdout, "  data.n=%d\n", qq->data.n.type);
   if (is_number(qq->data.n)) {
     fprintf (stdout, "    data.n.data.val=%d\n",  qq->data.n.data.val);
     fprintf (stdout, "    data.n.data.dval=%f\n", qq->data.n.data.dval);
   }
-  fprintf (stdout, "  data.str=%p\n", qq->data.str);
+  fprintf (stdout, "  data.str=%p\n", (void*)qq->data.str);
   if (qq->data.str != NULL) {
     fprintf (stdout, "    data.str->len=%d\n", (int)qq->data.str->len);
     fprintf (stdout, "    data.str->str=%s\n", qq->data.str->str);
   }
   fprintf (stdout, "  data.indep.serial=%d\n  data.indep.scale=%d\n", qq->data.indep.serial,
                                                                        qq->data.indep.scale);
-  fprintf (stdout, "  data.sym=%p\n", qq->data.sym);
-  fprintf (stdout, "  data.p=%p\n", qq->data.p);
-  fprintf (stdout, "  data.node=%p\n", qq->data.node);
+  fprintf (stdout, "  data.sym=%p\n", (void*)qq->data.sym);
+  fprintf (stdout, "  data.p=%p\n", (void*)qq->data.p);
+  fprintf (stdout, "  data.node=%p\n", (void*)qq->data.node);
   fprintf (stdout, "  subscript=%d\n", qq->subscript_.type);
   if (is_number(qq->subscript_)) {
     fprintf (stdout, "    subscript_.data.val=%d\n",  qq->subscript_.data.val);
     fprintf (stdout, "    subscript_.data.dval=%f\n", qq->subscript_.data.dval);
   }
-  fprintf (stdout, "  hashloc=%p\n", qq->hashloc_);
-  fprintf (stdout, "  parent=%p\n", qq->parent_);
-  fprintf (stdout, "  attr_head=%p\n", qq->attr_head_);
-  fprintf (stdout, "  subscr_head=%p\n\n", qq->subscr_head_);
+  fprintf (stdout, "  hashloc=%p\n", (void*)qq->hashloc_);
+  fprintf (stdout, "  parent=%p\n", (void*)qq->parent_);
+  fprintf (stdout, "  attr_head=%p\n", (void*)qq->attr_head_);
+  fprintf (stdout, "  subscr_head=%p\n\n", (void*)qq->subscr_head_);
 }
 #endif
 
 @ @<Declarations@>=
 static mp_node mp_get_value_node (MP mp);
-#if DEBUG > 1
+#if MPOST_DEBUG > 1
 static void debug_dump_value_node (mp_node x);
 #endif
 
@@ -6029,7 +6049,7 @@ information in their collective subscript attributes.
 
 
 @c
-#if DEBUG
+#if MPOST_DEBUG
 #define hashloc(A)       @[do_get_hashloc(mp,(mp_value_node)(A))@]
 #define set_hashloc(A,B) @[do_set_hashloc (mp,(mp_value_node)A, B)@]
 #define parent(A)        @[do_get_parent(mp, A)@]
@@ -6863,7 +6883,7 @@ void mp_flush_below_variable (MP mp, mp_node p) {
     mp_recycle_value (mp, p);   /* this sets |type(p)=undefined| */
   } else {
     q = subscr_head (p);
-    while (mp_name_type (q) == mp_subscr) {
+    while (q && mp_name_type (q) == mp_subscr) {
       mp_flush_below_variable (mp, q);
       r = q;
       q = mp_link (q);
@@ -8014,7 +8034,7 @@ called |solve_choices|, which has been introduced to keep
 @<Fill in the control information between...@>=
 @<Calculate the turning angles $\psi_k$ and the distances $d_{k,k+1}$;
   set $n$ to the length of the path@>;
-@<Remove |open| types at the breakpoints@>;
+@<Remove |open| types at the breakpoints@>
 mp_solve_choices (mp, p, q, n)
 
 
@@ -8025,7 +8045,7 @@ coordinates of $z\k-z_k$, and the magnitude of this vector will be
 and $z\k-z_k$ will be stored in |psi[k]|.
 
 @<Glob...@>=
-int path_size;  /* maximum number of knots between breakpoints of a path */
+integer path_size;  /* maximum number of knots between breakpoints of a path */
 mp_number *delta_x;
 mp_number *delta_y;
 mp_number *delta;  /* knot differences */
@@ -8775,7 +8795,7 @@ do {
   number_substract (arg, mp->theta[k + 1]);
   n_sin_cos (arg, mp->cf, mp->sf);
   mp_set_controls (mp, s, t, k);
-  incr (k);
+  incr (k); 
   s = t;
 } while (k != n);
 free_number (arg);
@@ -9293,16 +9313,17 @@ void mp_free_path (MP mp, mp_knot p);
 @ Simple accessors for |mp_knot|.
 
 @c
-mp_number mp_knot_x_coord(MP mp, mp_knot p) { return p->x_coord; }
-mp_number mp_knot_y_coord(MP mp, mp_knot p) { return p->y_coord; }
-mp_number mp_knot_left_x (MP mp, mp_knot p) { return p->left_x;  }
-mp_number mp_knot_left_y (MP mp, mp_knot p) { return p->left_y;  }
-mp_number mp_knot_right_x(MP mp, mp_knot p) { return p->right_x;  }
-mp_number mp_knot_right_y(MP mp, mp_knot p) { return p->right_y;  }
-int mp_knot_right_type(MP mp, mp_knot p) { return mp_right_type(p);}
-int mp_knot_left_type (MP mp, mp_knot p) { return mp_left_type(p);}
-mp_knot mp_knot_next (MP mp, mp_knot p)  { return p->next; }
+mp_number mp_knot_x_coord(MP mp, mp_knot p) { (void)mp; return p->x_coord; }
+mp_number mp_knot_y_coord(MP mp, mp_knot p) { (void)mp; return p->y_coord; }
+mp_number mp_knot_left_x (MP mp, mp_knot p) { (void)mp; return p->left_x;  }
+mp_number mp_knot_left_y (MP mp, mp_knot p) { (void)mp; return p->left_y;  }
+mp_number mp_knot_right_x(MP mp, mp_knot p) { (void)mp; return p->right_x;  }
+mp_number mp_knot_right_y(MP mp, mp_knot p) { (void)mp; return p->right_y;  }
+int mp_knot_right_type(MP mp, mp_knot p) { (void)mp; return mp_right_type(p);}
+int mp_knot_left_type (MP mp, mp_knot p) { (void)mp; return mp_left_type(p);}
+mp_knot mp_knot_next (MP mp, mp_knot p)  { (void)mp; return p->next; }
 double mp_number_as_double(MP mp, mp_number n) {
+  (void)mp; 
   return number_to_double(n);
 }
 
@@ -10346,14 +10367,14 @@ if (number_positive(arc)) {
   } else {
     set_number_from_div (n1, arc, d1); /* |n1 = (arc / d1)| */
     floor_scaled(n1);
-  }  
+  }
   number_clone (n, n1);
   set_number_from_mul (n1, n1, d1); /* |n1 = (n1 * d1)| */
   number_substract (arc, n1); /* |arc = arc - n1| */
 
   number_clone (d1, inf_t);         /* reuse |d1| */
   number_clone (v1, n);             /* |v1 = n| */
-    
+
   set_number_from_int(v1, number_to_int(v1)+1); /* |v1 = n1+1| */
   set_number_from_div (d1, d1, v1); /* |d1 = EL_GORDO / v1| */
   if (number_greater (t_tot, d1)) {
@@ -12415,7 +12436,7 @@ if (mp_dash_p (p) != NULL) {
   @<Finish printing the dash pattern that |p| refers to@>;
 }
 mp_print_ln (mp);
-@<Print join and cap types for stroked node |p|@>;
+@<Print join and cap types for stroked node |p|@>
 mp_print (mp, " with pen");
 mp_print_ln (mp);
 if (mp_pen_p ((mp_stroked_node) p) == NULL) {
@@ -13368,7 +13389,7 @@ static mp_knot mp_offset_prep (MP mp, mp_knot c, mp_knot h) {
   int k_needed;     /* amount to be added to |mp_info(p)| when it is computed */
   mp_knot w0;   /* a pointer to pen offset to use just before |p| */
   mp_number dxin, dyin;    /* the direction into knot |p| */
-  int turn_amt;     /* change in pen offsets for the current cubic */
+  integer turn_amt;     /* change in pen offsets for the current cubic */
   mp_number max_coef;       /* used while scaling */
   mp_number ss;
   @<Other local variables for |offset_prep|@>;
@@ -13416,7 +13437,7 @@ static mp_knot mp_offset_prep (MP mp, mp_knot c, mp_knot h) {
   p = c;
   c0 = c;
   k_needed = 0;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_nl;dbg_str(@=--[==[BEGIN]==]@>);dbg_nl;
 dbg_str(@=return@>);dbg_nl;
 dbg_n(w0->x_coord);
@@ -13424,7 +13445,7 @@ dbg_n(w0->y_coord);
 #endif
  do {
     q = mp_next_knot (p);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_nl;dbg_open_t;dbg_str(@=--[==[begin loop]==]@>);dbg_nl;
 dbg_n(p->x_coord);dbg_n(p->y_coord);
 dbg_n(p->right_x);dbg_n(p->right_y);
@@ -13436,7 +13457,7 @@ dbg_n(w0->y_coord);
     @<Split the cubic between |p| and |q|, if necessary, into cubics
       associated with single offsets, after which |q| should
       point to the end of the final such cubic@>;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=end Split the cubic between p and q@>);dbg_open_t;dbg_nl;
 dbg_n(w->x_coord);dbg_n(w->y_coord);
 dbg_n(w0->x_coord);dbg_n(w0->y_coord);
@@ -13445,12 +13466,12 @@ dbg_close_t; dbg_comma;dbg_nl;
   NOT_FOUND:
     @<Advance |p| to node |q|, removing any ``dead'' cubics that
       might have been introduced by the splitting process@>;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_n(w0->x_coord);dbg_n(w0->y_coord);
 dbg_str(@=--[==[end loop]==]@>);dbg_nl; dbg_close_t;dbg_comma;dbg_nl;
 #endif
   } while (q != c);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
  dbg_key(@=Fix the offset change@>);dbg_open_t;dbg_nl;
  dbg_n(p->x_coord);dbg_n(p->y_coord);
  dbg_key_ival(info pre,mp_knot_info(p));dbg_comma;dbg_nl;
@@ -13459,7 +13480,7 @@ dbg_str(@=--[==[end loop]==]@>);dbg_nl; dbg_close_t;dbg_comma;dbg_nl;
 #endif
   @<Fix the offset change in |mp_knot_info(c)| and set |c| to the return value of
     |offset_prep|@>;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_n(p->x_coord);dbg_n(p->y_coord);
 dbg_key_ival(info post,mp_knot_info(p));dbg_comma;dbg_nl;
 dbg_n(c->x_coord);dbg_n(c->y_coord);
@@ -13559,7 +13580,7 @@ the testcase reported by Bogus\l{}aw Jackowski in tracker id 267, case 52c
 on Sarovar.)
 
 @<Advance |p| to node |q|, removing any ``dead'' cubics...@>=
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_comment(@=Advance p to node q@>);dbg_nl;
 #endif
 q0 = q;
@@ -13583,7 +13604,7 @@ if ((q != q0) && (q != c || c == c0))
 
 @ @<Remove the cubic following |p| and update the data structures...@>=
 {
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
  dbg_key(@=Remove the cubic following p@>);dbg_open_t;dbg_nl;
  dbg_n(p->x_coord);dbg_n(p->y_coord);
  dbg_key_ival(pre info(p),mp_knot_info(p));  dbg_close_t;dbg_comma;dbg_nl;
@@ -13605,7 +13626,7 @@ if ((q != q0) && (q != c || c == c0))
     mp->spec_p2 = p;
   r = p;
   mp_remove_cubic (mp, p);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
   dbg_key(@=Remove the cubic following p@>);dbg_open_t;dbg_nl;
   dbg_n(p->x_coord);dbg_n(p->y_coord);
   dbg_key_ival(post info(p),mp_knot_info (p)); dbg_close_t;dbg_comma;dbg_nl;
@@ -13678,26 +13699,26 @@ We may have to split a cubic into many pieces before each
 piece corresponds to a unique offset.
 
 @<Split the cubic between |p| and |q|, if necessary, into cubics...@>=
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_comment(@=Split the cubic between p and q@>);dbg_nl;
 dbg_key(@=Split the cubic@>);dbg_open_t;dbg_nl;
 dbg_key_ival(pre info(p),mp_knot_info(p));dbg_comma;
 dbg_n(w0->x_coord);dbg_n(w0->y_coord);
 #endif
 mp_knot_info (p) = zero_off + k_needed;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key_ival(post info(p),mp_knot_info(p));dbg_close_t;dbg_comma; dbg_nl;
 #endif
 k_needed = 0;
 @<Prepare for derivative computations;
   |goto not_found| if the current cubic is dead@>;
-@<Find the initial direction |(dx,dy)|@>;
+@<Find the initial direction |(dx,dy)|@>
 @<Update |mp_knot_info(p)| and find the offset $w_k$ such that
   $d_{k-1}\preceq(\\{dx},\\{dy})\prec d_k$; also advance |w0| for
   the direction change at |p|@>;
-@<Find the final direction |(dxin,dyin)|@>;
-@<Decide on the net change in pen offsets and set |turn_amt|@>;
-@<Complete the offset splitting process@>;
+@<Find the final direction |(dxin,dyin)|@>
+@<Decide on the net change in pen offsets and set |turn_amt|@>
+@<Complete the offset splitting process@>
 w0 = mp_pen_walk (mp, w0, turn_amt)@;
 
 
@@ -13753,7 +13774,7 @@ set_number_from_substraction(x1, q->left_x, p->right_x);
 set_number_from_substraction(y0, p->right_y, p->y_coord);
 set_number_from_substraction(y2, q->y_coord, q->left_y);
 set_number_from_substraction(y1, q->left_y, p->right_y);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=Prepare for derivative computations@>);dbg_open_t;dbg_nl;
 dbg_n(x0);dbg_n(y0);dbg_n(x1);dbg_n(y1);dbg_n(x2);dbg_n(y2);
 dbg_close_t;dbg_comma;dbg_nl;
@@ -13855,7 +13876,7 @@ void mp_fin_offset_prep (MP mp, mp_knot p, mp_knot w, @|
   new_number(t2);
   new_fraction(s);
   new_fraction(t);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(mp_fin_offset_prep);dbg_open_t;dbg_nl;
 #endif
   while (1) {
@@ -13863,7 +13884,7 @@ dbg_key(mp_fin_offset_prep);dbg_open_t;dbg_nl;
       ww = mp_next_knot (w);    /* a pointer to $w\k$ */
     else
       ww = mp_prev_knot (w);    /* a pointer to $w_{k-1}$ */
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_comment(@=begin iteration@>);
 dbg_open_t;dbg_nl;
 dbg_n(w->x_coord);dbg_n(w->y_coord);
@@ -13874,11 +13895,11 @@ dbg_in(rise);
 #endif
     @<Compute test coefficients |(t0,t1,t2)|
       for $d(t)$ versus $d_k$ or $d_{k-1}$@>;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_comment(@=crossing_point@>);
 #endif
     crossing_point (t, t0, t1, t2);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_n(t);dbg_n(t0);dbg_n(t1);dbg_n(t2);
 dbg_in(number_greaterequal(t, fraction_one_t));
 dbg_in(turn_amt);
@@ -13890,18 +13911,18 @@ dbg_close_t; dbg_comma;dbg_nl;
       else
         goto RETURN;
     }
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_comment(@=Split the cubic at t, and split off another cubic if the derivative crosses back@>);
 #endif
     @<Split the cubic at $t$,
       and split off another cubic if the derivative crosses back@>;
     w = ww;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_comment(@=end iteration@>);
 #endif
   }
 RETURN:
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_comment(@=RETURN@>);
 dbg_n(t);
 #endif
@@ -13913,7 +13934,7 @@ dbg_n(t);
   free_number (t0);
   free_number (t1);
   free_number (t2);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_close_t; dbg_comma;dbg_nl;
 #endif
 }
@@ -13929,7 +13950,7 @@ begins to fail.
   mp_number abs_du, abs_dv;
   new_number (abs_du);
   new_number (abs_dv);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=Compute test coefficients (t0,t1,t2) for d(t) versus...@>);dbg_open_t;dbg_nl;
 #endif
   set_number_from_substraction(du, ww->x_coord, w->x_coord);
@@ -13938,7 +13959,7 @@ dbg_key(@=Compute test coefficients (t0,t1,t2) for d(t) versus...@>);dbg_open_t;
   number_abs(abs_du);
   number_clone(abs_dv, dv);
   number_abs(abs_dv);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_CUBIC;
 dbg_n(w->x_coord);dbg_n(w->y_coord);
 dbg_n(ww->x_coord);dbg_n(ww->y_coord);
@@ -13985,7 +14006,7 @@ dbg_in(number_greaterequal(abs_du, abs_dv));
   free_number (abs_dv);
   if (number_negative(t0))
     set_number_to_zero(t0); /* should be positive without rounding error */
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_n(t0);dbg_n(t1);dbg_n(t2);
 dbg_close_t; dbg_comma;dbg_nl;
 #endif
@@ -14053,7 +14074,7 @@ the true initial direction for the given cubic, even if it is almost
 degenerate.
 
 @<Find the initial direction |(dx,dy)|@>=
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_nl;
 dbg_comment(@=Find the initial direction (dx,dy)@>);dbg_nl;
 dbg_n(w0->x_coord);dbg_n(w0->y_coord);
@@ -14075,7 +14096,7 @@ if (p == c) {
   number_clone(dy0, dy);
 }
 /* BEGIN PATCH */
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_nl;dbg_key(mp_dx_dy_approx_t_1);dbg_open_t;dbg_nl;
 dbg_n(ueps_ap);
 dbg_n(p->x_coord);dbg_n(p->y_coord);
@@ -14083,11 +14104,11 @@ dbg_n(p->right_x);dbg_n(p->right_y);
 dbg_n(q->left_x);dbg_n(q->left_y);
 dbg_n(q->x_coord);dbg_n(q->y_coord);
 #endif
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_n(dxin_ap);dbg_n(dyin_ap);
 dbg_close_t;dbg_comma;dbg_nl;
 #endif
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_nl;dbg_key(mp_dx_dy_approx_t_0);dbg_open_t;dbg_nl;
 dbg_n(ueps_ap);
 dbg_n(p->x_coord);dbg_n(p->y_coord);
@@ -14095,18 +14116,18 @@ dbg_n(p->right_x);dbg_n(p->right_y);
 dbg_n(q->left_x);dbg_n(q->left_y);
 dbg_n(q->x_coord);dbg_n(q->y_coord);
 #endif
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_close_t;dbg_comma;dbg_nl;
 dbg_key(@=derivatives@>);dbg_open_t;dbg_nl;
 dbg_n(dx_m);dbg_n(dy_m);
 dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);dbg_close_t;dbg_comma;dbg_nl;
 #endif
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=derivatives after first patch@>);dbg_open_t;dbg_nl;
 dbg_n(dx_m);dbg_n(dy_m);
 dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);dbg_close_t;dbg_comma;dbg_nl;
 #endif
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=derivatives patched@>);dbg_open_t;dbg_nl;
 dbg_n(dx_m);dbg_n(dy_m);
 dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);dbg_close_t;dbg_comma;dbg_nl;
@@ -14125,18 +14146,18 @@ if (number_zero(dxin) && number_zero(dyin)) {
     number_clone(dyin, y0);
   }
 }
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=dxin dyin before@>);dbg_open_t;dbg_nl;
 dbg_n(dxin);dbg_n(dyin);
 dbg_close_t;dbg_comma;
 #endif
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=dxin dyin after@>);dbg_open_t;dbg_nl;
 dbg_n(dxin);dbg_n(dyin);
 dbg_close_t;dbg_comma;
 #endif
 /* BEGIN PATCH */
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=dx dy dxin dyin after patch@>);dbg_open_t;dbg_nl;
 dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);
 dbg_n(dxin);dbg_n(dyin);dbg_n(dxin_ap);dbg_n(dyin_ap);
@@ -14156,7 +14177,7 @@ right.) This code depends on |w0| being the offset for |(dxin,dyin)|.
   mp_number ab_vs_cd;
   new_number (ab_vs_cd);
   ab_vs_cd (ab_vs_cd, dy, dxin, dx, dyin);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_nl;
 dbg_comment(@=Update mp_knot_info(p)@>);dbg_nl;
 dbg_key(mp_get_turn_amt_dx_dy);dbg_open_t;dbg_str(@=--[==[call mp_get_turn_amt]==]@>);dbg_nl;
@@ -14166,13 +14187,13 @@ dbg_n(ab_vs_cd);
  is_dxdy=true;
  turn_amt = mp_get_turn_amt (mp, w0, dx, dy, number_nonnegative(ab_vs_cd));
  is_dxdy=false;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_dn(turn_amt);
 dbg_close_t;dbg_comma;
 dbg_nl;
 #endif
   free_number (ab_vs_cd);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=w0 before walk@>);dbg_open_t;dbg_nl;
 dbg_n(w0->x_coord);dbg_n(w0->y_coord);
 dbg_dn(turn_amt);
@@ -14180,14 +14201,14 @@ dbg_close_t;dbg_comma;
 #endif
   w = mp_pen_walk (mp, w0, turn_amt);
   w0 = w;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=w0 after walk@>);dbg_open_t;dbg_nl;
 dbg_n(w0->x_coord);dbg_n(w0->y_coord);
 dbg_close_t;dbg_comma;
 dbg_open_t;dbg_in(mp_knot_info(p));
 #endif
   mp_knot_info (p) = mp_knot_info (p) + turn_amt;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
   dbg_in(mp_knot_info(p));dbg_close_t;dbg_comma;
 #endif
 }
@@ -14223,7 +14244,7 @@ integer mp_get_turn_amt (MP mp, mp_knot w, mp_number dx, mp_number dy, boolean c
       set_number_from_substraction (arg1, ww->x_coord, w->x_coord);
       set_number_from_substraction (arg2, ww->y_coord, w->y_coord);
       ab_vs_cd (t, dy, arg1, dx, arg2);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
      dbg_sp;
      dbg_open_t;dbg_str(@=--[==[inside mp_get_turn_amt do loop]==]@>);dbg_nl;
      dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(ww->x_coord);dbg_n(ww->y_coord);
@@ -14249,7 +14270,7 @@ integer mp_get_turn_amt (MP mp, mp_knot w, mp_number dx, mp_number dy, boolean c
     set_number_from_substraction (arg1, w->x_coord, ww->x_coord);
     set_number_from_substraction (arg2, w->y_coord, ww->y_coord);
     ab_vs_cd (t, dy, arg1, dx, arg2);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
      dbg_sp;
      dbg_open_t;dbg_str(@=--[==[outside mp_get_turn_amt do loop]==]@>);dbg_nl;
      dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(ww->x_coord);dbg_n(ww->y_coord);
@@ -14265,7 +14286,7 @@ integer mp_get_turn_amt (MP mp, mp_knot w, mp_number dx, mp_number dy, boolean c
       set_number_from_substraction (arg1, w->x_coord, ww->x_coord);
       set_number_from_substraction (arg2, w->y_coord, ww->y_coord);
       ab_vs_cd (t, dy, arg1, dx, arg2);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
      dbg_sp;
      dbg_open_t;dbg_str(@=--[==[inside mp_get_turn_amt do loop for t<0]==]@>);dbg_nl;
      dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(ww->x_coord);dbg_n(ww->y_coord);
@@ -14320,14 +14341,14 @@ with respect to $d_{k-1}$, and apply |fin_offset_prep| to each part.
 
 @<Complete the offset splitting process@>=
 ww = mp_prev_knot (w);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=Complete the offset splitting process@>);dbg_open_t;dbg_nl;
 dbg_n(w->x_coord);dbg_n(w->y_coord);
 dbg_n(ww->x_coord);dbg_n(ww->y_coord);
 dbg_close_t; dbg_comma;dbg_nl;
 #endif
-@<Compute test coeff...@>;
-#ifdef DEBUGENVELOPE
+@<Compute test coeff...@>
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=after Compute test coeff@>);dbg_open_t;dbg_nl;
 dbg_n(w->x_coord);dbg_n(w->y_coord);
 dbg_n(ww->x_coord);dbg_n(ww->y_coord);
@@ -14336,7 +14357,7 @@ dbg_close_t; dbg_comma;dbg_nl;
 @<Find the first |t| where $d(t)$ crosses $d_{k-1}$ or set
   |t:=fraction_one+1|@>;
 if (number_greater(t, fraction_one_t)) {
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=t > fraction_one_t@>);dbg_open_t;dbg_nl;
 dbg_n(p->x_coord);dbg_n(p->y_coord);
 dbg_n(w->x_coord);dbg_n(w->y_coord);
@@ -14354,7 +14375,7 @@ dbg_close_t; dbg_comma;dbg_nl;
   set_number_from_of_the_way(y1a, t, y0, y1);
   set_number_from_of_the_way(y1,  t, y1, y2);
   set_number_from_of_the_way(y2a, t, y1a, y1);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=t <= fraction_one_t@>);dbg_open_t;dbg_nl;
 dbg_n(p->x_coord);dbg_n(p->y_coord);
 dbg_n(t);
@@ -14392,7 +14413,7 @@ dbg_close_t; dbg_comma;dbg_nl;
     mp_fin_offset_prep (mp, r, ww, x0, x1, x2, y0, y1, y2, -1, (-1 - turn_amt));
   }
 }
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=end Complete the offset splitting process@>);dbg_open_t;dbg_nl;
 dbg_n(w->x_coord);dbg_n(w->y_coord);
 dbg_n(w0->x_coord);dbg_n(w0->y_coord);
@@ -14423,7 +14444,7 @@ answer.  If |t2<0|, there is one crossing and it is antiparallel only if
 crossing and the first crossing cannot be antiparallel.
 
 @<Find the first |t| where $d(t)$ crosses $d_{k-1}$ or set...@>=
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=Find the first t where@>);dbg_open_t;dbg_nl;
 #endif
 crossing_point (t, t0, t1, t2);
@@ -14460,7 +14481,7 @@ if (turn_amt >= 0) {
 } else if (number_greater(t, fraction_one_t)) {
   number_clone (t, fraction_one_t);
 }
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_n(t);
 dbg_close_t; dbg_comma;dbg_nl;
 #endif
@@ -14481,16 +14502,16 @@ the path should always change the sign of |turn_amt|.
   mp_number t_ap;
   new_number (t_ap);
   new_number (ab_vs_cd);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_sp;
 dbg_key(@=Decide on the net change in pen offsets and set turn_amt@>);dbg_open_t;dbg_nl;
 #endif
   ab_vs_cd (ab_vs_cd, dx, dyin, dxin, dy);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_n(ab_vs_cd);dbg_n(dx);dbg_n(dyin);dbg_n(dxin);dbg_n(dy);
 #endif
 /* BEGIN PATCH */
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key_nval(ab_vs_cd patched,ab_vs_cd);
 dbg_close_t;dbg_comma;dbg_nl;
 #endif
@@ -14521,7 +14542,7 @@ if (d_sign == 0) {
 }
 @<Make |ss| negative if and only if the total change in direction is
   more than $180^\circ$@>;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_nl;
 dbg_key(@=Make ss negative if and only if@>); dbg_open_t;dbg_nl;
 dbg_key(mp_get_turn_amt_dxin_dyin);dbg_open_t;dbg_str(@=--[==[call mp_get_turn_amt]==]@>);dbg_nl;
@@ -14530,7 +14551,7 @@ dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(dxin);dbg_n(dyin);dbg_in((d_sign > 0))
 is_dxindyin=true;
 turn_amt = mp_get_turn_amt (mp, w, dxin, dyin, (d_sign > 0));
 is_dxindyin=false;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key_dval(turn_amt 1,turn_amt);dbg_comma;dbg_nl;
 dbg_key_nval(ss,ss);dbg_comma;dbg_nl;
 dbg_key_ival(d_sign,d_sign);dbg_comma;dbg_nl;
@@ -14538,7 +14559,7 @@ dbg_key_ival(n,n);dbg_comma;dbg_nl;
 #endif
 if (number_negative(ss))
   turn_amt = turn_amt - d_sign * n;
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key_dval(turn_amt 2,turn_amt);dbg_comma;dbg_nl;
 dbg_close_t;dbg_comma;dbg_nl;
 dbg_close_t;dbg_comma;dbg_nl;
@@ -14587,7 +14608,7 @@ then swapped with |(x2,y2)|.  We make use of the identities
   new_fraction (r2);
   take_fraction (r1, x0, y2);
   take_fraction (r2, x2, y0);
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_sp;
 dbg_open_t;dbg_dn(d_sign);dbg_close_t;dbg_comma;dbg_nl;
 #endif
@@ -14647,11 +14668,11 @@ if (number_positive(t0)) {
   take_fraction (r2, arg1, tmp2);
   set_number_from_addition (ss, r1, r2);
   /* BEGIN PATCH */
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=patch ss before@>);dbg_open_t;
 dbg_n(ss);dbg_close_t;dbg_comma;
 #endif
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
 dbg_key(@=patch ss after@>);dbg_open_t;
 dbg_n(ss);dbg_close_t;dbg_comma;
 #endif
@@ -14701,7 +14722,7 @@ static void mp_print_spec (MP mp, mp_knot cur_spec, mp_knot cur_pen,
 {
   w = mp_pen_walk (mp, w, (mp_knot_info (p) - zero_off));
   mp_print (mp, " % ");
-#ifdef DEBUGENVELOPE
+#ifdef MPOST_DEBUG_ENVELOPE
  dbg_nl;dbg_open_t;dbg_str(@=--[==[START]==]@>);dbg_nl;
  dbg_key(@=Printing mp_knot_info (p)@>);dbg_open_t;dbg_nl;
  dbg_n(p->x_coord);dbg_n(p->y_coord);
@@ -16012,10 +16033,10 @@ split |cubic_intersection| up into two procedures.
 @<Glob...@>=
 mp_number delx;
 mp_number dely;   /* the components of $\Delta=2^l(w_0-z_0)$ */
-integer tol;    /* bound on the uncertainty in the overlap test */
-integer uv;
-integer xy;     /* pointers to the current packets of interest */
-integer three_l;        /* |tol_step| times the bisection level */
+mpinteger64 tol;    /* bound on the uncertainty in the overlap test */
+mpinteger64 uv;
+mpinteger64 xy;     /* pointers to the current packets of interest */
+mpinteger64 three_l;        /* |tol_step| times the bisection level */
 mp_number appr_t;
 mp_number appr_tt;        /* best approximations known to the answers */
 
@@ -17349,6 +17370,7 @@ static mp_value_node divide_p_by_2_n (MP mp, mp_value_node p, integer n) {
 
 @ @c
 static void change_to_known (MP mp, mp_value_node p, mp_node x, mp_value_node final_node, integer n) {
+  (void)n;
   if (dep_info (p) == NULL) {
     mp_number absx;
     new_number (absx);
@@ -17559,7 +17581,7 @@ activities, and there is a finite state control for each level of the
 input mechanism. These stacks record the current state of an implicitly
 recursive process, but the |get_next| procedure is not recursive.
 
-@d cur_cmd() (unsigned)(mp->cur_mod_->type)
+@d cur_cmd() (unsigned)(mp->cur_mod_->type) /* TODO: In C23 check if we can remove (unsigned) */
 @d set_cur_cmd(A) mp->cur_mod_->type=(A)
 @d cur_mod_int() number_to_int (mp->cur_mod_->data.n) /* operand of current command */
 @d cur_mod() number_to_scaled (mp->cur_mod_->data.n) /* operand of current command */
@@ -17593,10 +17615,10 @@ all of this procedure appears elsewhere in the program, together with the
 corresponding |primitive| calls.
 
 @<Declarations@>=
-static void mp_print_cmd_mod (MP mp, integer c, integer m);
+static void mp_print_cmd_mod (MP mp, mpinteger64 c, mpinteger64 m);
 
 @ @c
-void mp_print_cmd_mod (MP mp, integer c, integer m) {
+void mp_print_cmd_mod (MP mp, mpinteger64 c, mpinteger64 m) {
   switch (c) {
     @t\4@>@<Cases of |print_cmd_mod| for symbolic printing of primitives@>@;
   default:
@@ -17612,7 +17634,7 @@ user's transcript file.
 @d show_cur_cmd_mod mp_show_cmd_mod(mp, cur_cmd(),cur_mod())
 
 @c
-static void mp_show_cmd_mod (MP mp, integer c, integer m) {
+static void mp_show_cmd_mod (MP mp, mpinteger64 c, mpinteger64 m) {
   mp_begin_diagnostic (mp);
   mp_print_nl (mp, "{");
   mp_print_cmd_mod (mp, c, m);
@@ -17749,7 +17771,7 @@ integer in_open;        /* the number of lines in the buffer, less one */
 integer in_open_max;    /* highest value of |in_open| ever seen */
 unsigned int open_parens;       /* the number of open text files */
 void **input_file;
-integer *line_stack;    /* the line number for each file */
+mpinteger64 *line_stack;    /* the line number for each file */
 char **inext_stack;     /* used for naming \.{MPX} files */
 char **iname_stack;     /* used for naming \.{MPX} files */
 char **iarea_stack;     /* used for naming \.{MPX} files */
@@ -17763,7 +17785,7 @@ static void mp_reallocate_input_stack (MP mp, int newsize) {
   int k;
   int n = newsize +1;
   XREALLOC (mp->input_file, n, void *);
-  XREALLOC (mp->line_stack, n, integer);
+  XREALLOC (mp->line_stack, n, mpinteger64);
   XREALLOC (mp->inext_stack, n, char *);
   XREALLOC (mp->iname_stack, n, char *);
   XREALLOC (mp->iarea_stack, n, char *);
@@ -17901,10 +17923,10 @@ compute it as well.
 @^system dependencies@>
 
 @<Declarations@>=
-static integer mp_true_line (MP mp);
+static mpinteger64 mp_true_line (MP mp);
 
 @ @c
-integer mp_true_line (MP mp) {
+mpinteger64 mp_true_line (MP mp) {
   int k;        /* an index into the input stack */
   if (file_state && (name > max_spec_src)) {
     return line;
@@ -18260,7 +18282,7 @@ token by the |cur_tok| routine.
 @^inner loop@>
 
 @c
-@<Declare the procedure called |make_exp_copy|@>;
+@<Declare the procedure called |make_exp_copy|@>
 static mp_node mp_cur_tok (MP mp) {
   mp_node p;    /* a new token node */
   if (cur_sym() == NULL && (cur_sym_mod() == 0 || cur_sym_mod() == mp_normal_sym)) {
@@ -18533,7 +18555,7 @@ name of a macro whose replacement text is being scanned.
 integer scanner_status; /* are we scanning at high speed? */
 mp_sym warning_info;    /* if so, what else do we need to know,
                            in case an error occurs? */
-integer warning_line;
+mpinteger64 warning_line;
 mp_node warning_info_node;
 
 @ @<Initialize the input routines@>=
@@ -19078,7 +19100,7 @@ static void mp_start_mpx_input (MP mp);
 @ @c
 static void mp_t_next (MP mp) {
   int old_status;       /* saves the |scanner_status| */
-  integer old_info;     /* saves the |warning_info| */
+  mpinteger64 old_info;     /* saves the |warning_info| */
 
 if ((mp->extensions == 1) && (cur_cmd() == mp_start_tex))
     @<Pass \&{btex} ... \&{etex} to script@>@;
@@ -19323,12 +19345,12 @@ static mp_node mp_scan_toks (MP mp, mp_command_code terminator,
 
 @ @c
 void mp_print_sym  (mp_sym sym) {
-  printf("{type = %d, v = {type = %d, data = {indep = {scale = %d, serial = %d}, n = %d, str = %p, sym = %p, node = %p, p = %p}}, text = %p}\n", 
+  printf("{type = %d, v = {type = %d, data = {indep = {scale = %d, serial = %d}, n = %d, str = %p, sym = %p, node = %p, p = %p}}, text = %p}\n",
     sym->type, sym->v.type, (int)sym->v.data.indep.scale, (int)sym->v.data.indep.serial,
-    sym->v.data.n.type, sym->v.data.str, sym->v.data.sym, sym->v.data.node, sym->v.data.p, sym->text);
+    sym->v.data.n.type, (void*)sym->v.data.str, (void *)sym->v.data.sym, (void *)sym->v.data.node, (void *)sym->v.data.p, (void *)sym->text);
   if (is_number(sym->v.data.n)) {
       mp_number n = sym->v.data.n;
-      printf("{data = {dval = %f, val = %d}, type = %d}\n", n.data.dval, n.data.val, n.type);
+      printf("{data = {dval = %f, val = %"PRId64"}, type = %d}\n", n.data.dval, n.data.val, n.type);
   }
   if (sym->text != NULL) {
      mp_string t = sym->text;
@@ -19549,10 +19571,10 @@ tokens is seen, its meaning has already become undefined.
 
 @c
 static void mp_scan_def (MP mp) {
-  int m;        /* the type of definition */
+  mpinteger64 m;        /* the type of definition */
   int n;        /* the number of special suffix parameters */
   int k;        /* the total number of parameters */
-  int c;        /* the kind of macro we're defining */
+  mpinteger64 c;        /* the kind of macro we're defining */
   mp_subst_list_item *r = NULL, *rp = NULL;     /* parameter-substitution list */
   mp_node q;    /* tail of the macro token list */
   mp_node p;    /* temporary storage */
@@ -20072,10 +20094,10 @@ or at the beginning of a line.
 {
     char *txt = NULL;
     char *ptr = NULL;
-    int slin = line;
+    mpinteger64 slin = line;
     int size = 0;
     int done = 0;
-    int mode = round_unscaled(internal_value(mp_texscriptmode)) ; /* default: 1 */
+    mpinteger64 mode = round_unscaled(internal_value(mp_texscriptmode)) ; /* default: 1 */
     int verb = cur_mod() == verbatim_code;
     int first;
     /* we had a (mandate) trailing space */
@@ -20220,7 +20242,7 @@ or at the beginning of a line.
         if (slin > 0) {
             mp_snprintf(msg, 256, "No matching 'etex' for '%stex'.", verb ? "verbatim" : "b");
         } else {
-            mp_snprintf(msg, 256, "No matching 'etex' for '%stex' in line %d.", verb ? "verbatim" : "b",slin);
+            mp_snprintf(msg, 256, "No matching 'etex' for '%stex' in line %"PRId64".", verb ? "verbatim" : "b",slin);
         }
         mp_error (mp, msg, hlp, false);
         free(txt);
@@ -20525,7 +20547,7 @@ if (cur_cmd() != mp_comma) {
   l_delim = cur_sym();
   r_delim = equiv_sym (cur_sym());
 }
-@<Scan the argument represented by |mp_sym_info(r)|@>;
+@<Scan the argument represented by |mp_sym_info(r)|@>
 if (cur_cmd() != mp_comma)
   @<Check that the proper right delimiter was present@>@;
 FOUND:
@@ -20824,7 +20846,7 @@ corresponding |if_line|.
 @<MPlib internal header stuff@>=
 typedef struct mp_if_node_data {
   NODE_BODY;@+@t}\6{@>
-  int if_line_field_;
+  mpinteger64 if_line_field_;
 } mp_if_node_data;
 typedef struct mp_if_node_data *mp_if_node;
 
@@ -20842,7 +20864,7 @@ static mp_node mp_get_if_node (MP mp) {
 mp_node cond_ptr;       /* top of the condition stack */
 integer if_limit;       /* upper bound on |fi_or_else| codes */
 quarterword cur_if;     /* type of conditional being worked on */
-integer if_line;        /* line where that conditional began */
+mpinteger64 if_line;        /* line where that conditional began */
 
 @ @<Set init...@>=
 mp->cond_ptr = NULL;
@@ -20914,7 +20936,7 @@ void mp_pass_text (MP mp) {
 
 
 @ @<Decrease the string reference count...@>=
-if (cur_cmd() == mp_string_token) {
+if ((QUARTERWORD)(cur_cmd()) == (QUARTERWORD)mp_string_token) {
   delete_str_ref (cur_mod_str());
 }
 
@@ -22088,9 +22110,9 @@ it catch up to what has previously been printed on the terminal.
 @c
 void mp_open_log_file (MP mp) {
   unsigned old_setting; /* previous |selector| setting */
-  int k;        /* index into |months| and |buffer| */
+  mpinteger64 k;        /* index into |months| and |buffer| */
   int l;        /* end of first input line */
-  integer m;    /* the current month */
+  mpinteger64 m;    /* the current month */
   const char *months = "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC";
   /* abbreviations of month names */
   if (mp->log_opened)
@@ -22789,8 +22811,8 @@ in full.
 @.linearform@>
 
 @<Declarations@>=
-@<Declare the procedure called |print_dp|@>;
-@<Declare the stashing/unstashing routines@>;
+@<Declare the procedure called |print_dp|@>
+@<Declare the stashing/unstashing routines@>
 static void mp_print_exp (MP mp, mp_node p, quarterword verbosity);
 
 @ @c
@@ -24259,7 +24281,7 @@ found. Some cases are harder than others, but complexity arises solely
 because of the multiplicity of possible cases.
 
 @<Declare the procedure called |make_exp_copy|@>=
-@<Declare subroutines needed by |make_exp_copy|@>;
+@<Declare subroutines needed by |make_exp_copy|@>
 static void mp_make_exp_copy (MP mp, mp_node p) {
   mp_node t;    /* register(s) for list manipulation */
   mp_value_node q;
@@ -25412,7 +25434,7 @@ break;
 @ OK, let's look at the simplest \\{do} procedure first.
 
 @c
-@<Declare nullary action procedure@>;
+@<Declare nullary action procedure@>
 static void mp_do_nullary (MP mp, quarterword c) {
   check_arith();
   if (number_greater (internal_value (mp_tracing_commands), two_t))
@@ -25517,7 +25539,7 @@ for backward compatibility) .
 
 
 @c
-@<Declare unary action procedures@>;
+@<Declare unary action procedures@>
 static void mp_do_unary (MP mp, quarterword c) {
   mp_node p;      /* for list manipulation */
   mp_value new_expr;
@@ -25791,7 +25813,7 @@ static void mp_do_unary (MP mp, quarterword c) {
     if (mp->cur_exp.type != mp_known) {
       mp_bad_unary (mp, mp_char_op);
     } else {
-      int vv = round_unscaled (cur_exp_value_number ()) % 256;
+      mpinteger64 vv = round_unscaled (cur_exp_value_number ()) % 256;
       set_cur_exp_value_scaled (vv);
       mp->cur_exp.type = mp_string_type;
       if (number_negative(cur_exp_value_number ())) {
@@ -27272,7 +27294,7 @@ recycled after the binary operation has been safely carried out.
 @d binary_return  { mp_finish_binary(mp, old_p, old_exp); return; }
 
 @c
-@<Declare binary action procedures@>;
+@<Declare binary action procedures@>
 static void mp_finish_binary (MP mp, mp_node old_p, mp_node old_exp) {
   check_arith();
   /* Recycle any sidestepped |independent| capsules */
@@ -27992,7 +28014,7 @@ be monkeying around with really big values.
 @^overflow in arithmetic@>
 
 @<Declare binary action...@>=
-@<Declare the procedure called |dep_finish|@>;
+@<Declare the procedure called |dep_finish|@>
 static void mp_add_or_subtract (MP mp, mp_node p, mp_node q, quarterword c) {
   mp_variable_type s, t;        /* operand types */
   mp_value_node r;      /* dependency list traverser */
@@ -28265,72 +28287,89 @@ static void mp_frac_mult (MP mp, mp_number n, mp_number d) {
   mp_end_diagnostic (mp, false);
 }
 
-
 @ The |hard_times| routine multiplies a nice color or pair by a dependency list.
 
 @<Declare binary action procedures@>=
-static void mp_hard_times (MP mp, mp_node p) {
-  mp_value_node q;      /* a copy of the dependent variable |p| */
-  mp_value_node pp;     /* for typecasting p */
-  mp_node r;    /* a component of the big node for the nice color or pair */
-  mp_number v;     /* the known value for |r| */
-  new_number (v);
-  if (mp_type (p) <= mp_pair_type) {
-    q = (mp_value_node) mp_stash_cur_exp (mp);
-    mp_unstash_cur_exp (mp, p);
-    p = (mp_node) q;
-  }                             /* now |cur_type=mp_pair_type| or |cur_type=mp_color_type| or |cur_type=mp_cmykcolor_type| */
-  pp = (mp_value_node) p;
-  if (mp->cur_exp.type == mp_pair_type) {
-    r = x_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-    r = y_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-  } else if (mp->cur_exp.type == mp_color_type) {
-    r = red_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-    r = green_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-    r = blue_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-  } else if (mp->cur_exp.type == mp_cmykcolor_type) {
-    r = cyan_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-    r = yellow_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-    r = magenta_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-    r = black_part (value_node (cur_exp_node ()));
-    number_clone(v, value_number (r));
-    mp_new_dep (mp, r, mp_type (pp),
-                mp_copy_dep_list (mp, (mp_value_node) dep_list (pp)));
-    mp_dep_mult (mp, (mp_value_node) r, v, true);
-  }
-  free_number (v);
+static void mp_hard_times(MP mp, mp_node p)
+{
+    if (p->type <= mp_pair_type) {
+        mp_value_node q = (mp_value_node) mp_stash_cur_exp(mp);
+        mp_unstash_cur_exp(mp, p);
+        p = (mp_node) q;
+    }
+    switch (mp->cur_exp.type) {
+        case mp_pair_type:
+            {
+                mp_node e = value_node(cur_exp_node());
+                mp_number x, y;
+                new_number(x);
+                new_number(y);
+                number_clone(x, value_number(x_part(e)));
+                number_clone(y, value_number(y_part(e)));
+                mp_new_dep(mp, y_part(e), p->type, mp_copy_dep_list(mp, (mp_value_node) dep_list((mp_value_node) p)));
+                mp_free_value_node(mp, x_part(e));
+                x_part(e) = p;
+                set_mp_link(prev_dep(p), x_part(e));
+                mp_dep_mult(mp, (mp_value_node) x_part(e), x, true);
+                mp_dep_mult(mp, (mp_value_node) y_part(e), y, true);
+                free_number(x);
+                free_number(y);
+            }
+            break;
+        case mp_color_type:
+            {
+                mp_node e = value_node(cur_exp_node());
+                mp_number r, g, b;
+                new_number(r);
+                new_number(g);
+                new_number(b);
+                number_clone(r, value_number(red_part(e)));
+                number_clone(g, value_number(green_part(e)));
+                number_clone(b, value_number(blue_part(e)));
+                mp_new_dep(mp, blue_part(e),  p->type, mp_copy_dep_list(mp, (mp_value_node) dep_list((mp_value_node) p)));
+                mp_new_dep(mp, green_part(e), p->type, mp_copy_dep_list(mp, (mp_value_node) dep_list((mp_value_node) p)));
+                mp_free_value_node(mp, red_part(e));
+                red_part(e) = p;
+                set_mp_link(prev_dep(p), red_part(e));
+                mp_dep_mult(mp, (mp_value_node) red_part(e),   r, true);
+                mp_dep_mult(mp, (mp_value_node) green_part(e), g, true);
+                mp_dep_mult(mp, (mp_value_node) blue_part(e),  b, true);
+                free_number(r);
+                free_number(g);
+                free_number(b);
+            }
+            break;
+        case mp_cmykcolor_type:
+            {
+                mp_node e = value_node(cur_exp_node());
+                mp_number c, m, y, k;
+                new_number(c);
+                new_number(m);
+                new_number(y);
+                new_number(k);
+                number_clone(c, value_number(cyan_part(e)));
+                number_clone(m, value_number(magenta_part(e)));
+                number_clone(y, value_number(yellow_part(e)));
+                number_clone(k, value_number(black_part(e)));
+                mp_new_dep(mp, black_part(e),   p->type, mp_copy_dep_list(mp, (mp_value_node) dep_list((mp_value_node) p)));
+                mp_new_dep(mp, yellow_part(e),  p->type, mp_copy_dep_list(mp, (mp_value_node) dep_list((mp_value_node) p)));
+                mp_new_dep(mp, magenta_part(e), p->type, mp_copy_dep_list(mp, (mp_value_node) dep_list((mp_value_node) p)));
+                mp_free_value_node(mp, cyan_part(e));
+                cyan_part(e) = p;
+                set_mp_link(prev_dep(p), cyan_part(e));
+                mp_dep_mult(mp, (mp_value_node) cyan_part(e),    c, true);
+                mp_dep_mult(mp, (mp_value_node) magenta_part(e), m, true);
+                mp_dep_mult(mp, (mp_value_node) yellow_part(e),  y, true);
+                mp_dep_mult(mp, (mp_value_node) black_part(e),   k, true);
+                free_number(c);
+                free_number(m);
+                free_number(y);
+                free_number(k);
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 @ @<Declare binary action...@>=
@@ -28896,7 +28935,7 @@ number_clone(mp->ty, sy)@;
 and when some of their components are unknown.
 
 @<Declare binary action...@>=
-@<Declare subroutines needed by |big_trans|@>;
+@<Declare subroutines needed by |big_trans|@>
 static void mp_big_trans (MP mp, mp_node p, quarterword c) {
   mp_node q, r, pp, qq; /* list manipulation registers */
   q = value_node (p);
@@ -29418,10 +29457,10 @@ static void mp_set_up_glyph_infont (MP mp, mp_node p) {
   f = mp_ps_font_parse (mp, (int) mp_find_font (mp, n));
   if (f != NULL) {
     if (mp_type (p) == mp_known) {
-      int v = round_unscaled (value_number (p));
+      mpinteger64 v = round_unscaled (value_number (p));
       if (v < 0 || v > 255) {
         char msg[256];
-        mp_snprintf (msg, 256, "glyph index too high (%d)", v);
+        mp_snprintf (msg, 256, "glyph index too high (%" PRId64 ")", v);
         mp_error (mp, msg, NULL, true);
       } else {
         h = mp_ps_font_charstring (mp, f, v);
@@ -29771,7 +29810,7 @@ will be equal to the right-hand side (which will normally be equal
 to the left-hand side).
 
 @<Declarations@>=
-@<Declare the procedure called |make_eq|@>;
+@<Declare the procedure called |make_eq|@>
 static void mp_do_equation (MP mp);
 
 @ @c
@@ -30870,7 +30909,7 @@ mp_free_stream (&(mp->run_data.ship_out));
 }
 
 @ @<Start non-interactive work@>=
-@<Initialize the output routines@>;
+@<Initialize the output routines@>
 mp->input_ptr = 0;
 mp->max_in_stack = file_bottom;
 mp->in_open = file_bottom;
@@ -30897,7 +30936,7 @@ if (!mp->ini_version) {
 mp_fix_date_and_time (mp);
 if (mp->random_seed == 0)
   mp->random_seed =
-    (number_to_scaled (internal_value (mp_time)) / number_to_scaled (unity_t)) + number_to_scaled (internal_value (mp_day));
+   (int)((number_to_scaled (internal_value (mp_time)) / number_to_scaled (unity_t)) + number_to_scaled (internal_value (mp_day)));
 init_randoms (mp->random_seed);
 initialize_print_selector();
 mp_open_log_file (mp);
@@ -30908,7 +30947,7 @@ if (mp->troff_mode) {
   number_clone (internal_value(mp_gtroffmode), unity_t);
   number_clone (internal_value(mp_prologues), unity_t);
 }
-@<Fix up |mp->internal[mp_job_name]|@>;
+@<Fix up |mp->internal[mp_job_name]|@>
 if (mp->start_sym != NULL) {    /* insert the `\&{everyjob}' symbol */
   set_cur_sym(mp->start_sym);
   mp_back_input (mp);
@@ -31069,7 +31108,7 @@ void mp_do_random_seed (MP mp) {
 
 @ @<Initialize the random seed to |cur_exp|@>=
 {
-  init_randoms (number_to_scaled(cur_exp_value_number ()));
+  init_randoms ((int)number_to_scaled(cur_exp_value_number ()));
   if (mp->selector >= log_only && mp->selector < write_file) {
     mp->old_setting = mp->selector;
     mp->selector = log_only;
@@ -31135,7 +31174,7 @@ static void mp_do_protection (MP mp);
 
 @ @c
 void mp_do_protection (MP mp) {
-  int m;        /* 0 to unprotect, 1 to protect */
+  mpinteger64 m;        /* 0 to unprotect, 1 to protect */
   halfword t;   /* the |eq_type| before we change it */
   m = cur_mod();
   do {
@@ -32249,7 +32288,7 @@ void mp_do_bounds (MP mp) {
   mp_node lhv;     /* variable on left, the corresponding edge structure */
   mp_edge_header_node lhe;
   mp_node p;    /* for list manipulation */
-  integer m;    /* initial value of |cur_mod| */
+  mpinteger64 m;    /* initial value of |cur_mod| */
   m = cur_mod();
   lhv = mp_start_draw_cmd (mp, mp_to_token);
   if (lhv != NULL) {
@@ -32416,12 +32455,12 @@ void mp_do_add_to (MP mp) {
 }
 
 @ @<Declare action procedures for use by |do_statement|@>=
-@<Declare the \ps\ output procedures@>;
+@<Declare the \ps\ output procedures@>
 static void mp_do_ship_out (MP mp);
 
 @ @c
 void mp_do_ship_out (MP mp) {
-  integer c;    /* the character code */
+  mpinteger64 c;    /* the character code */
   mp_value new_expr;
   memset(&new_expr,0,sizeof(mp_value));
   new_number(new_expr.data.n);
@@ -32507,12 +32546,12 @@ else
 break;
 
 @ @<Declare action procedures for use by |do_statement|@>=
-@<Declare a procedure called |no_string_err|@>;
+@<Declare a procedure called |no_string_err|@>
 static void mp_do_message (MP mp);
 
 @ @c
 void mp_do_message (MP mp) {
-  int m;        /* the type of message */
+  mpinteger64  m;        /* the type of message */
   mp_value new_expr;
   m = cur_mod();
   memset(&new_expr,0,sizeof(mp_value));
@@ -33029,7 +33068,7 @@ short nd;
 short ni;       /* sizes of \.{TFM} subtables */
 short skip_table[TFM_ITEMS];    /* local label status */
 boolean lk_started;     /* has there been a lig/kern step in this command yet? */
-integer bchar;  /* right boundary character */
+mpinteger64 bchar;  /* right boundary character */
 short bch_label;        /* left boundary starting location */
 short ll;
 short lll;      /* registers used for lig/kern processing */
@@ -33187,7 +33226,7 @@ static eight_bits mp_get_code (MP mp);
 
 @ @c
 eight_bits mp_get_code (MP mp) {                               /* scans a character code value */
-  integer c;    /* the code value found */
+  mpinteger64 c;    /* the code value found */
   mp_value new_expr;
   const char *hlp[] = {
          "I was looking for a number between 0 and 255, or for a",
@@ -33269,7 +33308,7 @@ static void mp_do_tfm_command (MP mp);
 
 @ @c
 void mp_do_tfm_command (MP mp) {
-  int c, cc;    /* character codes */
+  mpinteger64 c, cc;    /* character codes */
   int k;        /* index into the |kern| array */
   int j;        /* index into |header_byte| or |param| */
   mp_value new_expr;
@@ -33944,7 +33983,7 @@ static void mp_fix_design_size (MP mp) {
   }
   if (mp->header_byte[4] == 0 && mp->header_byte[5] == 0 &&
       mp->header_byte[6] == 0 && mp->header_byte[7] == 0) {
-    integer dd = number_to_scaled (d);
+    mpinteger64 dd = number_to_scaled (d);
     mp->header_byte[4] = (char) (dd / 04000000);
     mp->header_byte[5] = (char) ((dd / 4096) % 256);
     mp->header_byte[6] = (char) ((dd / 16) % 256);
@@ -34102,11 +34141,11 @@ mp_pack_job_name (mp, ".tfm");
 while (!mp_open_out (mp, &mp->tfm_file, mp_filetype_metrics))
   mp_prompt_file_name (mp, "file name for font metrics", ".tfm");
 mp->metric_file_name = xstrdup (mp->name_of_file);
-@<Output the subfile sizes and header bytes@>;
+@<Output the subfile sizes and header bytes@>
 @<Output the character information bytes, then
   output the dimensions themselves@>;
-@<Output the ligature/kern program@>;
-@<Output the extensible character recipes and the font metric parameters@>;
+@<Output the ligature/kern program@>
+@<Output the extensible character recipes and the font metric parameters@>
 if (number_positive (internal_value (mp_tracing_stats)))
   @<Log the subfile sizes of the \.{TFM} file@>;
 mp_print_nl (mp, "Font metrics written on ");
@@ -34185,7 +34224,7 @@ if ((mp->bchar < 0) || (mp->bchar > 255)) {
   mp->lk_started = true;
   lk_offset = 1;
 }
-@<Find the minimum |lk_offset| and adjust all remainders@>;
+@<Find the minimum |lk_offset| and adjust all remainders@>
 if (mp->bch_label < undefined_label) {
   skip_byte (mp->nl) = qi (255);
   next_char (mp->nl) = qi (0);
@@ -34692,7 +34731,7 @@ static void mp_append_to_template (MP mp, integer ff, integer c, boolean roundin
     mp_print (mp, ss);
   } else if (internal_type (c) == mp_known) {
     if (rounding) {
-      int cc = round_unscaled (internal_value (c));
+      mpinteger64 cc = round_unscaled (internal_value (c));
       print_with_leading_zeroes (cc, ff);
     } else {
       print_number (internal_value (c));
@@ -34879,7 +34918,7 @@ char *mp_get_output_file_name (MP mp) {
 }
 void mp_open_output_file (MP mp) {
   char *ss;     /* filename extension proposal */
-  int c;    /* \&{charcode} rounded to the nearest integer */
+  mpinteger64 c;    /* \&{charcode} rounded to the nearest integer */
   c = round_unscaled (internal_value (mp_char_code));
   ss = mp_set_output_file_name (mp, c);
   while (!mp_open_out (mp, (void *) &mp->output_file, mp_filetype_postscript))
@@ -35472,7 +35511,7 @@ program yet; and we'd better leave space for a few more routines that may
 have been forgotten.
 
 @c
-@<Declare the basic parsing subroutines@>;
+@<Declare the basic parsing subroutines@>
 @<Declare miscellaneous procedures that were declared |forward|@>
 
 
@@ -35707,7 +35746,7 @@ But when we finish this part of the program, \MP\ is ready to call on the
 mp->buffer[limit] = (ASCII_code) '%';
 mp_fix_date_and_time (mp);
 if (mp->random_seed == 0)
-  mp->random_seed = (number_to_scaled (internal_value (mp_time)) / number_to_scaled (unity_t)) + number_to_scaled (internal_value (mp_day));
+  mp->random_seed = (int)((number_to_scaled (internal_value (mp_time)) / number_to_scaled (unity_t)) + number_to_scaled (internal_value (mp_day)));
 init_randoms (mp->random_seed);
 initialize_print_selector();
 mp_normalize_selector (mp);

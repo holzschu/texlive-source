@@ -1,3 +1,23 @@
+2025-08-30  Karl Berry  <karl@freefriends.org>
+
+	* Makefile.am (BUILT_SOURCES): depend on detex-src/$(am__dirstamp)
+	to work around modifications to detex.l causing failure
+	due to the detex-src/ subdir in the build directory not being created.
+	Patch from Samuel Thibault.
+	TL report: https://tug.org/pipermail/tlbuild/2025q3/005834.html
+	Debian patch: https://github.com/debian-tex/texlive-bin/blob/master/debian/patches/detex_single_job.diff
+	Debian bug: https://bugs.debian.org/1111524
+
+2025-06-08  Karl Berry  <karl@freefriends.org>
+
+	* detex-src/detex.l: pacify C23.
+        (getenv) add prototype arg.
+	(TexOpen): avoid decl with no args.
+	Etc.
+	From https://github.com/pkubowicz/opendetex/pull/86
+	originally:
+	https://github.com/debian-tex/texlive-bin/blob/master/debian/patches/gcc-15/86.patch
+
 2024-01-07  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
 	* Import opendetex-2.8.11.

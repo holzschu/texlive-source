@@ -1,4 +1,4 @@
-% Copyright (c) 2009-2029 by Jonathan Kew
+% Copyright (c) 2009-2026 by Jonathan Kew
 % Copyright (c) 1994-2008 by SIL International
 % Copyright (c) 2010-2012 by Han The Thanh
 % Copyright (c) 2012-2013 by Khaled Hosny
@@ -319,8 +319,8 @@ known as `\eTeX'.
 @d eTeX_version_string=='-2.6' {current \eTeX\ version}
 @#
 @d XeTeX_version=0 { \.{\\XeTeXversion} }
-@d XeTeX_revision==".999997" { \.{\\XeTeXrevision} }
-@d XeTeX_version_string=='-0.999997' {current \XeTeX\ version}
+@d XeTeX_revision==".999998" { \.{\\XeTeXrevision} }
+@d XeTeX_version_string=='-0.999998' {current \XeTeX\ version}
 @#
 @d XeTeX_banner=='This is XeTeX, Version 3.141592653',eTeX_version_string,XeTeX_version_string
   {printed when \XeTeX\ starts}
@@ -1985,8 +1985,13 @@ amounts of user interaction:
 @d print_err(#)==begin if interaction=error_stop_mode then wake_up_terminal;
   print_nl("! "); print(#);
   end
-@d print_ignored_err(#)==begin if interaction=error_stop_mode then wake_up_terminal;
-  print_nl("ignored error: "); print(#);
+@d print_ignored_err(#)==begin
+  {An error in original \TeX, but we want to send it only to the log in
+   other engines.}
+  old_selector_ignored_err := selector;
+  selector := log_only;
+  wlog_cr; wlog('ignored: '); print(#);
+  selector := old_selector_ignored_err;
   end
 
 @<Glob...@>=
@@ -6245,6 +6250,7 @@ routines are going to work.
 
 @<Glob...@>=
 @!old_setting:0..max_selector;
+@!old_selector_ignored_err:0..max_selector; { for |print_ignored_err|}
 @!sys_time,@!sys_day,@!sys_month,@!sys_year:integer;
     {date and time supplied by external system}
 
@@ -33136,7 +33142,7 @@ end;
 @ Parenthesized subexpressions can be inside expressions, and this
 nesting has a stack.  Seven local variables represent the top of the
 expression stack:  |p| points to pushed-down entries, if any; |l|
-specifies the type of expression currently beeing evaluated; |e| is the
+specifies the type of expression currently being evaluated; |e| is the
 expression so far and |r| is the state of its evaluation; |t| is the
 term so far and |s| is the state of its evaluation; finally |n| is the
 numerator for a combined multiplication and division, if any.

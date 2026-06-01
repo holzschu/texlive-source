@@ -15,15 +15,12 @@ LFLAGS = @LDFLAGS@
 LIBS = $(LFLAGS) @PTHREAD_LIBS@ @GLEW@ @LIBS@ $(GCLIBS) @LSPLIBS@
 CXX_STANDARD = @CXX_STANDARD@
 DOSLIBS = $(LIBS) -ltermcap -lwolfssl -lgdi32 -lwinmm -s -static
-LSP_BUILD_ROOT=@LSP_BUILD_ROOT@
 LSP_ROOT=@LSP_ROOT@
 
 CMAKE ?= cmake
 PERL ?= perl
 PYTHON ?= python3
 BISON ?= bison
-PYRCC ?= pyrcc5
-PYUIC ?= pyuic5
 
 # Libraries needed to make asymptote.so.
 # We have to remove OpenGL, threading, GC, etc from this.
@@ -32,7 +29,6 @@ SHAREDLIBS = $(filter-out -lglut -GL -pthread $(GCLIBS), $(LIBS))
 vpath %.cc prc
 vpath %.cc thirdparty_impl/tinyexr_impl/src
 vpath %.ui GUI/windows
-vpath %.py GUI/pyUIClass
 vpath %.py GUI
 
 CAMP = camperror path drawpath drawlabel picture psfile texfile util settings \
@@ -127,16 +123,18 @@ INSTALL = @INSTALL@
 REVISION = "const char *REVISION="
 last = $(shell head -1 revision.cc | sed -e 's/.*\"\(.*\)\";/\1/')
 usinggit = $(shell if test -d ".git"; then echo yes; fi)
+revision = ""
 ifeq ($(usinggit),yes)
 	revision = $(shell LC_ALL="C" git describe --long | \
 	sed -e 's/git-\([0-9]*\)-g.*/-\1/' | sed -e 's/-0-g.*//')
-else
+endif
+ifeq ($(revision),"")
 	revision = @VERSION@
 endif
 
 export prefix docdir exampledir mandir infodir INSTALL MAKE DESTDIR TEXI2DVI
 
-asy: base/version.asy $(FILES:=.o) $(XNAME) revision.o @LSPLIB@ @GLEW@
+asy: base/version.asy $(FILES:=.o) $(XNAME) revision.o $(GCLIB) @LSPLIB@ @GLEW@
 	$(CXX) $(OPTS) -o $(NAME) $(FILES:=.o) revision.o $(LIBS)
 
 $(XNAME): $(PYFILES)
@@ -169,11 +167,11 @@ doc/version.texi: version.txt
 asymptote.so: $(COREFILES:=.pic.o) glew.o
 	$(CXX) $(OPTS) -shared -o asymptote.so revision.o $(COREFILES:=.pic.o) $(SHAREDLIBS)
 
-$(LSP_BUILD_ROOT)/liblspcpp.a:
-	$(CMAKE) -B$(LSP_BUILD_ROOT) -S$(LSP_ROOT) -DCMAKE_CXX_FLAGS=\
+$(LSP_ROOT)/liblspcpp.a:
+	$(CMAKE) -B$(LSP_ROOT) -S$(LSP_ROOT) -DCMAKE_CXX_FLAGS=\
 	"-fPIE @OPTIONS@ @LSP_CXX_BUILD_FLAGS@" \
 	@LSP_CMAKE_OPTIONS@
-	$(MAKE) -C $(LSP_BUILD_ROOT)
+	$(MAKE) -C $(LSP_ROOT)
 
 all:	asy sty man faq asy-keywords.el
 
@@ -197,8 +195,8 @@ man:	asy sty
 faq:	asy sty
 	cd doc && $(MAKE) faq
 
-$(RUNTIME_FILES:=.cc): %.cc: runtime.pl opsymbols.h runtimebase.in %.in
-	$(PERL) ./runtime.pl --prefix $(@:.cc=) --opsym-file opsymbols.h \
+$(RUNTIME_FILES:=.cc): %.cc: runtime.py opsymbols.h runtimebase.in %.in
+	$(PYTHON) ./runtime.py --prefix $(@:.cc=) --opsym-file opsymbols.h \
 		--runtime-base-file runtimebase.in \
 		--src-template-dir . \
 		--header-out-dir . \
@@ -236,9 +234,6 @@ allsymbols.h: $(SYMBOL_FILES:=.raw.i) findsym.py
 
 symbol.o: $(SYMBOLSH)
 
-icons_rc.py: GUI/res/icons.qrc
-	-$(PYRCC) GUI/res/icons.qrc -o GUI/icons_rc.py
-
 GUI/xasyicons: GUI/res/icons.qrc GUI/buildtool.py
 	-cd GUI && $(PYTHON) buildtool.py buildicons
 
@@ -265,7 +260,7 @@ opsymbols.h: camp.l opsymbols.py
 
 envcompleter.d: keywords.h
 
-asy-keywords.el: asy base/v3dtypes.asy base/v3dheadertypes.asy
+asy-keywords.el: asy base/v3dtypes.asy base/v3dheadertypes.asy asy-list.py
 	@echo Creating $@;
 	$(ASY) -l > asy.list
 	for dir in $(KEYWORDS); do \
@@ -273,7 +268,6 @@ asy-keywords.el: asy base/v3dtypes.asy base/v3dheadertypes.asy
 	  grep -v ^plain.asy$ | grep -v ^plain_ | grep -v ^three_ | \
 	  xargs ../$(ASY) -l >> ../asy.list; \
 	done
-	revision=`cat version.txt`
 	$(PYTHON) ./asy-list.py --asy-list-file asy.list --revision $(revision) --output-file $@
 
 install-notexhash: asy-keywords.el install-asy install-man
@@ -346,7 +340,6 @@ uninstall-asy:
 	-rmdir $(GUIdir)/configs
 	-cd $(GUIdir)/res/icons && rm -f *.svg
 	-rmdir $(GUIdir)/res/icons
-	-cd $(GUIdir) && rm -f icons_rc.py
 	-rmdir $(GUIdir)/res
 	-rmdir $(GUIdir)
 	-cd $(shaderdir) && rm -f *.glsl
@@ -370,8 +363,9 @@ uninstall-docdir:
 clean:	FORCE
 	-rm -f asy asymptote.so *.pic.o *.o *.d *.raw.i *mon.out $(CLEAN)
 	-cd LspCpp && $(MAKE) distclean
-	-cd LspCpp && rm -rf liblspcpp.a Makefile CMakeFiles third_party/uri/src/CMakeFiles
 	-cd tinyexr && $(MAKE) clean
+	cd doc && $(MAKE) clean
+	cd tests && $(MAKE) clean
 
 gc-clean: FORCE clean
 	-$(MAKE) -C $(GC) clean
@@ -379,7 +373,6 @@ gc-clean: FORCE clean
 cleaner: FORCE clean
 	-rm -rf __pycache__
 	-rm -rf GUI/__pycache__
-	-rm -rf GUI/pyUIClass/__pycache__
 	-rm -rf GUI/configs/__pycache__
 	-$(MAKE) -C $(GC) distclean
 	-$(MAKE) -C libatomic_ops distclean
@@ -387,24 +380,26 @@ cleaner: FORCE clean
 		cord/tests/.deps extra/.deps tests/.deps
 
 	-rm -f Makefile config.h config.log config.status \
-		errors.temp
+		errors.temp autom4te.cache
 	-rm -rf LspCpp/CMakeCache.txt
-	cd doc && $(MAKE) clean
-	cd tests && $(MAKE) distclean
+	cd doc && $(MAKE) cleaner
+	cd tests && $(MAKE) cleaner
 
-distclean: FORCE cleaner
-	cd doc && $(MAKE) distclean
-
-cleanest: FORCE maintainer-clean
-maintainer-clean: FORCE distclean
+cleanest: FORCE cleaner
 	-rm -f configure config.h.in
+	-rm -rf GUI/xasyicons GUI/xasyqtui GUI/xasyversion
 	-cd $(GC) && rm -rf ltmain.sh missing \
 		test-driver configure autom4te.cache m4/l*.m4
 	-cd libatomic_ops && rm -rf ltmain.sh missing \
 		test-driver configure autom4te.cache m4/l*.m4
 	-cd GUI && $(PYTHON) buildtool.py clean
-	-rm -rf autom4te.cache $(DIST)
+	-rm -rf $(DIST)
 	-rm -rf vcpkg_installed
+	cd doc && $(MAKE) cleanest
+	cd tests && $(MAKE) cleanest
+
+distclean: FORCE cleaner
+maintainer-clean: FORCE cleanest
 
 test: asy FORCE
 	./wce
@@ -434,9 +429,6 @@ glew.o: glew.c config.h
 	${CC} $(MAKEDEPEND) $(MDOPTS) $< > $@.$$$$ 2>/dev/null && \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
-%.py: %.ui
-	mkdir -p GUI/pyUIClass
-	-$(PYUIC) -o GUI/pyUIClass/$(notdir $@) $<
 # Compile for the shared library.  OpenGL must be disabled as it causes
 # crashes inside a shared library.
 %.pic.o: %.cc

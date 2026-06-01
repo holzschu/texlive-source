@@ -1,3 +1,91 @@
+2026-03-02  Karl Berry  <karl@tug.org>
+
+	* TL'26 release.
+
+2026-02-23  Thanh Han The  <hanthethanh@gmail.com>
+
+	* writepng.c (write_png): wrong use of | instead of &
+	when looking for PNG_COLOR_MASK_ALPHA.
+
+2026-02-15  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.web (pdf_begin_string): initialize must_set_text_pos
+	to fix each character in the output being set individually.
+	Report from Christian Clason,
+	  https://tug.org/pipermail/tex-live/2026-February/052142.html
+	and fix found by Hartmut Henkel,
+	  https://tug.org/pipermail/tex-live/2026-February/052152.html
+
+2026-02-08  Karl Berry  <karl@freefriends.org>
+
+	* writepng.c (writepng): if envvar TEXMF_DEBUG_PNG_COPY
+	is set to 1, report why PNG copying did not happen. Report/patch
+	from Norbert. Thread:
+	https://tug.org/pipermail/tex-live/2026-February/052076.html
+	#include <stdlib.h> and <string.h> to support this.
+	* NEWS: mention this.
+
+2026-01-18  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.web (print_ignored_err): send "ignored error"
+	output only to log file.
+	* NEWS: mention this.
+	* pdftex.ch: change for --file-line-error no longer worthwhile.
+
+2026-01-15  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.web,
+	* pdftex.ch (print_ignored_err): omit word "error" in message
+	to avoid false positives by humans and editors (cross-engine).
+	https://tug.org/pipermail/pdftex/2026-January/009463.html
+
+2026-01-10  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (pdf_begin_string): must_set_text_pos if doing
+	pdf_begin_text. Report from Ulrike Fischer, 29 Sep 2025 13:14:49.
+
+2026-01-07  Karl Berry  <karl@freefriends.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]29 for TL26.
+
+2025-11-10  Karl Berry  <karl@freefriends.org>
+
+	* NEWS: typo.
+
+2025-09-26  Karl Berry  <karl@freefriends.org>
+
+	* writejpg.c (read_jpg_info) <M_SOF2>: check that the PDF major
+	version is 1 before complaining that the minor version is <= 2.
+	Clea Rees, https://tug.org/pipermail/pdftex/2025-September/009457.html.
+	(tests/41-jpeg-dct)
+
+2025-05-17  Karl Berry  <karl@freefriends.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]28 for post-TL25 fix.
+
+2025-05-15  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (adv_char_width): remove dd parameter; call
+	divide_scaled by the hardwired 4, instead of dd.
+	(pdf_init_font): also check that the width of character 32 is >one_bp
+	for the pdf_font_has_space_char value.
+	(pdf_begin_string, output_one_char): change adv_char_width calls
+	similarly.
+	This is to fix overlapping text in ptmr8r and other fonts,
+	reported by Ulrike 01 May 2025 10:23:07.
+	Test: 40-overlapping-text-with-pdfinterwordspaceon.
+	(pdftex r963)
+
+2025-04-17  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.web (bool): rename variable to booltemp, kowtowing to C23.
+
 2025-03-07  Karl Berry  <karl@tug.org>
 
 	* TL'25 release.

@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id: xdvipdfm-pdf.test 74908 2025-04-10 22:20:35Z karl $
+# $Id$
 # Copyright 2025 Karl Berry <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 # PDF parsing reports.

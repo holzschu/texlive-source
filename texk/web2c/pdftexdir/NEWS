@@ -1,3 +1,19 @@
+pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026) (3 March 2026)
+- changes:
+  - don't complain about minor version <=2 unless major version == 1.
+  - send \ignoreprimitiveerror output only to log file, and
+    without the word "error".
+  - if environment variable TEXMF_DEBUG_PNG_COPY is set to 1,
+    report why PNG copying did not happen.
+
+- bugfixes:
+  - do not shift fraction denominator if \pdfpageheight is used.
+-----------------------------------------------------------------------------
+pdfTeX 3.141592653-2.6-1.40.28 (TeX Live 2025 post-release) (17 May March 2025)
+- bugfixes:
+  - fix overlapping text in ptmr8r and other fonts.
+
+-----------------------------------------------------------------------------
 pdfTeX 3.141592653-2.6-1.40.27 (TeX Live 2025) (7 March 2025)
 - changes:
   - new primitive \pdfptexuseunderscore: if positive or
@@ -607,7 +623,7 @@ pdfTeX 3.141592-1.30.0 was released on 2005-08-01
 ------------------------------------------------
 pdfTeX 3.141592-1.21a was released on 2005-02-04
 - ttf2afm 1.0:
-    - added support for refering to glyphs via unicode in encoding files (ie 'uniXXX')
+    - added support for referring to glyphs via unicode in encoding files (ie 'uniXXX')
     - added some more info to the AFM output
     - some minor bug fixes
     - a short documentation available

@@ -1,3 +1,43 @@
+2026-01-12  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* scanid.c: Check malformed inputs before EOF.
+	Thank report by V-One Giri.
+	* tests/sample.idx: Add tests for malformed inputs.
+	* configure.ac, mkind.h: Bump version to 2.18
+
+2025-12-28  Karl Berry  <karl@freefriends.org>
+
+	* tests/nested-range-test.pl: for more debuggin, show all
+	processes when output .ind doesn't exist; still mysteriously not
+	existing after successful run.
+
+	* Makefile.am,
+	* tests/nest.test: doc/svn tweaks.
+
+2025-12-21  Karl Berry  <karl@freefriends.org>
+
+	* tests/nested-range-test.pl: output .ind still not existing
+	sometimes; report explicitly what's happening, and sleep 2.
+
+2025-10-11  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* tests/romalpA.idx, tests/romalpA-[56].ind:
+	Add tests for roman numerals.
+
+2025-09-21  Karl Berry  <karl@freefriends.org>
+
+	* tests/nested-range-test.pl: check return status of test run.
+	Occasionally the output file doesn't exist before we try to open
+	it, for no evident reason. Related to disk caching? Also try
+	sleep(1) if it's not there yet.
+
+2025-08-11  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* tests/pprec.test, tests/range.idx,
+	tests/range4.ist, tests/range{1,2,3,4}.ind:
+	Add tests for page range.
+	* Makefile.am: Adjust.
+
 2025-02-10  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
 
 	* tests/makeindex.test, tests/head1.ist,

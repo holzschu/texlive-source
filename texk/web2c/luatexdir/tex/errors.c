@@ -151,22 +151,26 @@ void print_ignored_err(const char *s)
     if (interaction == error_stop_mode) {
         wake_up_terminal();
     }
+    err_old_setting = selector;
     if (callback_id > 0) {
-        err_old_setting = selector;
         selector = new_string;
         in_error = 1 ;
+    } else {
+        selector = log_only;
     }
     if (filelineerrorstylep) {
         print_file_line();
     } else {
-        tprint_nl("ignored error ");
+        tprint_nl("");
     }
+    tprint("ignored: ");
     tprint(s);
     if (callback_id <= 0) {
         xfree(last_error);
         last_error = (string) xmalloc((unsigned) (strlen(s) + 1));
         strcpy(last_error,s);
     }
+    selector = err_old_setting;
 }
 
 /*tex
@@ -1011,7 +1015,7 @@ void wrapup_backend(void) {
     if (output_mode_used == OMODE_NONE) {
         print_err(" ==> Fatal error occurred, no FMT file produced!");
     } else {
-        backend_out_control[backend_control_finish_file](static_pdf,history == fatal_error_stop);
+      backend_out_control_err[BACKEND_INDEX(backend_control_finish_file)](static_pdf,history == fatal_error_stop);
     }
 }
 

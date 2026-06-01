@@ -1,3 +1,127 @@
+2026-02-18  Luigi Scarso  <luigi.scarso@gmail.com>
+
+	* [luatex] Spacing issue: Partial fix. WORK IN PROGRESS.
+        
+
+2026-02-18  Luigi Scarso  <luigi.scarso@gmail.com>
+
+	* Rewrite node.protect_glyph and node.unprotect_glyph (H.Hagen), thanks to David Chiang.
+        
+
+2026-02-02  Luigi Scarso  <luigi.scarso@gmail.com>
+
+	* New luaffi from https://github.com/Tekenlight/luaffifb
+        
+
+2026-01-18  Karl Berry  <karl@freefriends.org>
+
+	* luatexdir/tex/errors.c (print_ignored_err): send "ignored error"
+	output only to log file.
+
+
+2026-01-15  Karl Berry  <karl@freefriends.org>
+
+	* luatexdir/tex/errors.c (print_ignored_err): omit word "error" in
+	message to avoid false positives by humans and editors (cross-engine).
+	https://tug.org/pipermail/pdftex/2026-January/009463.html
+
+
+2025-12-06  Luigi Scarso  <luigi.scarso@gmail.com>
+	* set_macro needs to check if the space is the only character
+	  after a backslash before removing a "trailing" space
+	  (thanks to Udi Fogiel and H.Hagen)
+	* fixed wrong spacing around display with \matheqdirmode=1. WORK IN PROGRESS (Udi Fogiel)
+	* fixed Errors in "texlua" do not print a traceback (Max Chernoff)
+      
+
+2025-09-23  Luigi Scarso  <luigi.scarso@gmail.com>
+	* Fixed scan_keywordcs typo in the manual  (Max Chernoff)
+
+
+2025-09-19  Luigi Scarso  <luigi.scarso@gmail.com>
+	* Included in writeimg.c the correct header  <kpathsea/absolute.h>
+	  for kpse_absolute_p 
+
+	
+2025-09-14  Karl Berry  <karl@freefriends.org>
+
+	* luaoutputdir.test (tests): mkdir top-level subdir.
+	Report from Maxim Cournoyer, tex-live 12 Sep 2025 22:42:53.
+
+
+2025-09-14  Luigi Scarso  <luigi.scarso@gmail.com>
+	* Fixed read_img, it  now checks --output-dir (thanks to reescf@gmail.com)
+	* Added the $(ENVLUATEXCPPFLAGS) and $(ENVLUAJITEXCPPFLAGS) variables to libluatex.am
+	  to add compiler switches from the environment.
+
+2025-09-02  Luigi Scarso  <luigi.scarso@gmail.com>
+	* Fix field names of mplib.stats (thanks to Josef Friedrich)
+        * Fixed a wrong date in luatex-nodes.tex.
+
+
+2025-09-01 Luigi Scarso  <luigi.scarso@gmail.com>
+	* WORK IN PROGRESS: Various fixes for C23 compatibility. LuaTeX 1.24.0 
+
+
+2025-07-15 Luigi Scarso  <luigi.scarso@gmail.com>
+	* Fixed a paragraph misplacement in luatex-languages.tex (thanks to Josef Friedrich)
+
+
+2025-07-15 Luigi Scarso  <luigi.scarso@gmail.com>
+	* Fixed typos in mathcodes.c (thanks to Josef Friedrich)
+
+	
+2025-07-05 Luigi Scarso  <luigi.scarso@gmail.com>
+	* Fix for legacy handling of truetype fonts (thanks to marcpenninga)
+
+
+2025-07-01 Luigi Scarso  <luigi.scarso@gmail.com>
+	* max size of the destination names table for PDF output raised to 1048576  (Max Chernoff)
+
+
+2025-06-24 Luigi Scarso  <luigi.scarso@gmail.com>
+	* Restored \mathflattenmode (M.F. Krüger)
+	* LuaTeX 1.23.3 
+
+
+2025-05-30 Luigi Scarso  <luigi.scarso@gmail.com>
+	* additional 'value' field for write nodes (getfield) for
+	  unexpanded token tables (H.Hagen)
+	* LuaTeX 1.23.2 
+
+
+2025-04-17 Luigi Scarso  <luigi.scarso@gmail.com>
+	* experimental extension to ToUnicode for Type1 fonts (HH)
+	* Document the table variant of `character.tounicode` (Max Chernoff)
+
+
+2025-03-20 Luigi Scarso  <luigi.scarso@gmail.com>
+	*  some more never used modes made obsolete + staircase kerns adapted (H.Hagen)
+	*  LuaTeX 1.23.1
+
+
+2025-03-18 Luigi Scarso  <luigi.scarso@gmail.com>
+	*  LuaTeX 1.23.0
+
+
+025-03-17 Luigi Scarso  <luigi.scarso@gmail.com>
+	*  final solution for italic (H.Hagen)
+
+
+2025-03-16 Luigi Scarso  <luigi.scarso@gmail.com>
+	* always use old school tex logic (also for opentype) wrt italics
+	  with exception for large operators in opentyep fonts (no mixed font
+          usage); all related control modes removed (H.Hagen)
+
+
+2025-03-15 Luigi Scarso  <luigi.scarso@gmail.com>
+	* italicsmode fix for eight bit fonts (H.Hagen)
+
+	
+2025-03-13 Luigi Scarso  <luigi.scarso@gmail.com>
+	* extra italicsmode (large operator italic spacing) (H.Hagen)
+
+	
 2025-02-28  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
 	* luatex.c: Remove problematic lines for windows
 

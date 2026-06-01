@@ -15,6 +15,7 @@
 
 @ First, we will need some stuff from other files.
 @c
+#include "mpconfig.h"
 #include <w2c/config.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@
 #include "mppsout.h"            /* internal header */
 #include "mpsvgout.h"           /* internal header */
 #include "mpmath.h"             /* internal header */
-@<Definitions@>;
+@<Definitions@>
 #endif
 
 @ Here are the functions needed for the avl construction.

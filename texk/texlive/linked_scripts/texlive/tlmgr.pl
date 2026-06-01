@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 74241 2025-02-23 23:10:34Z karl $
-# Copyright 2008-2024 Norbert Preining
+# $Id: tlmgr.pl 77655 2026-02-07 15:38:21Z karl $
+# Copyright 2008-2025 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 # 
@@ -8,8 +8,8 @@
 
 use strict; use warnings;
 
-my $svnrev = '$Revision: 74241 $';
-my $datrev = '$Date: 2025-02-24 00:10:34 +0100 (Mon, 24 Feb 2025) $';
+my $svnrev = '$Revision: 77655 $';
+my $datrev = '$Date: 2026-02-07 16:38:21 +0100 (Sat, 07 Feb 2026) $';
 my $tlmgrrevision;
 my $tlmgrversion;
 my $prg;
@@ -46,23 +46,21 @@ BEGIN {
   $^W = 1;
   # make subprograms (including kpsewhich) have the right path:
   my $kpsewhichname;
+  $Master = __FILE__;
   if ($^O =~ /^MSWin/i) {
     # on w32 $0 and __FILE__ point directly to tlmgr.pl; they can be relative
-    $Master = __FILE__;
     $Master =~ s!\\!/!g;
     $Master =~ s![^/]*$!../../..!
       unless ($Master =~ s!/texmf-dist/scripts/texlive/tlmgr\.pl$!!i);
     $bindir = "$Master/bin/windows";
     $kpsewhichname = "kpsewhich.exe";
-    # path already set by wrapper batchfile
+    # PATH already set by wrapper batchfile
   } else {
-    $Master = __FILE__;
     $Master =~ s,/*[^/]*$,,;
     $bindir = $Master;
     $Master = "$Master/../..";
-    # make subprograms (including kpsewhich) have the right path:
-    $ENV{"PATH"} = "$bindir:$ENV{PATH}";
     $kpsewhichname = "kpsewhich";
+    $ENV{"PATH"} = "$bindir:$ENV{PATH}";
   }
   if (-r "$bindir/$kpsewhichname") {
     # not in bootstrapping mode => kpsewhich exists, so use it to get $Master
@@ -72,8 +70,12 @@ BEGIN {
   # if we have no directory in which to find our modules,
   # no point in going on.
   if (! $Master) {
-    die ("Could not determine directory of tlmgr executable, "
-         . "maybe shared library woes?\nCheck for error messages above");
+    warn "$0: Could not determine (Master) directory of tlmgr executable.\n";
+    warn "$0:   with __FILE__: ", __FILE__, "\n";
+    warn "$0:   and bindir: $bindir\n";
+    warn "$0:   and PATH: $ENV{PATH}\n";
+    die  "$0: Check for error messages above.\n";
+
   }
 
   $::installerdir = $Master;  # for config.guess et al., see TLUtils.pm
@@ -3416,10 +3418,17 @@ sub action_update {
 
       if ($opts{"backup"} && !$opts{"dry-run"}) {
         my $compressorextension = $Compressors{$::progs{'compressor'}}{'extension'};
-        $tlp->make_container($::progs{'compressor'}, $root,
-                             destdir => $opts{"backupdir"},
-                             relative => $tlp->relocated,
-                             user => 1);
+        my ($s, undef, $fullname) = $tlp->make_container($::progs{'compressor'}, $root,
+                                                         destdir => $opts{"backupdir"},
+                                                         relative => $tlp->relocated,
+                                                         user => 1);
+        if ($s <= 0) {
+          tlwarn("\n$prg: creation of backup container failed for: $pkg\n");
+          tlwarn("$prg: continuing to update other packages, please retry...\n");
+          $ret |= $F_WARNING;
+          # we should try to update other packages at least
+          next;
+        }
         $unwind_package =
             "$opts{'backupdir'}/${pkg}.r" . $tlp->revision . ".tar.$compressorextension";
         
@@ -3522,8 +3531,8 @@ sub action_update {
         if (wndws()) {
           # w32 is notorious for not releasing a file immediately
           # we experienced permission denied errors
-          my $newname = $unwind_package;
-          $newname =~ s/__BACKUP/___BACKUP/;
+          my ($suffix) = $unwind_package =~ /(\.tar\.[^.\s]+)$/;
+          my $newname = TeXLive::TLUtils::tl_tmpfile(SUFFIX => $suffix);
           copy ("-f", $unwind_package, $newname);
           # try to remove the file if has been created by us
           unlink($unwind_package) if $remove_unwind_container;
@@ -7593,7 +7602,7 @@ do not include the version of the local installation
     #
     # if the release of the installed TL is less than the release
     # of the main remote repository, then
-    # warn that one needs to call update-tlmgr-latest.sh --update
+    # warn that one needs to call update-tlmgr-latest.sh -- --upgrade
     # We do this only if there is no extension like 2100-gpg etc
     if ($is_main && $TeXLive::TLConfig::ReleaseYear < $texlive_release_year) {
       if (length($texlive_release) > 4) {
@@ -7603,7 +7612,7 @@ do not include the version of the local installation
         return (undef, "Local TeX Live ($TeXLive::TLConfig::ReleaseYear)"
                 . " is older than remote repository ($texlive_release_year).\n"
                 . "Cross release updates are only supported with\n"
-                . "  update-tlmgr-latest(.sh/.exe) --update\n"
+                . "  update-tlmgr-latest(.sh/.exe) -- --upgrade\n"
                 . "See https://tug.org/texlive/upgrade.html for details.")
       }
     }
@@ -7634,7 +7643,7 @@ and the repository are not compatible:
   # - on every update, save the last seen remote main revision into
   #   00texlive.installation
   #
-  if ($is_main) {
+  if ($is_main && !$opts{"usermode"}) {
     my $rtlp = $remotetlpdb->get_package("texlive-scripts");
     my $ltlp = $localtlpdb->get_package("texlive-scripts");
     my $local_revision;
@@ -7659,9 +7668,11 @@ and the repository are not compatible:
     if ($remote_revision > 0 && $local_revision > $remote_revision) {
       info("fail load $location\n") if ($::machinereadable);
       return(undef, <<OLD_REMOTE_MSG);
-Remote database (revision $remote_revision of the texlive-scripts package)
-seems to be older than the local installation (rev $local_revision of
-texlive-scripts); please use a different mirror and/or wait a day or two.
+Remote database at $location
+(revision $remote_revision of the texlive-scripts package)
+seems to be older than the local installation
+(revision $local_revision of texlive-scripts);
+please use a different mirror and/or wait a day or two.
 OLD_REMOTE_MSG
     }
   }
@@ -10625,7 +10636,7 @@ This script and its documentation were written for the TeX Live
 distribution (L<https://tug.org/texlive>) and both are licensed under the
 GNU General Public License Version 2 or later.
 
-$Id: tlmgr.pl 74241 2025-02-23 23:10:34Z karl $
+$Id: tlmgr.pl 77655 2026-02-07 15:38:21Z karl $
 =cut
 
 # test HTML version: pod2html --cachedir=/tmp tlmgr.pl >/tmp/tlmgr.html

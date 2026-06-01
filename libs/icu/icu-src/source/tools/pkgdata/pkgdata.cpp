@@ -480,6 +480,10 @@ main(int argc, char* argv[]) {
         fprintf(stdout, "Note: Ignoring option -b (windows-dynamicbase).\n");
     }
 
+    if (options[WIN_DLL_ARCH].doesOccur) {
+        o.cpuArch = options[WIN_DLL_ARCH].value;
+    }
+
     /* OK options are set up. Now the file lists. */
     tail = nullptr;
     for( n=1; n<argc; n++) {
@@ -787,7 +791,7 @@ static int32_t pkg_executeOptions(UPKGOptions *o) {
                         o->tmpDir,
                         o->entryName,
                         (optMatchArch[0] == 0 ? nullptr : optMatchArch),
-                        nullptr,
+                        o->cpuArch,
                         nullptr,
                         gencFilePath,
                         sizeof(gencFilePath),

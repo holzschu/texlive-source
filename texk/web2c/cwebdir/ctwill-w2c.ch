@@ -35,10 +35,10 @@
 @z
 
 @x [0.0] l.34
-\def\title{CWEAVE (Version 4.12.1)}
+\def\title{CWEAVE (Version 4.12.2)}
 @y
 \def\Kpathsea/{{\mc KPATHSEA\spacefactor1000}} \ifacro\sanitizecommand\Kpathsea{KPATHSEA}\fi
-\def\title{CTWILL (Version 4.12.1 [\TeX~Live])}
+\def\title{CTWILL (Version 4.12.2 [\TeX~Live])}
 @z
 
 @x [0.0] l.36
@@ -48,9 +48,9 @@
 @z
 
 @x [0.0] l.38
-  \centerline{(Version 4.12.1)}
+  \centerline{(Version 4.12.2)}
 @y
-  \centerline{(Version 4.12.1 [\TeX~Live])}
+  \centerline{(Version 4.12.2 [\TeX~Live])}
 @z
 
 @x [0.0] l.40
@@ -77,7 +77,7 @@ Crusius, and others who have contributed improvements.
 The ``banner line'' defined here should be changed whenever \.{CWEAVE}
 is modified.
 
-@d banner "This is CWEAVE (Version 4.12.1)"
+@d banner "This is CWEAVE (Version 4.12.2)"
 @y
 This is the \.{CTWILL} program by D. E. Knuth, based
 on \.{CWEAVE} by Silvio Levy and D.~E. Knuth. It is also based on
@@ -101,7 +101,7 @@ Until then, \.{CWEAVE}'s sequence of sections will be preserved.
 The ``banner line'' defined here should be changed whenever \.{CTWILL} is
 modified. The version number parallels the corresponding version of \.{CWEAVE}.
 
-@d banner "This is CTWILL, Version 4.12.1"
+@d banner "This is CTWILL, Version 4.12.2"
   /* will be extended by the \TeX~Live |versionstring| */
 @z
 
@@ -127,7 +127,7 @@ modified. The version number parallels the corresponding version of \.{CWEAVE}.
 turned on during the first phase.
 
 @<Private...@>=
-static boolean change_exists; /* has any section changed? */
+static bool change_exists; /* has any section changed? */
 @y
 turned on during the first phase---NOT!
 @z
@@ -950,14 +950,14 @@ section_count=0; format_visible=true; right_start_switch=false; copy_limbo();
 @z
 
 @x [12.229] l.4212
-static boolean group_found=false; /* has a starred section occurred? */
+static bool group_found=false; /* has a starred section occurred? */
 
 @ @<Translate the \9{c}current section@>= {
   section_count++;
 @y
-static boolean group_found=false; /* has a starred section occurred? */
-static boolean right_start_switch; /* has `\.{@@r}' occurred recently? */
-static boolean temp_switch; /* has `\.{@@\%}' occurred recently? */
+static bool group_found=false; /* has a starred section occurred? */
+static bool right_start_switch; /* has `\.{@@r}' occurred recently? */
+static bool temp_switch; /* has `\.{@@\%}' occurred recently? */
 
 @ @d usage_sentinel (struct perm_meaning *)1
 @<Translate the \9{c}current section@>= {
@@ -1016,18 +1016,24 @@ flush_buffer(out_ptr,false,false);
 @z
 
 @x [12.232] l.4268
-        err_print("! TeX string should be in C text only"); break;
+        err_print("! TeX string should be in C text only");
 @y
-        err_print(_("! TeX string should be in C text only")); break;
+        err_print(_("! TeX string should be in C text only"));
 @z
 
-@x [12.232] l.4274
+@x [12.232] l.4271
+        err_print("! Verbatim string should be in C text only"); break;
+@y
+        err_print(_("! Verbatim string should be in C text only")); break;
+@z
+
+@x [12.232] l.4277
         err_print("! You can't do that in TeX text"); break;
 @y
         err_print(_("! You can't do that in TeX text")); break;
 @z
 
-@x [12.233] l.4288
+@x [12.233] l.4291
   outer_parse(); finish_C(format_visible); format_visible=true;
   doing_format=false;
 }
@@ -1039,20 +1045,20 @@ flush_buffer(out_ptr,false,false);
 }
 @z
 
-@x [12.236] l.4340
+@x [12.236] l.4343
 @<Start \9{a}a macro...@>= {
 @y
 @<Start \9{a}a macro...@>= {
   is_macro=true;
 @z
 
-@x [12.236] l.4346
+@x [12.236] l.4349
     err_print("! Improper macro definition");
 @y
     err_print(_("! Improper macro definition"));
 @z
 
-@x [12.236] l.4347
+@x [12.236] l.4350
 @.Improper macro definition@>
   else {
     app('$'); app_cur_id(false);
@@ -1064,7 +1070,7 @@ flush_buffer(out_ptr,false,false);
     def_diff=(*loc!='(');
 @z
 
-@x [12.236] l.4359
+@x [12.236] l.4362
         } @=/* otherwise fall through */@>@;
       default: err_print("! Improper macro definition"); break;
 @y
@@ -1072,7 +1078,7 @@ flush_buffer(out_ptr,false,false);
       default: err_print(_("! Improper macro definition")); break;
 @z
 
-@x [12.237] l.4369
+@x [12.237] l.4372
 @ @<Start \9{a}a format...@>= {
   doing_format=true;
 @y
@@ -1081,25 +1087,25 @@ flush_buffer(out_ptr,false,false);
   is_macro=false;
 @z
 
-@x [12.237] l.4386
+@x [12.237] l.4389
   if (scrap_ptr!=scrap_info+2) err_print("! Improper format definition");
 @y
   if (scrap_ptr!=scrap_info+2) err_print(_("! Improper format definition"));
 @z
 
-@x [12.240] l.4421
+@x [12.240] l.4424
   err_print("! You need an = sign after the section name");
 @y
   err_print(_("! You need an = sign after the section name"));
 @z
 
-@x [12.241] l.4443
+@x [12.241] l.4446
   err_print("! You can't do that in C text");
 @y
   err_print(_("! You can't do that in C text"));
 @z
 
-@x [12.246] l.4513
+@x [12.246] l.4516
 out_str("\\fi"); finish_line();
 @.\\fi@>
 @y
@@ -1110,13 +1116,13 @@ out_str("}\\FI"); finish_line();
 @.\\FI@>
 @z
 
-@x [13.247] l.4534
+@x [13.247] l.4537
   if (show_progress) printf("%s","\nWriting the index...");
 @y
   if (show_progress) printf("%s",_("\nWriting the index..."));
 @z
 
-@x [13.247] l.4536
+@x [13.247] l.4539
   if (change_exists) {
     @<Tell about changed sections@>@;
     finish_line(); flush_buffer(out_buf,false,false);
@@ -1125,32 +1131,32 @@ out_str("}\\FI"); finish_line();
 @y
 @z
 
-@x [13.247] l.4545
+@x [13.247] l.4548
     fatal("! Cannot open index file ",idx_file_name);
 @y
     fatal(_("! Cannot open index file "),idx_file_name);
 @z
 
-@x [13.247] l.4557
+@x [13.247] l.4560
     fatal("! Cannot open section file ",scn_file_name);
 @y
     fatal(_("! Cannot open section file "),scn_file_name);
 @z
 
-@x [13.247] l.4569
+@x [13.247] l.4572
 fclose(active_file);
 @y
 fclose(active_file); active_file=tex_file=NULL;
 if (check_for_change) @<Update the result when it has changed@>@;
 @z
 
-@x [13.247] l.4572
+@x [13.247] l.4575
   printf("%s","Done.");
 @y
   printf("%s",_("Done."));
 @z
 
-@x [13.249] l.4580
+@x [13.249] l.4583
 the index section itself.
 
 @<Tell about changed sections@>=
@@ -1169,13 +1175,13 @@ out('.');
 the index section itself---NOT!
 @z
 
-@x [13.257] l.4724
+@x [13.257] l.4727
     if (sort_ptr>=scrap_info_end) overflow("sorting");
 @y
     if (sort_ptr>=scrap_info_end) overflow(_("sorting"));
 @z
 
-@x [13.262] l.4769
+@x [13.262] l.4772
 @ @<Output the name...@>=
 switch (cur_name->ilk) {@+char *p; /* index into |byte_mem| */@+@t}\6{\4@>
 @y
@@ -1186,20 +1192,20 @@ rest of the job.  Compare this code with section |@<Mini-output...@>|.
 switch (cur_name->ilk) {
 @z
 
-@x [13.262] l.4771
+@x [13.262] l.4774
   case normal: case func_template:
 @y
   case normal:
 @z
 
-@x [13.262] l.4773
-    else {@+boolean all_caps=true;@+@t}\6{@>
+@x [13.262] l.4776
+    else {@+bool all_caps=true;@+@t}\6{@>
 @y
-    else {@+boolean all_caps=true;@+char *p;
+    else {@+bool all_caps=true;@+char *p;
       /* index into |byte_mem| */ @+@t}\6{@>
 @z
 
-@x [13.262] l.4788
+@x [13.262] l.4791
   case roman: not_an_identifier: out_name(cur_name,false); goto name_done;
   case custom:
     out_str("$\\");
@@ -1214,13 +1220,13 @@ not_an_identifier: out_name(cur_name,false); goto name_done;
 @.\\\$@>
 @z
 
-@x [13.262] l.4798
+@x [13.262] l.4801
 out_name(cur_name,true);
 @y
 out_name(cur_name,proofing);
 @z
 
-@x [13.269] l.4861
+@x [13.269] l.4864
   puts("\nMemory usage statistics:");
 @.Memory usage statistics:@>
   printf("%td names (out of %ld)\n",@^system dependencies@>
@@ -1269,7 +1275,7 @@ out_name(cur_name,proofing);
             (ptrdiff_t)(max_sort_ptr-scrap_info),(long)max_scraps);
 @z
 
-@x [14.270] l.4883
+@x [14.270] l.4886
 @** Index.
 @y
 @q Section 270. @>
@@ -1480,7 +1486,7 @@ static char ministring_buf[max_tex_chars]; /* \TeX\ code being generated */
 static char *ministring_buf_end=ministring_buf+max_tex_chars-1;
   /* end of |ministring_buf| */
 static char *ministring_ptr; /* first available slot in |ministring_buf| */
-static boolean ms_mode; /* are we outputting to |ministring_buf|? */
+static bool ms_mode; /* are we outputting to |ministring_buf|? */
 
 @q Section 27->274. @>
 @ @<Set init...@>=
@@ -1578,10 +1584,10 @@ appear between parentheses or brackets. The calling routine |make_ministring|
 should set |ident_seen=false| first. (This is admittedly tricky.)
 
 @<Private var...@>=
-static boolean ident_seen;
+static bool ident_seen;
 
 @ @c
-static boolean app_supp(
+static bool app_supp(
   text_pointer p)
 { token_pointer j;
   if (ident_seen && **p>=tok_flag)
@@ -1601,7 +1607,7 @@ catch14: return *(*(p+1)-1)=='9'; /* was production 14 used? */
 }
 
 @q Section 282. @>
-@ @<Predec...@>=@+static boolean app_supp(text_pointer);
+@ @<Predec...@>=@+static bool app_supp(text_pointer);
 
 @q Section 142->283. @>
 @ The trickiest part of \.{CTWILL} is the procedure |make_ministring(pp+l)|,
@@ -1654,7 +1660,7 @@ else {
   text_pointer q=(p-1)->trans, r;
   token t;
   int ast_count=0; /* asterisks preceding the expression */
-  boolean non_ast_seen=false; /* have we seen a non-asterisk? */
+  bool non_ast_seen=false; /* have we seen a non-asterisk? */
   while (true) {
     if (*(q+1)==*q+1) {
       r=q;@+break; /* e.g., \&{struct}; we're doing production 45 or 46 */
@@ -1693,8 +1699,8 @@ while (ast_count) {
 
 @q Section 253->288. @>
 @ @<Private...@>=
-static boolean is_macro; /* it's a macro def, not a format def */
-static boolean def_diff; /* |false| iff the current macro has parameters */
+static bool is_macro; /* it's a macro def, not a format def */
+static bool def_diff; /* |false| iff the current macro has parameters */
 static name_pointer id_being_defined; /* the definee */
 
 @q Section 257->289. @>
@@ -1826,7 +1832,7 @@ out_mini(
 switch (cur_name->ilk) {@+char *p; /* index into |byte_mem| */@+@t}\6{\4@>
   case normal: case func_template:
     if (is_tiny(cur_name)) out_str("\\|");
-    else {@+boolean all_caps=true;@+@t}\6{@>
+    else {@+bool all_caps=true;@+@t}\6{@>
       for (p=cur_name->byte_start;p<(cur_name+1)->byte_start;p++)
         if (xislower(*p)) { /* not entirely uppercase */
           all_caps=false; break;
@@ -1936,7 +1942,7 @@ Preston Briggs, to whom credit is due.
 
 @<Update the result...@>= {
 if((tex_file=fopen(tex_file_name,"r"))!=NULL) {
-  boolean comparison=false;
+  bool comparison=false;
 
   if((check_file=fopen(check_file_name,"r"))==NULL)
     fatal(_("! Cannot open output file "),check_file_name);

@@ -1,3 +1,43 @@
+2026-03-17  Karl Berry  <karl@tug.org>
+
+	* configure.ac: version 20260317. Post-release patch.
+	* data/dvipdfmx.cfg (D): use --; suggestion from Max Chernoff.
+
+2026-03-17  Norbert Preining  <norbert@preining.info>
+
+	* dpxfile.c (filename_unsafe_for_command): new fn to check for
+	' or " in filenames.
+	(dpx_file_apply_filter): call it.
+	Report to tlsecurity from Dawid Kulikowski of CERN,
+        9 Mar 2026 15:28:18.
+
+2026-03-02  Karl Berry  <karl@tug.org>
+
+	* TL'26 release.
+
+2026-01-13  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* pst_obj.c: Check NULL pointer for a new ojbect.
+	* configure.ac: version 20260113.
+
+2026-01-11  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+	* pst.h: Increase PST_STRING_LEN_MAX to 32767
+	to avoid buffer overflow. Report from David Carlisle:
+	https://tug.org/pipermail/tex-live/2026-January/051972.html
+	https://tug.org/pipermail/dvipdfmx/2026-January/000393.html
+
+2026-01-07  Karl Berry  <karl@freefriends.org>
+
+	* configure.ac,
+	* xbb.c (show_version),
+	* dvipdfmx.c (show_version): copyright 2026, version 260107.
+
+2025-04-13  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	* dvipdfmx.c: Reinstate an option -o - to send output to
+	standard output. This option has been disabled unintentionally
+	for a long time.
+
 2025-04-10  Karl Berry  <karl@freefriends.org>
 
 	* configure.ac: version 20250410.
@@ -9,7 +49,7 @@
 	https://tug.org/pipermail/tex-live/2025-April/051444.html
 
 	* xdvipdfm-pdf.test: new test, for this (pdfobj) and the page
-	Group (pdfgroup) fix from Clerk ma.
+	Group (pdfgroup) fix from Clerk Ma.
 	* Makefile.am (tests): add it.
 	* tests/xdvipdfm-pdfobj.xdv,
 	* tests/xdvipdfm-pdfgroup.dvi: new test input files.

@@ -147,7 +147,7 @@ else
 @z
 
 @x
-"Usage: mpost [OPTION] [&MEMNAME] [MPNAME[.mp]] [COMMANDS]\n"
+"Usage: mpost [OPTION] [&MPNAME] [MPNAME[.mp]] [COMMANDS]\n"
 "       mpost --dvitomp DVINAME[.dvi] [MPXNAME[.mpx]]\n"
 "\n"
 "  Run MetaPost on MPNAME, usually creating MPNAME.NNN (and perhaps\n"
@@ -156,10 +156,8 @@ else
 "  after MPNAME is read.\n\n"
 "  With a --dvitomp argument, MetaPost acts as DVI-to-MPX converter only.\n"
 "  Call MetaPost with --dvitomp --help for option explanations.\n\n");
-fprintf(stdout,
-"  -ini                      be inimpost, for dumping mem files\n"
 @y
-"Usage: "@= @>P_UP@= @>"mpost [OPTION] [&MEMNAME] [MPNAME[.mp]] [COMMANDS]\n"
+"Usage: "@= @>P_UP@= @>"mpost [OPTION] [&MPNAME] [MPNAME[.mp]] [COMMANDS]\n"
 "       "@= @>P_UP@= @>"mpost --dvitomp DVINAME[.dvi] [MPXNAME[.mpx]]\n"
 "\n"
 "  Run "@= @>P_UP@= @>"MetaPost on MPNAME, usually creating MPNAME.NNN (and perhaps\n"
@@ -168,8 +166,6 @@ fprintf(stdout,
 "  after MPNAME is read.\n\n"
 "  With a --dvitomp argument, "@= @>P_UP@= @>"MetaPost acts as DVI-to-MPX converter only.\n"
 "  Call "@= @>P_UP@= @>"MetaPost with --dvitomp --help for option explanations.\n\n");
-fprintf(stdout,
-"  -ini                      be ini"@= @>P_UP@= @>"mpost, for dumping mem files\n"
 @z
 
 @x
@@ -181,6 +177,8 @@ fprintf(stdout,
 
 @x
 "  -version                  output version information and exit\n"
+);
+fprintf(stdout,
 "\n"
 "Email bug reports to mp-implementors@@tug.org.\n"
 @y

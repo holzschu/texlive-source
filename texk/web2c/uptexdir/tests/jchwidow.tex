@@ -43,30 +43,30 @@
 \TEST{\kchar\kuten"0419\kchar\kuten"0103}
 \fi
 
-{\kcatcode`α=15
+{\kcatcode"E0EA=15%  0xE0EA:: UTF-16:PUA(U+E0EA), EUC-JP:琲(U+7432), Shift_JIS:瑕(U+7455)
 \ifx\kchar\undefined\else
-  \message{KCHAR"3B1, kcatcode=15}
-  \def\S{\kchar"03B1}
-  \TEST{い\kchar"03B1。}
-  \TEST{\kchar"03B1。}
-  \TEST{\relax\kchar"03B1。}
-  \TEST{\vrule\kchar"03B1。}
-  \TEST{b\kchar"03B1。}
+  \message{KCHAR"E0EA, kcatcode=15}
+  \def\S{\kchar"E0EA}
+  \TEST{い\kchar"E0EA。}
+  \TEST{\kchar"E0EA。}
+  \TEST{\relax\kchar"E0EA。}
+  \TEST{\vrule\kchar"E0EA。}
+  \TEST{b\kchar"E0EA。}
   \TEST{い\S。}
 \fi
 
-  \message{CHAR"3B1, kcatcode=15}
-  \def\S{\char"03B1}
-  \TEST{い\char"03B1。}
-  \TEST{\char"03B1。}
-  \TEST{\relax\char"03B1。}
-  \TEST{\vrule\char"03B1。}
-  \TEST{b\char"03B1。}
+  \message{CHAR"E0EA, kcatcode=15}
+  \def\S{\char"E0EA}
+  \TEST{い\char"E0EA。}
+  \TEST{\char"E0EA。}
+  \TEST{\relax\char"E0EA。}
+  \TEST{\vrule\char"E0EA。}
+  \TEST{b\char"E0EA。}
   \TEST{い\S。}
 
 \ifx\kchardef\undefined\else
-  \message{KCHARDEF"3B1, kcatcode=15}
-  \kchardef\KA="3B1
+  \message{KCHARDEF"E0EA, kcatcode=15}
+  \kchardef\KA="E0EA
   \TEST{い\KA 。}
   \TEST{\KA 。}
   \TEST{\relax\KA 。}
@@ -75,14 +75,57 @@
   \TEST{い\S。}
 \fi
 
-  \message{CHARDEF"3B1, kcatcode=15}
-  \chardef\CA="3B1
+  \message{CHARDEF"E0EA, kcatcode=15}
+  \chardef\CA="E0EA
   \TEST{い\CA 。}
   \TEST{\CA 。}
   \TEST{\relax\CA 。}
   \TEST{\vrule\CA 。}
   \TEST{b\CA 。}
 }
+
+%% prebreakpenalty, postbreakpenalty
+\ifx\kchar\undefined\else\ifnum\jis"2121="3000
+
+\showboxbreadth10000
+\showboxdepth10000
+
+% default
+\setbox0\hbox{さㇷ゚サしか゚シすあ゙スせ𛂦゙セそ𛂱゚ソたっタ}
+\showbox0
+
+% prebreakpenalty
+\prebreakpenalty`ㇷ=41
+\prebreakpenalty`か=42
+\prebreakpenalty`あ=43
+\prebreakpenalty`𛂦=44
+\prebreakpenalty`𛂱=45
+\prebreakpenalty`っ=46
+\setbox1\hbox{たㇷ゚タちか゚チつあ゙ツて𛂦゙テと𛂱゚トなっナ}
+\showbox1
+
+% postbreakpenalty
+\postbreakpenalty`ㇷ=51
+\postbreakpenalty`か=52
+\postbreakpenalty`あ=53
+\postbreakpenalty`𛂦=54
+\postbreakpenalty`𛂱=55
+\postbreakpenalty`っ=56
+\setbox2\hbox{なㇷ゚ナにか゚ニぬあ゙ヌね𛂦゙ネの𛂱゚ノはっハ}
+\showbox2
+
+% reset
+\prebreakpenalty`ㇷ=0
+\postbreakpenalty`か=0
+\prebreakpenalty`あ=0
+\postbreakpenalty`𛂦=0
+\prebreakpenalty`𛂱=0
+\postbreakpenalty`っ=0
+\setbox3\hbox{はㇷ゚ハひか゚ヒふあ゙フへ𛂦゙ヘほ𛂱゚ホまっマ}
+\showbox3
+
+\fi
+\fi
 
 \bye
 

@@ -8,7 +8,7 @@ ltx2crossrefxml.pl - create XML files for submitting to crossref.org
 
 =head1 SYNOPSIS
 
-ltx2crossrefxml [B<-c> I<config_file>]  [B<-o> I<output_file>] [B<-input-is-xml>]
+ltx2crossrefxml [B<--debug>] [B<-c> I<config_file>]  [B<-o> I<output_file>] [B<-input-is-xml>]
                 I<latex_file1> I<latex_file2> ...
 
 =head1 OPTIONS
@@ -28,6 +28,10 @@ Output file.  If this option is not used, the XML is output to stdout.
 
 Do not transform author and title input strings, assume they are valid XML.
 
+=item B<--debug>
+
+Output some progress reports.
+
 =back
 
 The usual C<--help> and C<--version> options are also supported. Options
@@ -36,20 +40,21 @@ can begin with either C<-> or C<-->, and ordered arbitrarily.
 =head1 DESCRIPTION
 
 For each given I<latex_file>, this script reads C<.rpi> and (if they
-exist) C<.bbl> files and outputs corresponding XML that can be uploaded
-to Crossref (L<https://crossref.org>). Any extension of I<latex_file> is
-ignored, and I<latex_file> itself is not read (and need not even exist).
+exist) C<.bbl> and C<.aux> files and outputs corresponding XML that
+can be uploaded to Crossref (L<https://crossref.org>). Any extension
+of I<latex_file> is ignored, and I<latex_file> itself is not read (and
+need not even exist).
 
 Each C<.rpi> file specifies the metadata for a single article to be
 uploaded to Crossref (a C<journal_article> element in their schema); an
 example is below. These files are output by the C<resphilosophica>
-package (L<https://ctan.org/pkg/resphilosophica>) and the TUGboat
-publication procedure (L<https://tug.org/TUGboat/repository.html>), but
-(as always) can also be created by hand or by whatever other method you
-implement.
+package (L<https://ctan.org/pkg/resphilosophica>), C<aomart> package
+(L<https://ctan.org/pkg/aomart>), the TUGboat publication procedure
+(L<https://tug.org/TUGboat/repository.html>) and other packages. They
+can also be created by hand or by whatever other method you implement.
 
-Any C<.bbl> files present are used for the citation information in the
-output XML. See the L<CITATIONS> section below.
+Any C<.bbl>, C<.aux>, and C<.bib> files are used for the citation
+information in the output XML. See the L<CITATIONS> section below.
 
 Unless C<--rpi-is-xml> is specified, for all text (authors, title,
 citations), standard TeX control sequences are replaced with plain text
@@ -72,9 +77,9 @@ C<crossref-upload-tool.jar>
 
 For the definition of the Crossref schema currently output by this
 script, see
-L<https://data.crossref.org/reports/help/schema_doc/5.3.1/index.html>
+L<https://data.crossref.org/reports/help/schema_doc/5.4.0/index.html>
 with additional links and information at
-L<https://www.crossref.org/documentation/schema-library/metadata-deposit-schema-5-3-1/>.
+L<https://www.crossref.org/documentation/schema-library/metadata-deposit-schema-5-4-0/>.
 
 =head1 CONFIGURATION FILE FORMAT
 
@@ -91,10 +96,10 @@ upload. The variables which are used are these:
 
     $depositorName = "Depositor Name";
     $depositorEmail = 'depositor@example.org';
-    $registrant = 'Registrant';  # organization name
-    $fullTitle = "FULL TITLE";   # journal name
-    $issn = "1234-5678";         # required
-    $abbrevTitle = "ABBR. TTL."; # optional
+    $registrant = 'Registrant';  # required, organization name
+    $fullTitle = "FULL TITLE";   # required, journal name
+    $issn = "1234-5678";         # required, ISSN
+    $abbrevTitle = "ABBR. TTL."; # optional, abbreviated journal name
     $coden = "CODEN";            # optional
 
 For a given run, all C<.rpi> data read is assumed to belong to the
@@ -103,7 +108,7 @@ configuration data is written as a C<journal_metadata> element, with
 given C<full_title>, C<issn>, etc., and then each C<.rpi> is written as
 C<journal_issue> plus C<journal_article> elements.
 
-The configuration file can also define one Perl function:
+The configuration file can also define a Perl function
 C<LaTeX_ToUnicode_convert_hook>. If it is defined, it is called at the
 beginning of the procedure that converts LaTeX text to Unicode, which is
 done with the L<LaTeX::ToUnicode> module, from the C<bibtexperllibs>
@@ -112,6 +117,17 @@ accept one string (the LaTeX text), and return one string (presumably
 the transformed string). The standard conversions are then applied to
 the returned string, so the configured function need only handle special
 cases, such as control sequences particular to the journal at hand.
+(See TUGboat's C<ltx2crossrefxml-tugboat.cfg> for an example.)
+
+The configuration file can also define a hash C<BibentryToCrossref>) that
+maps Crossref entry types to BibTeX entry types used in the
+bibliography processing (see L<CITATIONS>), for example
+
+  %BibentryToCrossref = ('WEBPAGE' => 'other',
+                         'MISC' => 'other');
+
+The keys in this hash must be in the upper case, while the entries
+must be in the lower case.
 
 =head1 RPI FILE FORMAT
 
@@ -210,27 +226,28 @@ used to output a C<citation_list> element for that C<journal_article> in
 the output XML. If no C<.bbl> file exists for a given C<.rpi>,
 no C<citation_list> is output for that article.
 
-The C<.bbl> processing is rudimentary: only so-called
-C<unstructured_citation> references are produced for Crossref, that is,
-the contents of the citation (each paragraph in the C<.bbl>) is dumped
-as a single flat string without markup.
+The C<.bbl> files are processed to create the C<unstructured_citation>
+references defined by Crossref, that is, the contents of the citation
+(each paragraph in the C<.bbl>) as a single flat string without markup
+of any kind, including font changes.
 
 Bibliography text is unconditionally converted from TeX to XML, via the
 method described above. It is not unusual for the conversion to be
-incomplete or incorrect.  It is up to you to check for this; e.g., if
-any backslashes remain in the output, it is most likely an error.
+incomplete or incorrect. It is up to you to check for this; e.g., if any
+backslashes or pairs of dollar signs remain in the output, it is most
+likely an error.
 
 Furthermore, it is assumed that the C<.bbl> file contains a sequence of
 references, each starting with C<\bibitem{I<KEY>}> (which itself must be
 at the beginning of a line, preceded only by whitespace), and the whole
 bibliography ending with C<\end{thebibliography}> (similarly at the
-beginning of a line). A bibliography not following this format will not
-produce useful results. Bibliographies can be created by hand, or with
-BibTeX, or any other method.
+beginning of a line). A C<.bbl> file not following this format will not
+produce useful results. The C<.bbl> file can be created by hand, or with
+BibTeX, or any other method, as long as it has this format.
 
 The C<key> attribute for the C<citation> element is taken as the I<KEY>
 argument to the C<\bibitem> command. The sequential number of the
-citation (1, 2, ...) is appended. The argument to C<\bibitem> can be
+citation (1, 2, ...). The argument to C<\bibitem> can be
 empty (C<\bibitem{}>, and the sequence number will be used on its own.
 Although TeX will not handle empty C<\bibitem> keys, it can be
 convenient when creating a C<.bbl> purely for Crossref.
@@ -238,22 +255,49 @@ convenient when creating a C<.bbl> purely for Crossref.
 The C<.rpi> file is also checked for the bibliography information, in
 this same format.
 
-Feature request: if anyone is interested in figuring out how to generate
-structured citations
-(L<https://data.crossref.org/reports/help/schema_doc/5.3.1/common5_3_1_xsd.html#citation>),
-that would be great. The schema does not support many useful fields, so
-we also want to keep the unstructured text output.
+Crossref's structured citations are added as follows:
 
-Norman Gray's beastie program (L<https://heptapod.host/nxg/beastie>)
-supports this, via C<beastie extract-bib.scm -O crossref $(doc).aux>,
-as invoked in the TUGboat C<Common.mak> file. Work in progress.
+=over 4
 
-By the way, if for some reason we have to switch away from using
-beastie, the most viable approach is probably to change C<tugboat.bst>
-to output no-op TeX commands like \tubibauthor, \tubibtitle, etc. (a la
-biblatex), and use those commands to discern the various crossref field
-values. We can't start from the .bib because then we'd have to
-reimplement Bib(La)TeX.
+=item 1. If an C<.aux> file is present, it is checked for any C<\bibdata>
+commands. The C<bib> files in these commands are read, and the
+information there is used to generate XML entries. The script uses
+C<kpsewhich> to look for the bib files, so the usual BibTeX
+conventions for the search paths are followed.
+
+=item 2. For any citation the corresponding entry in the C<bib> file is
+processed.
+
+=item 3. The Crossref entry type is determined according to the algorithm
+describe below (L<CITATION ENTRY TYPES>).
+
+=item 4. The entry fields are used to populate structured citation.
+
+=back
+
+=head2 CITATION ENTRY TYPES
+
+The current Crossref schema
+L<https://data.crossref.org/reports/help/schema_doc/5.4.0/schema_5_4_0.html>
+defines C<type> attribute for a citation.  Unfortunately the list of
+possible types does not fully coincide with the list of BibTeX entry
+types.  Therefore the script uses the following algorithm to determine
+the Crossref entry type for a citation:
+
+=over 4
+
+=item 1. If the entry has the field C<crossrefentrytype>, it is used.
+
+=item 2. Otherwise if BibTeX entry type appears in the hash
+C<BibentryToCrossref>) in the configuration file (L<CONFIGURATION FILE
+FORMAT>), its value is used.
+
+=item 3. Otherwise the default mapping is used.  The script knows many
+BibTeX entry types, and should do a good job in most cases.
+
+=back
+
+
 
 =head1 EXAMPLES
 
@@ -268,7 +312,7 @@ Boris Veytsman L<https://github.com/borisveytsman/crossrefware>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012-2024  Boris Veytsman
+Copyright (C) 2012-2025 Boris Veytsman
 
 This is free software.  You may redistribute copies of it under the
 terms of the GNU General Public License (any version)
@@ -301,23 +345,26 @@ extent permitted by law.
 
  use POSIX qw(strftime);
 
+ our $BibTeX_Parser_options = {}; # can be set by config file
  use BibTeX::Parser::Author;
+ use BibTeX::Parser;
  use LaTeX::ToUnicode;
+ use IO::File;
 
  my $USAGE = <<END;
-Usage: $0 [-c CONFIG] [-o OUTPUT] [--rpi-is-xml] LTXFILE...
+Usage: $0 [--debug] [-c CONFIG] [-o OUTPUT] [--rpi-is-xml] LTXFILE...
 
-Convert .rpi and (if any are present) .bbl and .crbib files
-corresponding to each LTXFILE to xml, for submitting to crossref.org.
-The LTXFILE is not read, and need not even exist; any extension given is
-replaced by .rpi, .bbl, .crbib.
+Convert .rpi and (if any are present) .bbl and .aux files corresponding
+to each LTXFILE to xml, for submitting to crossref.org. The LTXFILE is
+not read, and need not even exist; any extension given is replaced by
+.rpi, .bbl, .aux.
 
 The .rpi files are plain text, with values on lines beginning with %, as
 output by (for example) the resphilosophica LaTeX package. The .bbl
-files are as output by BibTeX. The .crbib files are xml files ready for
-incorporation in the final xml, as output by the beastie program. All
-may also be created by other methods. The documentation for this script
-has examples.
+files (used to generate <unstructured_citation> elements) are as output
+by BibTeX. The .aux files (used to generate structured citation
+elements) are as written by LaTeX. All may also be created by other
+methods. The documentation for this script has examples.
 
 The xml is written to standard output by default; the -o (--output)
 option overrides this.
@@ -326,6 +373,7 @@ If the -c (--config) option is given, the given file is read before any
 processing is done. This is used to define journal-specific defaults.
 
 The usual --help and --version options are also supported.
+--debug outputs some progress reports to stderr.
 
 For an example of using this script and associatd code, see the TUGboat
 processing at
@@ -333,28 +381,31 @@ https://github.com/TeXUsersGroup/tugboat/tree/trunk/capsules/crossref.
 
 This script depends on https://github.com/borisveytsman/bibtexperllibs.
 
+For somewhat more documentation, see the man page or crossrefware.pdf.
+
 Development sources, bug tracker: https://github.com/borisveytsman/crossrefware
 Releases: https://ctan.org/pkg/crossrefware
 END
 
  my $VERSION = <<END;
-ltx2crossrefxml (crossrefware) 2.52
+ltx2crossrefxml (crossrefware) 2025-07-09
 This is free software: you are free to change and redistribute it, under
 the terms of the GNU General Public License
 http://www.gnu.org/licenses/gpl.html (any version).
 There is NO WARRANTY, to the extent permitted by law.
 
-Written by Boris Veytsman.
+Written by Boris Veytsman with contributions by Karl Berry.
 END
  use Getopt::Long;
  my %opts;
 
  GetOptions(
    "config|c=s" => \($opts{c}),
+   "debug!"     => \($opts{debug}),
    "output|o=s" => \($opts{o}),
    "rpi-is-xml!"=> \($opts{xi}),
    "version|V"  => \($opts{V}),
-   "help|?"     => \($opts{h})) || pod2usage(1);
+   "help|?"     => \($opts{h}));
 
  if ($opts{h}) { print "$USAGE\n$VERSION"; exit 0; } 
  if ($opts{V}) { print $VERSION; exit 0; } 
@@ -385,8 +436,46 @@ END
  our $timestamp = strftime("%Y%m%d%H%M%S", gmtime);
  # use timestamp in batchid, since the value is supposed to be unique
  # for every submission to crossref by a given publisher.
- # https://data.crossref.org/reports/help/schema_doc/5.3.1/common5_3_1_xsd.html#doi_batch_id
+ # https://data.crossref.org/reports/help/schema_doc/5.4.0/schema_5_4_0.html#doi_batch_id
  our $batchId="ltx2crossref-$timestamp-$$";
+
+ # Default mappings of BibTeX entries to Crossref types
+our %BibentryToCrossrefDefault = (
+    # Default types
+    'ARTICLE' => 'journal_article',
+    'BOOK' => 'book',
+    'BOOKLET' => 'book',
+    'CONFERENCE' => 'conference_paper',
+    'INBOOK' => 'book_chapter',
+    'INCOLLECTION' => 'book_chapter',
+    'INPROCEEDINGS' => 'conference_paper',
+    'MANUAL' => 'software',
+    'MASTERSTHESIS' => 'dissertation',
+    'MISC' => 'other',
+    'PHDTHESIS' => 'dissertation',
+    'PROCEEDINGS' => 'conference_proceedings',
+    'TECHREPORT' => 'report',
+    'UNPUBLISHED' => 'other',
+    # From TUGboat
+    'CTAN' => 'software',
+    'ONLINE' => 'web_resource',
+    'SOFTWARE' => 'software',
+    'WEBPAGE' => 'web_resource',
+    # From ACM
+    'UNDERREVIEW' => 'other',
+    'PRESENTATION' => 'poster',
+    'GAME' => 'software',
+    'VIDEO' => 'web_resource',
+    'ARTIFACTSOFTWARE' => 'software',
+    'ARTIFACTDATASET' => 'dataset',
+    'DATASET' => 'dataset',
+    'PRERINT' => 'preprint',
+    # Some other popular types
+    'PATENT' => 'patent',
+    'STANDARD' => 'standard'
+    );
+
+ our %BibentryToCrossref; # empty hash, might be overriden by config
 
  if ($opts{c}) {
      if (-r $opts{c}) {
@@ -399,6 +488,8 @@ END
      }
  }
 
+
+
  PrintHead();
 
  # 
@@ -408,6 +499,7 @@ END
 
  # Read the papers.
  foreach my $file (@ARGV) {
+     &debug("reading paper: $file\n");
      AddPaper($file);
  }
 
@@ -417,8 +509,9 @@ END
          foreach my $issue (keys %{$papers{$year}->{$volume}}) {
              PrintIssueHead($year, $volume, $issue);
              my $paperList = $papers{$year}->{$volume}->{$issue};
-             #warn "papers for year=$year,  volume=$volume, issue=$issue\n";
-             # Nice to have the issue.xml in some stable order, so sort
+             &debug("writing papers for "
+                     . "year=$year, volume=$volume, issue=$issue\n");
+             # Nice to keep the output xml in stable order, so sort
              # by starting page. Doesn't matter if it's not perfect.
              foreach my $paper (sort { $a->{startpage} <=> $b->{startpage} }
                                      @{$paperList}) {
@@ -447,7 +540,12 @@ sub PrintHead {
     # Crossref schema info:
     # https://www.crossref.org/documentation/schema-library/schema-versions/
     print OUT <<END;
-<doi_batch xmlns="http://www.crossref.org/schema/5.3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="5.3.1" xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 http://www.crossref.org/schema/deposit/crossref5.3.1.xsd">
+<doi_batch
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="5.4.0"
+    xmlns="http://www.crossref.org/schema/5.4.0"
+    xsi:schemaLocation="http://www.crossref.org/schema/5.4.0
+                       https://www.crossref.org/schemas/crossref5.4.0.xsd">
   <head>
     <doi_batch_id>$batchId</doi_batch_id>
     <timestamp>$timestamp</timestamp>
@@ -476,7 +574,7 @@ END
 
 
 #######################################################
-#  Adding one paper from $file.rpi and .bbl and .crbib to global %papers.
+#  Adding one paper from $file.rpi and .bbl to global %papers.
 #######################################################
 sub AddPaper {
     my $file = shift;
@@ -485,7 +583,7 @@ sub AddPaper {
     open (RPI, $rpifile)
       or die "$0: open($rpifile) failed: $! (did you process $file?)\n";
     my %data;
-    #warn "reading rpi file: $rpifile\n";
+    &debug("reading rpi file: $rpifile\n");
     while (<RPI>) {
         chomp;
         if (/^%([^=]*)\s*=\s*(.*)\s*$/) {
@@ -499,15 +597,22 @@ sub AddPaper {
     }
     close RPI;
     
-    # also look for bibliographies in FILE.bbl and FILE.crbib files.
+    # also look for bibliographies in FILE.bbl.
     my @bibliography;
     foreach my $bblfile ($rpifile, File::Spec->catfile($path, "$name.bbl")) {
         push (@bibliography, AddBibliography($bblfile));
     }
     $data{'bibliography'} = \@bibliography;
-    #
-    $data{'crbib'}
-      = AddCrossrefBib (File::Spec->catfile($path, "$name.crbib"));
+
+    my @refs;
+    foreach my $citation_hash (@bibliography) {
+	@refs = (@refs, keys (%$citation_hash));
+    }
+
+    $data{'bibtexbib'} =
+	AddBibtexBib(File::Spec->catfile($path, "$name.aux"),
+		     \@refs);
+
 
     # Die if the fields we use unconditionally are empty. Not all of
     # them are required by the schema, but we can wait to generalize.
@@ -607,71 +712,241 @@ sub AddBibliography {
 
 
 ############################################################## 
-# Read an XML <citation_list> element from CRBIBFILE, if it exists.
-# No error if it doesn't exist; it often won't, even if there is a bbl file.
+# Read \bibdata commands from AUX file, if exists.
+# No error if it doesn't exist.
+#
+# Extract bib entries corresponding to the list of keys and convert
+# them to XML structured citations accoding to Crossref
+# scheme at
+# https://data.crossref.org/reports/help/schema_doc/5.4.0/schema_5_4_0.html#citation 
 # 
 # Return a hash reference, with each element's key being the citation
 # key plus an integer, the same keys as in AddBibliography from the .bbl
-# file.# Each value is a flat string, the structured citation items for
-# that element.
-# 
-# We ignore any <unstructured_citation> element, since we generate our
-# own (which we prefer).
-# 
-# We don't parse XML, just extract the pieces with regexps.
-# This is generated by Norman Gray's beastie program. Example:
-# <citation_list>
-#   <citation key="bookshelf">
-#     <author>Peter Flynn</author>
-#     <volume_title>The bookshelf package</volume_title>
-#     <cYear>2020</cYear>
-#     <unstructured_citation>Flynn, Peter (manual): The bookshelf package[...]
-#   </citation>
-#   <citation key="Calibre">
-#     <author>Kovid Goyal</author>
-#     <volume_title>calibre User Manual</volume_title>
-#     <cYear>2024</cYear>
-#     <unstructured_citation>Kovid Goyal (manual): calibre User Manual[...]
-#   </citation>
-# </citation_list>
+# file. Each value is a hash with two elements:  entrytype being the
+# type of the entry, and citation being  the structured citation items for
+# that entry.
 ##############################################################
-sub AddCrossrefBib {
-    my ($crbibfile,$refs) = @_;
+sub AddBibtexBib {
+    my ($auxfile,$refs) = @_;
     my %result;
-    
-    #warn "crbibfile=$crbibfile\n";
-    open (CRBIB, $crbibfile) or return;
-    
-    # read whole file.
-    my $crbib_as_string = join("", <CRBIB>);
-    #warn "doing crbib $crbibfile; $crbib_as_string\n";
-    close (CRBIB) or warn "close($crbibfile) failed: $!";
-    
-    my $bibno = 0;
+    &debug("checking for aux file: $auxfile\n");
+    if (! -r $auxfile) {
+	return \%result;
+    }
 
-    # We're matching each <citation> here by virtue of .*? to be a
-    # non-greedy match, the /s modifier to treat the whole thing as one
-    # string, and the /g modifier to return an array of all matches.
-    my @crbib = ($crbib_as_string =~ m,<citation\s+(key=.*?)</citation>,sg);
-    for my $crb (@crbib) {
-        $bibno++;
-      
-        # wipe out the unstructured text.
-        $crb =~ s,\s*<unstructured_citation>.*</unstructured_citation>\s*,,;
-      
-        $crb = SanitizeTextNoEntities($crb);
-        
-        # qqq undone - must save by key, then write by key into the xml.
-        # need to be able to clean the text, beastie removes braces.
-        warn "crb $bibno: $crb\n";
+    # A hash translating from the real citekeys to crossref numbered ones
+    my %crkeys;
+    foreach my $crkey (@$refs) {
+	my $key = $crkey;
+	$key =~ s/-\d*$//;
+	$crkeys{$key}=$crkey;
     }
-    
-    if ($bibno == 0) {
-        warn "$0: *** no crossref cites found in: $crbibfile; check if ok\n";
+
+    # Reading the .aux file
+
+    my %bibfiles;
+    open (AUX, $auxfile) or return(\%result);
+    &debug(" parsing aux file: $auxfile\n");
+    while (<AUX>) {
+	if (/\\bibdata\{([^}]*)\}/) {
+	    my $bibdata=$1;
+	    foreach my $bibfile (split /,/, $bibdata) {
+		$bibfiles{$bibfile} = 1;
+	    }
+	}
     }
-    
-    return %result;
+
+    close AUX;
+
+    foreach my $bibfile (keys %bibfiles) {
+        $bibfile .= ".bib"
+          if $bibfile !~ /\.bib$/; # might end in .bib already
+	my $bibfilename = `kpsewhich $bibfile`; # --debug=-1 
+	chomp $bibfilename;
+	my $fh = IO::File->new($bibfilename);
+	if (! defined $fh) {
+	    warn "$0: could not open bib file: $bibfile\n";
+	    warn "$0:         kpsewhich found: $bibfilename\n";
+	    warn "$0:                     cwd: ", `pwd`;
+	    next;
+	}
+        &debug(" parsing bib file: $bibfilename\n");
+        # $BibTeX_Parser_options can be set by the config file.
+	my $parser = BibTeX::Parser->new($fh, $BibTeX_Parser_options);
+	while (my $entry = $parser->next) {
+	    my $key=$entry->key;
+	    if (exists $crkeys{$key}) {
+		my $crkey = $crkeys{$key};
+		$result{$crkey} = ConvertBibentryToCr ($entry);
+	    }
+	}
+
+    }
+
+    return \%result;
 }
+
+############################################################## 
+# Get Crossref entry type for a given entry.
+# Returnr a flat string
+##############################################################
+sub CrEntrytype {
+    my $entry=shift;
+    if ($entry->{'crossrefentrytype'}) {
+	&debug("  Found explicit entry type, $entry->{'crossrefentrytype'}\n");
+	return($entry->{'crossrefentrytype'});
+    }
+    
+    my $type = $entry->type;
+    &debug("Bibtex type $type\n");
+
+    if (exists $BibentryToCrossref{$type}) {
+	&debug("  Found a custom mapping $BibentryToCrossref{$type}\n");
+	return($BibentryToCrossref{$type});
+    }
+
+    if (exists $BibentryToCrossrefDefault{$type}) {
+	&debug("  Found a default mapping $BibentryToCrossrefDefault{$type}\n");
+	return($BibentryToCrossrefDefault{$type});
+    }
+
+    &debug("  Cannot find a mapping, returning 'other'\n");
+    return('other');
+}
+
+
+############################################################## 
+# Convert a BibTeX entry to Crossref structured citation
+# according to
+# https://data.crossref.org/reports/help/schema_doc/5.4.0/schema_5_4_0.html#citation
+#
+# Return a hash with two elements: entrytype and citation
+##############################################################
+sub ConvertBibentryToCr {
+    my $entry = shift;
+    &debug_hash_as_string("Processing citation entry", $entry);
+    my %result = ();
+
+    $result{'entrytype'} = CrEntrytype($entry);
+    $result{'citation'} = "";
+    
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'journal', 'journal_title');
+
+    my $issn = $entry->{"issn"};
+    if ($issn && $issn !~ /\d{4}-?\d{3}[\dX]/) {
+        # that's the regexp crossref matches.
+        warn "$0: goodbye, invalid issn value: $issn\n";
+        die "$0:   ", &debug_hash_as_string("in entry", $entry);
+    }
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'issn');
+
+    # Somehow crossref wants only the first author.  Why?
+    my @authors = $entry->author;
+    if (! scalar(@authors)) {
+	@authors = $entry->editor;
+    }
+    if (scalar(@authors)) {
+	my $author = shift @authors;
+	$result{'citation'} .= "<author>";
+	$result{'citation'} .= SanitizeTextEntities($author->to_string());
+	$result{'citation'} .= "</author>\n";
+    }
+
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'volume');
+
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'issue');
+
+    # We need only the first page
+    if ($entry->field('pages')) {
+	my $page = $entry->field('pages');
+	$page =~ s/-.*//;
+	$result{'citation'} .= "<first_page>$page</first_page>\n";
+    }
+
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'eprint', 'elocation_id');
+
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'year', 'cYear');
+
+    my $doi = $entry->{"doi"};
+    if ($doi) {
+      # Crossref accepts only a bare doi, so remove any leading
+      # https://doi.org/, etc. Complain now if it doesn't match
+      # the regexp the Crossref schema specifies.
+      $doi =~ s,^(https?://)?(dx\.)?doi\.org/,,; 
+      if ($doi !~ m!10\.[0-9]{4,9}/.{1,200}!) { # per crossref schema
+        warn "$0: invalid doi for crossref: $entry->{doi} (-> $doi)\n";
+        warn "$0:   (in title: $entry->{title})\n";
+      }
+      if ($doi ne $entry->{"doi"}) {
+        # If we made any changes to the value, update field value so we
+        # can call the usual routine.
+        $entry->{"doi_orig"} = $entry->{"doi"};
+        $entry->{"doi"} = $doi;
+      }
+      $result{'citation'} .= ConvertBibFieldToCfield($entry, 'doi');
+    }
+
+    my $isbn = $entry->{"isbn"};
+    if ($isbn) {
+        # requirements at
+  # data.crossref.org/reports/help/schema_doc/5.4.0/schema_5_4_0.html#http___www.crossref.org_schema_5.4.0_isbn
+        my $len = length($isbn);
+        if ($len == 9 && $isbn =~ /^\d+$/) {
+            # 9-digit standard book number from the 1960s; prepend 0 to
+            # make it an ISBN (according to wikipedia.org/ISBN).
+            $isbn = "0" . $isbn;
+            $len++;
+            # have to update the hash since that's the value that gets
+            # used below.
+            $entry->{isbn} = $isbn;
+        }
+        if ($len < 10 || $len > 17) {
+            warn "$0: goodbye, invalid isbn length: $len ($isbn)\n";
+            die "$0:   ", &debug_hash_as_string("in entry", $entry);
+        } elsif ($isbn !~ /(97(8|9)-)?\d[\d \-]+[\dX]/) {
+            warn "$0: goodbye, invalid isbn value: $isbn\n";
+            die "$0:   ", &debug_hash_as_string("in entry", $entry);
+        } else {
+            # value apparently ok, use it.
+            $result{'citation'} .= ConvertBibFieldToCfield($entry, 'isbn');
+        }
+    }
+
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'series', 'series_title');
+
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'booktitle', 'volume_title');
+
+    $result{'citation'} .= ConvertBibFieldToCfield($entry, 'title', 'article_title');
+    
+    chomp $result{'citation'}; # Delete the last \n
+    
+    return \%result;
+}
+
+
+############################################################## 
+# Convert a BibTeX field ENTRY->{BFIELD} into Crossref field
+# CFIELD.  If CFIELD is empty, use the same name for
+# CFIELD and BFIELD.
+#
+# Return a string: <cfield>sanitized-bfield-value</cfield>,
+# or the empty string if the bfield member is empty.
+##############################################################
+sub ConvertBibFieldToCfield {
+    my ($entry, $bfield, $cfield) = @_;
+    if (!length($cfield)) {
+	$cfield = $bfield;
+    }
+    if ($entry->field($bfield)) {
+	return( "<$cfield>" .
+		SanitizeTextEntities($entry->field($bfield)) .
+		"</$cfield>\n");
+    } else {
+	return("");
+    }
+}
+
+
 
 
 #################################################################
@@ -733,7 +1008,7 @@ END
 END
 
     if (scalar(@{$paper->{bibliography}})) {
-        PrintCitationList($paper->{bibliography}, $paper->{crbib});
+        PrintCitationList($paper->{bibliography}, $paper->{bibtexbib});
     }
 
     print OUT <<END;
@@ -745,7 +1020,7 @@ END
 ###############################################################
 # Crossref <title> strings can contain a few so-called "face" HTML
 # commands. Complain if they have anything anything else.
-# schema doc: https://data.crossref.org/reports/help/schema_doc/5.3.1/crossref5_3_1_xsd.html#title
+# schema doc: https://data.crossref.org/reports/help/schema_doc/5.4.0/schema_5_4_0.html#title
 #   face doc: https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/face-markup/
 # 
 # We don't technically validate the string, e.g., mismatched tags will
@@ -872,33 +1147,45 @@ END
 
 #############################################################
 #  Print citations in order from BIBLIOGRAPHY, a list reference, and
-#  CRBIB, a hash reference. Each element in BIBLIOGRAPHY is a
+#  BIBTEXBIB, a hash reference. Each element in BIBLIOGRAPHY is a
 #  one-element hash, with the key being the citation key and the value
 #  the (original) bbl text. We sanitize (de-texify) the text.
-#  Each element in CRBIB has key the citation key (from the same set)
-#  and value the structured citation string from any .crbib file.
+#  
+#  Each element in BIBTEXBIB has key the citation key (from the same
+#  set) and value the structured citation string.
 #  
 #############################################################
 sub PrintCitationList {
-    my ($bibliography,$crbib) = shift;
+    my ($bibliography, $bibtexbib) = @_;
     
     print OUT "      <citation_list>\n";
     foreach my $citation_hash (@$bibliography) {
         foreach my $citekey (keys (%{$citation_hash})) {  # only one key
             my $citation_text = $citation_hash->{$citekey};
-            $citation_text = SanitizeTextAlways($citation_text);
+            $citation_text = SanitizeTextEntities($citation_text);
 
-            #warn "  printing citation $citekey: $citation_text\n";
-            my $structured_citation = "";
-            if ($crbib->{$citekey}) {
-                $structured_citation = "\n" . " "x10 . $crbib->{$citekey};
-                warn "    with structured citation: $structured_citation\n";
-            }
+            &debug("  printing citation $citekey: $citation_text\n");
+            my $structured_citation_hash = $bibtexbib->{$citekey} || "";
+	    if ($structured_citation_hash) {
+		my $entrytype = $structured_citation_hash -> {'entrytype'};
+		my $structured_citation = $structured_citation_hash -> {'citation'};
+		$structured_citation = "\n" . $structured_citation;
+		$structured_citation =~ s/^(.)/          $1/mg;
+		&debug ("    with structured citation: $structured_citation\n");
+
             print OUT <<END;
-        <citation key="$citekey">$structured_citation
+        <citation key="$citekey" type="$entrytype">$structured_citation
           <unstructured_citation>$citation_text</unstructured_citation>
         </citation>
 END
+	    } else {
+            print OUT <<END;
+        <citation key="$citekey">
+          <unstructured_citation>$citation_text</unstructured_citation>
+        </citation>
+END
+	    }
+		
         }
     }
     print OUT "      </citation_list>\n";
@@ -907,7 +1194,7 @@ END
 
 ##############################################################
 #  Return publication_type attribute for <journal_article>, given $PUBTYPE.
-#  https://data.crossref.org/reports/help/schema_doc/5.3.1/crossref5_3_1_xsd.html#publication_type.atts_publication_type
+#  https://data.crossref.org/reports/help/schema_doc/5.4.0/NO_NAMESPACE.html#publication_type.atts_publication_type
 #  
 #  If not specified in input, return " publication_type=full_text" since
 #  it was hardwired that way before. If set to "omit", return empty
@@ -994,8 +1281,8 @@ sub SanitizeTextNoEntities {
 #  debug_hash_as_string($LABEL, HASH)
 #
 # Return LABEL followed by HASH elements, followed by a newline, as a
-# single string. If HASH is a reference, it is followed (but no recursive
-# derefencing).
+# single string. If HASH is a reference, it is followed (but no
+# recursive dereferencing).
 ###############################################################
 sub debug_hash_as_string {
   my ($label) = shift;
@@ -1028,3 +1315,5 @@ sub debug_list_as_string {
   my $str = "$label [" . join (",", @list) . "]";
   return "$str\n";
 }
+
+sub debug { $opts{"debug"} && warn "@_"; }
