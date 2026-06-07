@@ -691,7 +691,8 @@ our $biber  = 'biber %O %S';
 our $bibtex  = 'bibtex %O %S';
 # Switch(es) to make biber & bibtex silent:
 our $biber_silent_switch  = '--onlylog';
-our $bibtex_silent_switch  = '-terse';
+# iOS: we use bibtex8, which does not allow -terse
+our $bibtex_silent_switch  = '';
 our $bibtex_use = 1;   # Whether to actually run bibtex to update bbl files.
                    # This variable is also used in deciding whether to
                    #   delete bbl files in clean up operations.

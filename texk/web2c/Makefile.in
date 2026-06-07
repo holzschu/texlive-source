@@ -1418,7 +1418,7 @@ am__DEPENDENCIES_6 = libmplibcore.a $(am__DEPENDENCIES_1) \
 # __IPHONE__ change: create a dynamic library, not an executable. 
 luahbtex_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(luahbtex_CXXFLAGS) \
-	$(CXXFLAGS) $(luahbtex_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(luahbtex_LDFLAGS) $(LDFLAGS) -o $@.dylib
 am__objects_39 = luatexdir/luajithbtex-luatex.$(OBJEXT) \
     luatexdir/luatex-uexit_lua.$(OBJEXT) \
 	mplibdir/luajithbtex-lmplib.$(OBJEXT)
@@ -4558,7 +4558,7 @@ euptex_CPPFLAGS = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS) \
 # With --enable-ipc, e-upTeX may need to link with -lsocket.
 # __IPHONE__ addition: create dynamic library, not executable:
 euptex_LDADD = libukanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD) \
-	$(ipc_socketlibs) libmd5.a $(ZLIB_LIBS) $(am__append_133)
+	$(ipc_socketlibs) libmd5.a $(ZLIB_LIBS) $(am__append_133) \
 	-dynamiclib -export-dynamic -L$(SYSROOT)/usr/lib/
 euptex_DEPENDENCIES = libukanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies) libmd5.a $(ZLIB_DEPEND)
 

@@ -327,7 +327,7 @@ kpathsea_selfdir (kpathsea kpse, const_string argv0)
 #ifdef __IPHONE__
   // The binaries don't exist for real, but this is the directory where they should be:
   // Use of texlive/YYYY/architecture/bin/argv0 ensures most config files are happy.
-  // TODO: change 2025 to 2026 next year
+  // TODO: change 2026 to 2027 next year
   // The binaries must match the formats, so each upgrade requires changing this.
   name = xstrdup(getenv("HOME"));
   // if ($HOME) ends with "/Documents", remove "/Documents" before adding "/Library"
@@ -336,7 +336,7 @@ kpathsea_selfdir (kpathsea kpse, const_string argv0)
   if (nameDocuments) {
   	  nameDocuments[0] = 0x0; // end the string here.
   }
-  name = concat3 (name, DIR_SEP_STRING, "Library/texlive/2025/bin/arm-darwin") ; 
+  name = concat3 (name, DIR_SEP_STRING, "Library/texlive/2026/bin/arm-darwin") ; 
   name = concat3 (name, DIR_SEP_STRING, argv0) ; 
 #else   
   if (kpathsea_absolute_p (kpse, argv0, true)) {
