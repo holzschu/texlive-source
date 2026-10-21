@@ -2021,7 +2021,7 @@ if ( $auto_rc_use && ($HOME ne "" ) ) {
     # N.B. $HOME equals "" if latexmk couldn't determine a home directory.
     # In that case, we shouldn't look for an rc file there.
     if ( $HOME ) { 
-       push @user_rc, "$HOME/.latexmkrc";
+       push @user_rc, "$HOME/Documents/.latexmkrc";
     }
     read_first_rc_file_in_list( @user_rc );
 }

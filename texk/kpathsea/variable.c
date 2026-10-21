@@ -139,6 +139,9 @@ expand (kpathsea kpse, fn_type *expansion,
 
   if (expanding_p (kpse, var)) {
     WARNING1 ("kpathsea: variable `%s' references itself (eventually)", var);
+#ifdef __IPHONE__
+	ios_exit(1);
+#endif
   } else {
     string vtry = concat3 (var, "_", kpse->program_name);
     /* Check for an environment variable.  */
