@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -euo pipefail
 # -D __IPHONE__ for specific changes in the code
 # -D NDEBUG to deactivate assert
 
@@ -10,16 +11,41 @@
 #
 # 1) download the xcframework:
 
-IOS_SYSTEM_VER="v3.0.1"
+IOS_SYSTEM_VER="v3.0.5"
 HHROOT="https://github.com/holzschu"
 BUILD_SIMULATOR=0
+plutil -lint basic_Info.plist
 
-# echo "Downloading ios_system Framework:"
-# rm -rf ios_system.xcframework
-# curl -OL $HHROOT/ios_system/releases/download/$IOS_SYSTEM_VER/ios_system.xcframework.zip
-# unzip ios_system.xcframework.zip
-# rm ios_system.xcframework.zip
-# curl -OL $HHROOT/ios_system/releases/download/$IOS_SYSTEM_VER/ios_error.h
+curl --fail --location --retry 3 -O "$HHROOT/ios_system/releases/download/$IOS_SYSTEM_VER/ios_system.xcframework.zip"
+curl --fail --location --retry 3 -O "$HHROOT/ios_system/releases/download/v3.0.5/ios_error.h"
+shasum -a 256 -c - <<'CHECKSUMS'
+d429e68102926f58bedd8e8b7105dcd169478cd6da1cef494a5f468482d1c8f5  ios_system.xcframework.zip
+51d46b912eb30399cbb5c36c8c8f15eb1a44adcfc9ee581304ac9d3739a84716  ios_error.h
+CHECKSUMS
+rm -rf ios_system.xcframework
+unzip -q ios_system.xcframework.zip
+BUILD_TRIPLE=$(sh build-aux/config.guess)
+export TL_MAKE_FLAGS=-j3
+
+# Web2C needs native WEB translators before cross-compilation (README.2building 4.6.2).
+mkdir -p Work-native
+(
+    cd Work-native
+    ../configure --disable-all-pkgs --enable-web2c --disable-native-texlive-build \
+        --disable-shared --enable-static --without-x --with-system-zlib \
+        --disable-tex --disable-euptex --disable-aleph --disable-hitex \
+        --disable-pdftex --disable-luatex --disable-luajittex --disable-luahbtex \
+        --disable-luajithbtex --disable-mp --disable-pmp --disable-upmp \
+        --disable-xetex --disable-mf --disable-mflua --disable-mfluajit --disable-synctex
+    # The port's generated Makefile links programs as dylibs; host tools must be executables.
+    native_link='$(LIBTOOL) --tag=CC --mode=link $(CC) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@'
+    make -j3 "LINK=$native_link"
+    make -C texk/web2c -j3 "LINK=$native_link" tangle ctangle otangle tie
+    for tool in tangle ctangle otangle; do
+        "texk/web2c/$tool" --version
+    done
+) > build_native.log 2>&1
+export PATH="$PWD/Work-native/texk/web2c:$PATH"
 
 # 2) build for iOS:
 echo "Building for iOS:"
@@ -27,7 +53,7 @@ echo "Building for iOS:"
 export SYSROOT=$(xcrun --sdk iphoneos --show-sdk-path) 
 export OSX_SYSROOT=$(xcrun --show-sdk-path) 
 export STRIP="strip -x"
-./Build --host=arm-apple-darwin --build=x86_64-apple-darwin \
+./Build --host=arm-apple-darwin --build="$BUILD_TRIPLE" \
 --disable-native-texlive-build \
 --enable-shared \
 --disable-static \
@@ -56,6 +82,7 @@ export STRIP="strip -x"
 --disable-pmp \
 --disable-upmp \
 --disable-xdvipdfmx \
+--disable-xdvipsk \
 --disable-xindy \
 --disable-xpdfopen \
 --disable-dvi2tty \
@@ -73,9 +100,9 @@ export STRIP="strip -x"
 CC=clang \
 CXX=clang++ \
 OBJCXX=clang++ \
-MAKE=/usr/local/bin/make \
+MAKE=make \
 CFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -DPNG_ARM_NEON_OPT=0\ -I${PWD}\ -I${PWD}/texk/ptexenc\ " \
-CPPFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}" \
+CPPFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D_DARWIN_C_SOURCE=1\ -D\ __IPHONE__\ -I${PWD}" \
 LDFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -F${PWD}/ios_system.xcframework/ios-arm64\ -framework\ ios_system\ " \
 CXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
 OBJCXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
@@ -334,6 +361,7 @@ export SYSROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
 --disable-pmp \
 --disable-upmp \
 --disable-xdvipdfmx \
+--disable-xdvipsk \
 --disable-xindy \
 --disable-xpdfopen \
 --disable-dvi2tty \
@@ -353,7 +381,7 @@ CXX=clang++ \
 OBJCXX=clang++ \
 MAKE=/usr/local/bin/make \
 CFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}\ -I${PWD}/texk/ptexenc" \
-CPPFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}" \
+CPPFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D_DARWIN_C_SOURCE=1\ -D\ __IPHONE__\ -I${PWD}" \
 LDFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -F${PWD}/ios_system.xcframework/ios-arm64_x86_64-simulator\ -framework\ ios_system\ " \
 CXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
 OBJCXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
@@ -596,6 +624,9 @@ for framework in texlua53 kpathsea makeindex luatex luahbtex pdftex xetex bibtex
 do
    rm -rf $framework.xcframework
    xcodebuild -create-xcframework -framework Frameworks/$framework.framework -output $framework.xcframework
+	rm -f "$framework.xcframework.zip"
+	zip -rq "$framework.xcframework.zip" "$framework.xcframework"
+	swift package compute-checksum "$framework.xcframework.zip"
 done
 
 
