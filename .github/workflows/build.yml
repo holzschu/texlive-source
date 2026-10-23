@@ -41,6 +41,8 @@ jobs:
           bash build_command.sh || { tail -n 120 build_native.log build_cross.log build_simulator-*.log; exit 1; }
       - name: Slices and checksums
         run: |
+          # The downloaded build dependency is not a TeX release product.
+          rm -rf ios_system.xcframework ios_system.xcframework.zip
           ls *.xcframework.zip >/dev/null
           for zip in *.xcframework.zip; do
             sum=$(swift package compute-checksum "$zip")

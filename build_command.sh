@@ -69,6 +69,7 @@ export STRIP="strip -x"
 --enable-euptex      \
 --disable-hitex       \
 --disable-luajittex   \
+--disable-luajithbtex \
 --enable-xetex       \
 --disable-web-progs   \
 --disable-synctex     \
@@ -329,7 +330,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 if [ $BUILD_SIMULATOR == 1 ];
 then 
 #3 Now compile for the simulator: 
-# LuaJIT generates architecture-specific assembly, so configure each slice separately.
+# Configure each Simulator architecture separately, then combine the frameworks.
 for sim_arch in arm64 x86_64; do
 sim_host=aarch64-apple-darwin
 if [[ $sim_arch == x86_64 ]]; then sim_host=x86_64-apple-darwin; fi
@@ -353,6 +354,7 @@ export SYSROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
 --enable-euptex      \
 --disable-hitex       \
 --disable-luajittex   \
+--disable-luajithbtex \
 --enable-xetex       \
 --disable-web-progs   \
 --disable-synctex     \
