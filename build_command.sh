@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -euo pipefail
 # -D __IPHONE__ for specific changes in the code
 # -D NDEBUG to deactivate assert
 
@@ -10,16 +11,41 @@
 #
 # 1) download the xcframework:
 
-IOS_SYSTEM_VER="v3.0.1"
+IOS_SYSTEM_VER="v3.0.5"
 HHROOT="https://github.com/holzschu"
-BUILD_SIMULATOR=0
+BUILD_SIMULATOR=1
+plutil -lint basic_Info.plist
 
-# echo "Downloading ios_system Framework:"
-# rm -rf ios_system.xcframework
-# curl -OL $HHROOT/ios_system/releases/download/$IOS_SYSTEM_VER/ios_system.xcframework.zip
-# unzip ios_system.xcframework.zip
-# rm ios_system.xcframework.zip
-# curl -OL $HHROOT/ios_system/releases/download/$IOS_SYSTEM_VER/ios_error.h
+curl --fail --location --retry 3 -O "$HHROOT/ios_system/releases/download/$IOS_SYSTEM_VER/ios_system.xcframework.zip"
+curl --fail --location --retry 3 -O "$HHROOT/ios_system/releases/download/v3.0.5/ios_error.h"
+shasum -a 256 -c - <<'CHECKSUMS'
+d429e68102926f58bedd8e8b7105dcd169478cd6da1cef494a5f468482d1c8f5  ios_system.xcframework.zip
+51d46b912eb30399cbb5c36c8c8f15eb1a44adcfc9ee581304ac9d3739a84716  ios_error.h
+CHECKSUMS
+rm -rf ios_system.xcframework
+unzip -q ios_system.xcframework.zip
+BUILD_TRIPLE=$(sh build-aux/config.guess)
+export TL_MAKE_FLAGS=-j3
+
+# Web2C needs native WEB translators before cross-compilation (README.2building 4.6.2).
+mkdir -p Work-native
+(
+    cd Work-native
+    ../configure --disable-all-pkgs --enable-web2c --disable-native-texlive-build \
+        --disable-shared --enable-static --without-x --with-system-zlib \
+        --disable-tex --disable-euptex --disable-aleph --disable-hitex \
+        --disable-pdftex --disable-luatex --disable-luajittex --disable-luahbtex \
+        --disable-luajithbtex --disable-mp --disable-pmp --disable-upmp \
+        --disable-xetex --disable-mf --disable-mflua --disable-mfluajit --disable-synctex
+    # The port's generated Makefile links programs as dylibs; host tools must be executables.
+    native_link='$(LIBTOOL) --tag=CC --mode=link $(CC) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@'
+    make -j3 "LINK=$native_link"
+    make -C texk/web2c -j3 "LINK=$native_link" tangle ctangle otangle tie
+    for tool in tangle ctangle otangle; do
+        "texk/web2c/$tool" --version
+    done
+) > build_native.log 2>&1
+export PATH="$PWD/Work-native/texk/web2c:$PATH"
 
 # 2) build for iOS:
 echo "Building for iOS:"
@@ -27,7 +53,7 @@ echo "Building for iOS:"
 export SYSROOT=$(xcrun --sdk iphoneos --show-sdk-path) 
 export OSX_SYSROOT=$(xcrun --show-sdk-path) 
 export STRIP="strip -x"
-./Build --host=arm-apple-darwin --build=x86_64-apple-darwin \
+./Build --host=arm-apple-darwin --build="$BUILD_TRIPLE" \
 --disable-native-texlive-build \
 --enable-shared \
 --disable-static \
@@ -43,6 +69,7 @@ export STRIP="strip -x"
 --enable-euptex      \
 --disable-hitex       \
 --disable-luajittex   \
+--disable-luajithbtex \
 --enable-xetex       \
 --disable-web-progs   \
 --disable-synctex     \
@@ -56,6 +83,7 @@ export STRIP="strip -x"
 --disable-pmp \
 --disable-upmp \
 --disable-xdvipdfmx \
+--disable-xdvipsk \
 --disable-xindy \
 --disable-xpdfopen \
 --disable-dvi2tty \
@@ -73,9 +101,9 @@ export STRIP="strip -x"
 CC=clang \
 CXX=clang++ \
 OBJCXX=clang++ \
-MAKE=/usr/local/bin/make \
+MAKE=make \
 CFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -DPNG_ARM_NEON_OPT=0\ -I${PWD}\ -I${PWD}/texk/ptexenc\ " \
-CPPFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}" \
+CPPFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D_DARWIN_C_SOURCE=1\ -D\ __IPHONE__\ -I${PWD}" \
 LDFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -F${PWD}/ios_system.xcframework/ios-arm64\ -framework\ ios_system\ " \
 CXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
 OBJCXXFLAGS="-arch\ arm64\ -miphoneos-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
@@ -302,10 +330,15 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 if [ $BUILD_SIMULATOR == 1 ];
 then 
 #3 Now compile for the simulator: 
-echo "Building for Simulator:"
+# Configure each Simulator architecture separately, then combine the frameworks.
+for sim_arch in arm64 x86_64; do
+sim_host=aarch64-apple-darwin
+if [[ $sim_arch == x86_64 ]]; then sim_host=x86_64-apple-darwin; fi
+echo "Building for Simulator $sim_arch:"
+rm -rf Frameworks_Simulator
 
 export SYSROOT=$(xcrun --sdk iphonesimulator --show-sdk-path) 
-./Build --host=x86-apple-darwin --build=x86_64-apple-darwin \
+./Build --host="$sim_host" --build="$BUILD_TRIPLE" \
 --disable-native-texlive-build \
 --enable-shared \
 --disable-static \
@@ -321,6 +354,7 @@ export SYSROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
 --enable-euptex      \
 --disable-hitex       \
 --disable-luajittex   \
+--disable-luajithbtex \
 --enable-xetex       \
 --disable-web-progs   \
 --disable-synctex     \
@@ -334,6 +368,7 @@ export SYSROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
 --disable-pmp \
 --disable-upmp \
 --disable-xdvipdfmx \
+--disable-xdvipsk \
 --disable-xindy \
 --disable-xpdfopen \
 --disable-dvi2tty \
@@ -349,23 +384,30 @@ export SYSROOT=$(xcrun --sdk iphonesimulator --show-sdk-path)
 --disable-mfluajit \
 --disable-multiplatform \
 CC=clang \
+CPP="clang\ -E" \
 CXX=clang++ \
+CXXCPP="clang++\ -E" \
 OBJCXX=clang++ \
-MAKE=/usr/local/bin/make \
-CFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}\ -I${PWD}/texk/ptexenc" \
-CPPFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}" \
-LDFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -F${PWD}/ios_system.xcframework/ios-arm64_x86_64-simulator\ -framework\ ios_system\ " \
-CXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
-OBJCXXFLAGS="-miphonesimulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
->& build_simulator.log
+MAKE=make \
+CFLAGS="-DPNG_ARM_NEON_OPT=0\ -arch\ ${sim_arch}\ -mios-simulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D\ __IPHONE__\ -I${PWD}\ -I${PWD}/texk/ptexenc" \
+CPPFLAGS="-arch\ ${sim_arch}\ -mios-simulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -D_DARWIN_C_SOURCE=1\ -D\ __IPHONE__\ -I${PWD}" \
+LDFLAGS="-arch\ ${sim_arch}\ -mios-simulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -F${PWD}/ios_system.xcframework/ios-arm64_x86_64-simulator\ -framework\ ios_system\ " \
+CXXFLAGS="-arch\ ${sim_arch}\ -mios-simulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
+OBJCXXFLAGS="-arch\ ${sim_arch}\ -mios-simulator-version-min=14.0\ -isysroot\ ${SYSROOT}\ \ -std=c++17\ -D\ __IPHONE__\ -stdlib=libc++ " \
+>& "build_simulator-$sim_arch.log"
 
+mkdir -p Frameworks_Simulator
+cp basic_Info.plist Frameworks_Simulator/Info.template.plist
+plutil -replace CFBundleSupportedPlatforms.0 -string iPhoneSimulator Frameworks_Simulator/Info.template.plist
+plutil -replace DTPlatformName -string iphonesimulator Frameworks_Simulator/Info.template.plist
+plutil -remove UIRequiredDeviceCapabilities Frameworks_Simulator/Info.template.plist
 echo "Compilation done, generating frameworks"
 mkdir -p Frameworks_Simulator
 
 rm -rf Frameworks_Simulator/texlua53.framework
 mkdir Frameworks_Simulator/texlua53.framework 
 cp Work/libs/lua53/.libs/libtexlua53.5.dylib Frameworks_Simulator/texlua53.framework/texlua53
-cp basic_Info_Simulator.plist Frameworks_Simulator/texlua53.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/texlua53.framework/Info.plist
 plutil -replace CFBundleExecutable -string texlua53 Frameworks_Simulator/texlua53.framework/Info.plist
 plutil -replace CFBundleName -string texlua53 Frameworks_Simulator/texlua53.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.texlua53 Frameworks_Simulator/texlua53.framework/Info.plist
@@ -374,7 +416,7 @@ install_name_tool -id @rpath/texlua53.framework/texlua53   Frameworks_Simulator/
 rm -rf Frameworks_Simulator/kpathsea.framework
 mkdir Frameworks_Simulator/kpathsea.framework 
 cp Work/texk/kpathsea/.libs/libkpathsea.dylib Frameworks_Simulator/kpathsea.framework/kpathsea
-cp basic_Info_Simulator.plist Frameworks_Simulator/kpathsea.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/kpathsea.framework/Info.plist
 plutil -replace CFBundleExecutable -string kpathsea Frameworks_Simulator/kpathsea.framework/Info.plist
 plutil -replace CFBundleName -string kpathsea Frameworks_Simulator/kpathsea.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.kpathsea Frameworks_Simulator/kpathsea.framework/Info.plist
@@ -383,7 +425,7 @@ install_name_tool -id  @rpath/kpathsea.framework/kpathsea   Frameworks_Simulator
 rm -rf Frameworks_Simulator/makeindex.framework
 mkdir Frameworks_Simulator/makeindex.framework 
 cp Work/texk/makeindexk/.libs/makeindex.dylib Frameworks_Simulator/makeindex.framework/makeindex
-cp basic_Info.plist Frameworks_Simulator/makeindex.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/makeindex.framework/Info.plist
 plutil -replace CFBundleExecutable -string makeindex Frameworks_Simulator/makeindex.framework/Info.plist
 plutil -replace CFBundleName -string makeindex Frameworks_Simulator/makeindex.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.makeindex Frameworks_Simulator/makeindex.framework/Info.plist
@@ -393,7 +435,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib  @rpath/kpathsea.framework/
 rm -rf Frameworks_Simulator/luatex.framework
 mkdir Frameworks_Simulator/luatex.framework 
 cp Work/texk/web2c/.libs/luatex.dylib Frameworks_Simulator/luatex.framework/luatex
-cp basic_Info_Simulator.plist Frameworks_Simulator/luatex.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/luatex.framework/Info.plist
 plutil -replace CFBundleExecutable -string luatex Frameworks_Simulator/luatex.framework/Info.plist
 plutil -replace CFBundleName -string luatex Frameworks_Simulator/luatex.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.luatex Frameworks_Simulator/luatex.framework/Info.plist
@@ -404,7 +446,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib  @rpath/kpathsea.framework/
 rm -rf Frameworks_Simulator/luahbtex.framework
 mkdir Frameworks_Simulator/luahbtex.framework 
 cp Work/texk/web2c/.libs/luahbtex.dylib Frameworks_Simulator/luahbtex.framework/luahbtex
-cp basic_Info.plist Frameworks_Simulator/luahbtex.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/luahbtex.framework/Info.plist
 plutil -replace CFBundleExecutable -string luahbtex Frameworks_Simulator/luahbtex.framework/Info.plist
 plutil -replace CFBundleName -string luahbtex Frameworks_Simulator/luahbtex.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.luahbtex Frameworks_Simulator/luahbtex.framework/Info.plist
@@ -416,7 +458,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib  @rpath/kpathsea.framework/
 rm -rf Frameworks_Simulator/pdftex.framework
 mkdir Frameworks_Simulator/pdftex.framework
 cp Work/texk/web2c/.libs/pdftex.dylib Frameworks_Simulator/pdftex.framework/pdftex
-cp basic_Info_Simulator.plist Frameworks_Simulator/pdftex.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/pdftex.framework/Info.plist
 plutil -replace CFBundleExecutable -string pdftex Frameworks_Simulator/pdftex.framework/Info.plist
 plutil -replace CFBundleName -string pdftex Frameworks_Simulator/pdftex.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.pdftex Frameworks_Simulator/pdftex.framework/Info.plist
@@ -426,7 +468,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 rm -rf Frameworks_Simulator/xetex.framework
 mkdir Frameworks_Simulator/xetex.framework
 cp Work/texk/web2c/.libs/xetex.dylib Frameworks_Simulator/xetex.framework/xetex
-cp basic_Info_Simulator.plist Frameworks_Simulator/xetex.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/xetex.framework/Info.plist
 plutil -replace CFBundleExecutable -string xetex Frameworks_Simulator/xetex.framework/Info.plist
 plutil -replace CFBundleName -string xetex Frameworks_Simulator/xetex.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.xetex Frameworks_Simulator/xetex.framework/Info.plist
@@ -436,7 +478,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 rm -rf Frameworks_Simulator/ptexenc.framework
 mkdir Frameworks_Simulator/ptexenc.framework 
 cp Work/texk/ptexenc/.libs/libptexenc.dylib Frameworks_Simulator/ptexenc.framework/ptexenc
-cp basic_Info.plist Frameworks_Simulator/ptexenc.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/ptexenc.framework/Info.plist
 plutil -replace CFBundleExecutable -string ptexenc Frameworks_Simulator/ptexenc.framework/Info.plist
 plutil -replace CFBundleName -string ptexenc Frameworks_Simulator/ptexenc.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.ptexenc Frameworks_Simulator/ptexenc.framework/Info.plist
@@ -446,7 +488,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 rm -rf Frameworks_Simulator/euptex.framework
 mkdir Frameworks_Simulator/euptex.framework
 cp Work/texk/web2c/.libs/euptex.dylib Frameworks_Simulator/euptex.framework/euptex
-cp basic_Info.plist Frameworks_Simulator/euptex.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/euptex.framework/Info.plist
 plutil -replace CFBundleExecutable -string euptex Frameworks_Simulator/euptex.framework/Info.plist
 plutil -replace CFBundleName -string euptex Frameworks_Simulator/euptex.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.euptex Frameworks_Simulator/euptex.framework/Info.plist
@@ -457,7 +499,7 @@ install_name_tool -change $PWD/inst/lib/libptexenc.1.dylib @rpath/ptexenc.framew
 rm -rf Frameworks_Simulator/bibtex.framework
 mkdir Frameworks_Simulator/bibtex.framework
 cp Work/texk/bibtex-x/.libs/bibtex8.dylib Frameworks_Simulator/bibtex.framework/bibtex
-cp basic_Info_Simulator.plist Frameworks_Simulator/bibtex.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/bibtex.framework/Info.plist
 plutil -replace CFBundleExecutable -string bibtex Frameworks_Simulator/bibtex.framework/Info.plist
 plutil -replace CFBundleName -string bibtex Frameworks_Simulator/bibtex.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.bibtex Frameworks_Simulator/bibtex.framework/Info.plist
@@ -467,7 +509,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 rm -rf Frameworks_Simulator/kpsewhich.framework
 mkdir Frameworks_Simulator/kpsewhich.framework
 cp Work/texk/kpathsea/.libs/kpsewhich Frameworks_Simulator/kpsewhich.framework/kpsewhich
-cp basic_Info.plist Frameworks_Simulator/kpsewhich.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/kpsewhich.framework/Info.plist
 plutil -replace CFBundleExecutable -string kpsewhich Frameworks_Simulator/kpsewhich.framework/Info.plist
 plutil -replace CFBundleName -string kpsewhich Frameworks_Simulator/kpsewhich.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.kpsewhich Frameworks_Simulator/kpsewhich.framework/Info.plist
@@ -477,7 +519,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 rm -rf Frameworks_Simulator/xdvipdfmx.framework
 mkdir Frameworks_Simulator/xdvipdfmx.framework
 cp Work/texk/dvipdfm-x/.libs/xdvipdfmx.dylib Frameworks_Simulator/xdvipdfmx.framework/xdvipdfmx
-cp basic_Info.plist Frameworks_Simulator/xdvipdfmx.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/xdvipdfmx.framework/Info.plist
 plutil -replace CFBundleExecutable -string xdvipdfmx Frameworks_Simulator/xdvipdfmx.framework/Info.plist
 plutil -replace CFBundleName -string xdvipdfmx Frameworks_Simulator/xdvipdfmx.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.xdvipdfmx Frameworks_Simulator/xdvipdfmx.framework/Info.plist
@@ -488,7 +530,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 rm -rf Frameworks_Simulator/texlua53A.framework
 mkdir Frameworks_Simulator/texlua53A.framework 
 cp Work/libs/lua53/.libs/libtexlua53.5.dylib Frameworks_Simulator/texlua53A.framework/texlua53A
-cp basic_Info.plist Frameworks_Simulator/texlua53A.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/texlua53A.framework/Info.plist
 plutil -replace CFBundleExecutable -string texlua53A Frameworks_Simulator/texlua53A.framework/Info.plist
 plutil -replace CFBundleName -string texlua53A Frameworks_Simulator/texlua53A.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.texlua53A Frameworks_Simulator/texlua53A.framework/Info.plist
@@ -497,7 +539,7 @@ install_name_tool -id @rpath/texlua53A.framework/texlua53A   Frameworks_Simulato
 rm -rf Frameworks_Simulator/kpathseaA.framework
 mkdir Frameworks_Simulator/kpathseaA.framework 
 cp Work/texk/kpathsea/.libs/libkpathsea.dylib Frameworks_Simulator/kpathseaA.framework/kpathseaA
-cp basic_Info.plist Frameworks_Simulator/kpathseaA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/kpathseaA.framework/Info.plist
 plutil -replace CFBundleExecutable -string kpathseaA Frameworks_Simulator/kpathseaA.framework/Info.plist
 plutil -replace CFBundleName -string kpathseaA Frameworks_Simulator/kpathseaA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.kpathseaA Frameworks_Simulator/kpathseaA.framework/Info.plist
@@ -506,7 +548,7 @@ install_name_tool -id  @rpath/kpathseaA.framework/kpathseaA   Frameworks_Simulat
 rm -rf Frameworks_Simulator/luatexA.framework
 mkdir Frameworks_Simulator/luatexA.framework 
 cp Work/texk/web2c/.libs/luatex.dylib Frameworks_Simulator/luatexA.framework/luatexA
-cp basic_Info.plist Frameworks_Simulator/luatexA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/luatexA.framework/Info.plist
 plutil -replace CFBundleExecutable -string luatexA Frameworks_Simulator/luatexA.framework/Info.plist
 plutil -replace CFBundleName -string luatexA Frameworks_Simulator/luatexA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.luatexA Frameworks_Simulator/luatexA.framework/Info.plist
@@ -517,7 +559,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib  @rpath/kpathseaA.framework
 rm -rf Frameworks_Simulator/luahbtexA.framework
 mkdir Frameworks_Simulator/luahbtexA.framework 
 cp Work/texk/web2c/.libs/luahbtex.dylib Frameworks_Simulator/luahbtexA.framework/luahbtexA
-cp basic_Info.plist Frameworks_Simulator/luahbtexA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/luahbtexA.framework/Info.plist
 plutil -replace CFBundleExecutable -string luahbtexA Frameworks_Simulator/luahbtexA.framework/Info.plist
 plutil -replace CFBundleName -string luahbtexA Frameworks_Simulator/luahbtexA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.luahbtexA Frameworks_Simulator/luahbtexA.framework/Info.plist
@@ -528,7 +570,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib  @rpath/kpathseaA.framework
 rm -rf Frameworks_Simulator/pdftexA.framework
 mkdir Frameworks_Simulator/pdftexA.framework
 cp Work/texk/web2c/.libs/pdftex.dylib Frameworks_Simulator/pdftexA.framework/pdftexA
-cp basic_Info.plist Frameworks_Simulator/pdftexA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/pdftexA.framework/Info.plist
 plutil -replace CFBundleExecutable -string pdftexA Frameworks_Simulator/pdftexA.framework/Info.plist
 plutil -replace CFBundleName -string pdftexA Frameworks_Simulator/pdftexA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.pdftexA Frameworks_Simulator/pdftexA.framework/Info.plist
@@ -538,7 +580,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathseaA.framework/
 rm -rf Frameworks_Simulator/xetexA.framework
 mkdir Frameworks_Simulator/xetexA.framework
 cp Work/texk/web2c/.libs/xetex.dylib Frameworks_Simulator/xetexA.framework/xetexA
-cp basic_Info.plist Frameworks_Simulator/xetexA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/xetexA.framework/Info.plist
 plutil -replace CFBundleExecutable -string xetexA Frameworks_Simulator/xetexA.framework/Info.plist
 plutil -replace CFBundleName -string xetexA Frameworks_Simulator/xetexA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.xetexA Frameworks_Simulator/xetexA.framework/Info.plist
@@ -548,7 +590,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathseaA.framework/
 rm -rf Frameworks_Simulator/ptexencA.framework
 mkdir Frameworks_Simulator/ptexencA.framework 
 cp Work/texk/ptexenc/.libs/libptexenc.dylib Frameworks_Simulator/ptexencA.framework/ptexencA
-cp basic_Info.plist Frameworks_Simulator/ptexencA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/ptexencA.framework/Info.plist
 plutil -replace CFBundleExecutable -string ptexencA Frameworks_Simulator/ptexencA.framework/Info.plist
 plutil -replace CFBundleName -string ptexencA Frameworks_Simulator/ptexencA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.ptexencA Frameworks_Simulator/ptexencA.framework/Info.plist
@@ -558,7 +600,7 @@ install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathsea.framework/k
 rm -rf Frameworks_Simulator/euptexA.framework
 mkdir Frameworks_Simulator/euptexA.framework
 cp Work/texk/web2c/.libs/euptex.dylib Frameworks_Simulator/euptexA.framework/euptexA
-cp basic_Info.plist Frameworks_Simulator/euptexA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/euptexA.framework/Info.plist
 plutil -replace CFBundleExecutable -string euptexA Frameworks_Simulator/euptexA.framework/Info.plist
 plutil -replace CFBundleName -string euptexA Frameworks_Simulator/euptexA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.euptexA Frameworks_Simulator/euptexA.framework/Info.plist
@@ -569,12 +611,24 @@ install_name_tool -change $PWD/inst/lib/libptexenc.1.dylib @rpath/ptexencA.frame
 rm -rf Frameworks_Simulator/xdvipdfmxA.framework
 mkdir Frameworks_Simulator/xdvipdfmxA.framework
 cp Work/texk/dvipdfm-x/.libs/xdvipdfmx.dylib Frameworks_Simulator/xdvipdfmxA.framework/xdvipdfmxA
-cp basic_Info.plist Frameworks_Simulator/xdvipdfmxA.framework/Info.plist
+cp Frameworks_Simulator/Info.template.plist Frameworks_Simulator/xdvipdfmxA.framework/Info.plist
 plutil -replace CFBundleExecutable -string xdvipdfmxA Frameworks_Simulator/xdvipdfmxA.framework/Info.plist
 plutil -replace CFBundleName -string xdvipdfmxA Frameworks_Simulator/xdvipdfmxA.framework/Info.plist
 plutil -replace CFBundleIdentifier -string Nicolas-Holzschuch.xdvipdfmxA Frameworks_Simulator/xdvipdfmxA.framework/Info.plist
 install_name_tool -id @rpath/xdvipdfmxA.framework/xdvipdfmxA   Frameworks_Simulator/xdvipdfmxA.framework/xdvipdfmxA
 install_name_tool -change @rpath/libkpathsea.6.dylib @rpath/kpathseaA.framework/kpathseaA Frameworks_Simulator/xdvipdfmxA.framework/xdvipdfmxA
+
+rm -rf "Frameworks_Simulator-$sim_arch"
+mv Frameworks_Simulator "Frameworks_Simulator-$sim_arch"
+done
+
+cp -R Frameworks_Simulator-arm64 Frameworks_Simulator
+for framework_dir in Frameworks_Simulator/*.framework; do
+    framework=$(basename "$framework_dir" .framework)
+    lipo -create "Frameworks_Simulator-arm64/$framework.framework/$framework" \
+        "Frameworks_Simulator-x86_64/$framework.framework/$framework" \
+        -output "$framework_dir/$framework"
+done
 
 # 4) build xc frameworks:
 echo "Building xc frameworks:"
@@ -596,6 +650,9 @@ for framework in texlua53 kpathsea makeindex luatex luahbtex pdftex xetex bibtex
 do
    rm -rf $framework.xcframework
    xcodebuild -create-xcframework -framework Frameworks/$framework.framework -output $framework.xcframework
+	rm -f "$framework.xcframework.zip"
+	zip -rq "$framework.xcframework.zip" "$framework.xcframework"
+	swift package compute-checksum "$framework.xcframework.zip"
 done
 
 

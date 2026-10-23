@@ -18745,8 +18745,14 @@ xetex-xetex-pool.obj: xetex-pool.c
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(xetex_CPPFLAGS) $(CPPFLAGS) $(xetex_CFLAGS) $(CFLAGS) -c -o xetex-xetex-pool.obj `if test -f 'xetex-pool.c'; then $(CYGPATH_W) 'xetex-pool.c'; else $(CYGPATH_W) '$(srcdir)/xetex-pool.c'; fi`
 
 # __IPHONE__ addition 
-xetexuexit.o: xetexuexit.c
+xetexuexit.o: xetexuexit.c xetexd.h
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(xetex_CPPFLAGS) $(CPPFLAGS) $(xetex_CFLAGS) $(CFLAGS) -MT xetexuexit.o -MD -MP -MF $(DEPDIR)/xetexuexit.Tpo -c -o xetexuexit.o `test -f 'xetexuexit.c' || echo '$(srcdir)/'`xetexuexit.c
+
+euptexuexit.o: euptexuexit.c euptexd.h
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(euptex_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o $@ `test -f 'euptexuexit.c' || echo '$(srcdir)/'`euptexuexit.c
+
+pdfuexit.o: pdfuexit.c pdftexd.h
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pdftex_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o $@ `test -f 'pdfuexit.c' || echo '$(srcdir)/'`pdfuexit.c
 
 
 .cc.o:
