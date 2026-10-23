@@ -38,7 +38,7 @@ jobs:
           df -h .
       - name: Build frameworks
         run: |
-          bash build_command.sh || { tail -n 120 build_native.log build_cross.log; exit 1; }
+          bash build_command.sh || { tail -n 120 build_native.log build_cross.log build_simulator-*.log; exit 1; }
       - name: Slices and checksums
         run: |
           ls *.xcframework.zip >/dev/null
@@ -51,8 +51,9 @@ jobs:
             echo '| xcframework | slice | archs |'
             echo '| --- | --- | --- |'
             for xcf in *.xcframework; do
-              [ -d "$xcf/ios-arm64" ] || exit 1
-              # The existing recipe builds arm64 iOS only (BUILD_SIMULATOR=0).
+              plutil -convert json -o - "$xcf/Info.plist" | jq -e '
+                [.AvailableLibraries[] | {id: .LibraryIdentifier, archs: (.SupportedArchitectures | sort)}] | sort_by(.id) ==
+                [{id: "ios-arm64", archs: ["arm64"]}, {id: "ios-arm64_x86_64-simulator", archs: ["arm64", "x86_64"]}]' >/dev/null
               plutil -convert json -o - "$xcf/Info.plist" | jq -r \
                 '.AvailableLibraries[] | [.LibraryIdentifier, .LibraryPath, (.SupportedArchitectures | sort | join(" "))] | @tsv' \
                 | while IFS=$'\t' read -r slice lib expected; do
@@ -66,7 +67,7 @@ jobs:
                   done
             done
           } | tee -a "$GITHUB_STEP_SUMMARY"
-          du -sh Work-native Work Frameworks
+          du -sh Work-native Work Frameworks Frameworks_Simulator-*
           df -h .
       - uses: actions/upload-artifact@v7
         with:
